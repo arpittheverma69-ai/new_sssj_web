@@ -44,14 +44,14 @@ export function NavbarDemo({ children }: { children: React.ReactNode }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
-        <div className="relative w-full h-screen flex">
+        <div className="relative w-full flex bg-gray-100 min-h-screen">
             <div className="w-80 max-lg:hidden relative">
                 <div className="fixed top-0 w-65">
                     <SideItems />
                 </div>
             </div>
-            <div className="w-full">
-                <Navbar className="w-full top-0 py-3">
+            <div className="lg:w-screen w-full">
+                <Navbar className="w-full top-0 py-3 lg:hidden">
                     {/* Desktop Navigation */}
                     <NavBody>
                         <NavbarLogo />

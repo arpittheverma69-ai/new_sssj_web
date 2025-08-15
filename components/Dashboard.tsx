@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import RecentInvoicesTable from './invoice-table/RecentInvoicesTable';
 
 // Register ChartJS components
 ChartJS.register(
@@ -274,37 +275,7 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Invoices */}
-            <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
-                    <h3 className="text-lg md:text-xl font-bold text-slate-800">Recent Invoices</h3>
-                    <a href="#" className="text-blue-500 text-sm md:text-base font-semibold hover:underline">View All</a>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs md:text-sm">
-                        <thead className="text-xs text-slate-500 uppercase bg-slate-50">
-                            <tr>
-                                <th className="py-2 px-3 md:py-3 md:px-4">Invoice No.</th>
-                                <th className="py-2 px-3 md:py-3 md:px-4">Date</th>
-                                <th className="py-2 px-3 md:py-3 md:px-4">Customer</th>
-                                <th className="py-2 px-3 md:py-3 md:px-4">Type</th>
-                                <th className="py-2 px-3 md:py-3 md:px-4">Amount</th>
-                                <th className="py-2 px-3 md:py-3 md:px-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr className="border-b border-slate-200">
-                                <td className="py-3 px-3 md:py-4 md:px-4 text-slate-400" colSpan={6}>No recent invoices to display.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Activate Windows Watermark */}
-            <div className="fixed bottom-5 right-5 md:right-8 text-slate-400 text-xs md:text-sm">
-                <p>Activate Windows</p>
-                <p className="text-2xs md:text-xs">Go to Settings to activate Windows.</p>
-            </div>
+            <RecentInvoicesTable />
         </main>
     );
 }
