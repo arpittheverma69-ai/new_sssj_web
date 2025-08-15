@@ -1,6 +1,14 @@
 "use client"
 import { usePathname } from "next/navigation";
-import { FaCirclePlus, FaFileLines, FaGear, FaSquarePollVertical, FaUser } from "react-icons/fa6";
+import Lottie, { LottieRefCurrentProps } from "lottie-react";
+import { useRef } from "react";
+import analytics from "@/lib/icon-files/analytics.json"
+import Individual from "@/lib/icon-files/Individual.json"
+import Report from "@/lib/icon-files/Report V2.json"
+import note from "@/lib/icon-files/note.json"
+import plus from "@/lib/icon-files/plus.json"
+import setting from "@/lib/icon-files/setting.json"
+import Link from "next/link";
 
 const SideItems = () => {
     const pathname = usePathname();
@@ -8,32 +16,32 @@ const SideItems = () => {
         {
             name: "Dashboard",
             link: "/",
-            icon: <FaCirclePlus />
+            icon: analytics
         },
         {
             name: "Create Invoice",
             link: "/create-invoice",
-            icon: <FaFileLines />
+            icon: plus
         },
         {
             name: "All Invoices",
             link: "/all-invoice",
-            icon: <FaUser />
+            icon: note
         },
         {
             name: "Customers",
             link: "/customers",
-            icon: <FaCirclePlus />
+            icon: Individual
         },
         {
             name: "Reports",
             link: "/reports",
-            icon: <FaSquarePollVertical />
+            icon: Report
         },
         {
             name: "Settings",
             link: "/setting",
-            icon: <FaGear />
+            icon: setting
         },
     ];
     return (
@@ -45,12 +53,23 @@ const SideItems = () => {
             <nav className="flex flex-col mt-4 space-y-1 text-gray-700 px-2">
                 {
                     navItems.map((item, id) => {
+                        const lottieRef = useRef<LottieRefCurrentProps>(null);
                         const active = pathname === item.link
                         return (
-                            <a href={item.link} key={id} className={`${active ? 'bg-blue-100' : 'hover:bg-gray-100'} px-4 py-2 rounded-md flex`}>
-                                <span className="">{item.icon}</span>
+                            <Link href={item.link} key={id} className={`${active ? 'bg-blue-100' : 'hover:bg-gray-100'} px-4 py-2 rounded-md flex items-center`}
+                                onMouseEnter={() => lottieRef.current?.play()}
+                                onMouseLeave={() => lottieRef.current?.stop()}
+                            >
+                                <div className="w-7 h-7 cursor-pointer mr-2">
+                                    <Lottie
+                                        lottieRef={lottieRef}
+                                        animationData={item.icon}
+                                        loop={false}
+                                        autoplay={false}
+                                    />
+                                </div>
                                 {item.name}
-                            </a>
+                            </Link>
                         );
                     })
                 }

@@ -1,198 +1,124 @@
+"use client";
 import React, { useState } from "react";
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    MenuItem,
-    Button,
-    Typography,
-} from "@mui/material";
-import Grid from "@mui/material/Grid2";
 
-interface AddCustomerDialogProps {
+interface AddCustomerProps {
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     open: boolean;
-    onClose: () => void;
-    onSubmit: (data: CustomerData) => void;
 }
 
-interface CustomerData {
-    name: string;
-    address: string;
-    gstin: string;
-    state: string;
-    stateCode: string;
-    phone: string;
-    email: string;
-}
-
-const states = [
-    { code: "09", name: "Uttar Pradesh" },
-    { code: "27", name: "Maharashtra" },
-    { code: "07", name: "Delhi" },
-    { code: "29", name: "Karnataka" },
-    { code: "33", name: "Tamil Nadu" },
-    { code: "24", name: "Gujarat" },
-];
-
-const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({
-    open,
-    onClose,
-    onSubmit,
-}) => {
-    const [formData, setFormData] = useState<CustomerData>({
+export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
+    const [formData, setFormData] = useState({
         name: "",
         address: "",
-        gstin: "",
-        state: "",
-        stateCode: "",
         phone: "",
-        email: "",
+        email: ""
     });
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleStateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selected = states.find((s) => s.name === e.target.value);
-        setFormData((prev) => ({
-            ...prev,
-            state: selected?.name || "",
-            stateCode: selected?.code || "",
-        }));
-    };
-
-    const handleSubmit = () => {
-        if (!formData.name || !formData.address || !formData.state || !formData.email) {
-            alert("Please fill all required fields.");
-            return;
-        }
-        onSubmit(formData);
-        onClose();
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        console.log("Form Submitted:", formData);
+        setOpen(false);
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>
-                <Typography variant="h6">Add New Customer</Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Add a new customer to your database
-                </Typography>
-            </DialogTitle>
+        <div className="flex flex-col items-center">
+            {open && (
+                <div
+                    className="fixed inset-0 flex items-center justify-center bg-black/70 bg-opacity-40 z-50"
+                    onClick={() => setOpen(false)} // click outside closes popup
+                >
+                    <div
+                        className="bg-white w-full max-w-lg mx-4 rounded-lg shadow-lg"
+                        onClick={(e) => e.stopPropagation()} // prevent close when clicking inside form
+                    >
+                        {/* Header */}
+                        <div className="p-4 border-b flex justify-between items-center">
+                            <h2 className="text-lg font-semibold">Add New Customer</h2>
+                            <button
+                                onClick={() => setOpen(false)}
+                                className="text-gray-500 hover:text-gray-800"
+                            >
+                                ✕
+                            </button>
+                        </div>
 
-            <DialogContent dividers>
-                <Grid container spacing={2}>
-                    {/* Customer Name */}
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Customer Name *"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                        />
-                    </Grid>
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Name *</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full border rounded-md px-3 py-2"
+                                />
+                            </div>
 
-                    {/* Address */}
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Address *"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            multiline
-                            rows={3}
-                        />
-                    </Grid>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">
+                                    Address *
+                                </label>
+                                <textarea
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleChange}
+                                    required
+                                    rows={3}
+                                    className="w-full border rounded-md px-3 py-2"
+                                />
+                            </div>
 
-                    {/* GSTIN */}
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            label="GSTIN (Optional)"
-                            name="gstin"
-                            value={formData.gstin}
-                            onChange={handleChange}
-                        />
-                    </Grid>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Phone</label>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    className="w-full border rounded-md px-3 py-2"
+                                />
+                            </div>
 
-                    {/* State */}
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            select
-                            label="State *"
-                            name="state"
-                            value={formData.state}
-                            onChange={handleStateChange}
-                        >
-                            <MenuItem value="">
-                                <em>Select State</em>
-                            </MenuItem>
-                            {states.map((state) => (
-                                <MenuItem key={state.code} value={state.name}>
-                                    {state.name}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </Grid>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="w-full border rounded-md px-3 py-2"
+                                />
+                            </div>
 
-                    {/* State Code */}
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            label="State Code"
-                            name="stateCode"
-                            value={formData.stateCode}
-                            InputProps={{ readOnly: true }}
-                        />
-                    </Grid>
-
-                    {/* Phone */}
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            label="Phone Number"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            type="tel"
-                        />
-                    </Grid>
-
-                    {/* Email */}
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            type="email"
-                        />
-                    </Grid>
-                </Grid>
-            </DialogContent>
-
-            <DialogActions>
-                <Button onClick={onClose} color="inherit">
-                    Cancel
-                </Button>
-                <Button onClick={handleSubmit} variant="contained" color="primary">
-                    Add Customer
-                </Button>
-            </DialogActions>
-        </Dialog>
+                            {/* Actions */}
+                            <div className="flex justify-end gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setOpen(false)}
+                                    className="px-4 py-2 border rounded-md"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
-};
-
-export default AddCustomerDialog;
+}

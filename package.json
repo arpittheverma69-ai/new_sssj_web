@@ -11,11 +11,13 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.1",
     "@mui/material": "^7.3.1",
     "@mui/x-data-grid": "^8.10.0",
     "@tabler/icons-react": "^3.34.1",
     "chart.js": "^4.5.0",
     "clsx": "^2.1.1",
+    "lottie-react": "^2.4.1",
     "motion": "^12.23.12",
     "next": "15.4.6",
     "react": "19.1.0",
