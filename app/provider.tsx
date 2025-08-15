@@ -10,7 +10,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
                     <SideItems />
                 </div>
             </div>
-            <div className="lg:w-screen w-full">
+            <div className="lg:w-screen w-full max-lg:mt-16">
                 <NavbarDemo />
                 {children}
             </div>

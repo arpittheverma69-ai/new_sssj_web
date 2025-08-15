@@ -1,7 +1,7 @@
 "use client"
 import { useState } from 'react';
-import { DataGrid, GridColDef, GridRowId } from '@mui/x-data-grid';
-import RecentInvoices from '../invoice-table/RecentInvoicesTable';
+import { GridRowId } from '@mui/x-data-grid';
+import RecentInvoices from '../invoice-table/InvoicesTable';
 
 interface TaxRate {
     id: number;
@@ -53,32 +53,32 @@ const TaxRatesTab = () => {
         isDefault: false,
     });
 
-    const columns: GridColDef[] = [
-        { field: 'hsnCode', headerName: 'HSN Code', width: 100 },
-        { field: 'description', headerName: 'Description', width: 150 },
-        { field: 'cgstRate', headerName: 'CGST Rate', width: 100 },
-        { field: 'sgstRate', headerName: 'SGST Rate', width: 100 },
-        { field: 'igstRate', headerName: 'IGST Rate', width: 100 },
-        {
-            field: 'isDefault',
-            headerName: 'Default',
-            width: 100,
-            renderCell: (params) => (params.value ? 'Yes' : 'No'),
-        },
-        {
-            field: 'actions',
-            headerName: 'Actions',
-            width: 100,
-            renderCell: (params) => (
-                <button
-                    className="text-blue-600 hover:text-blue-800"
-                    onClick={() => handleEdit(params.id)}
-                >
-                    Edit
-                </button>
-            ),
-        },
-    ];
+    // const columns: GridColDef[] = [
+    //     { field: 'hsnCode', headerName: 'HSN Code', width: 100 },
+    //     { field: 'description', headerName: 'Description', width: 150 },
+    //     { field: 'cgstRate', headerName: 'CGST Rate', width: 100 },
+    //     { field: 'sgstRate', headerName: 'SGST Rate', width: 100 },
+    //     { field: 'igstRate', headerName: 'IGST Rate', width: 100 },
+    //     {
+    //         field: 'isDefault',
+    //         headerName: 'Default',
+    //         width: 100,
+    //         renderCell: (params) => (params.value ? 'Yes' : 'No'),
+    //     },
+    //     {
+    //         field: 'actions',
+    //         headerName: 'Actions',
+    //         width: 100,
+    //         renderCell: (params) => (
+    //             <button
+    //                 className="text-blue-600 hover:text-blue-800"
+    //                 onClick={() => handleEdit(params.id)}
+    //             >
+    //                 Edit
+    //             </button>
+    //         ),
+    //     },
+    // ];
 
     const handleEdit = (id: GridRowId) => {
         // Handle edit action

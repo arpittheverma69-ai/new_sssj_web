@@ -4,7 +4,7 @@ import * as React from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import { TextField, Box } from "@mui/material";
 
-export default function RecentInvoices() {
+export default function InvoiceTable() {
     const [search, setSearch] = React.useState("");
 
     type InvoiceRow = {
@@ -61,7 +61,7 @@ export default function RecentInvoices() {
     return (
         <div
             className="bg-white p-4 md:p-6 rounded-lg shadow-sm"
-            style={{ width: "100%", maxWidth: "1000px", margin: "0 auto" }} // ensures fixed width
+            style={{ width: "100%", margin: "0 auto" }} // ensures fixed width
         >
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
@@ -84,7 +84,7 @@ export default function RecentInvoices() {
             </Box>
 
             {/* DataGrid container */}
-            <div style={{ height: 400, width: "100%" }}>
+            <div style={{ height: 350, width: '100%' }}>
                 <DataGrid
                     rows={filteredRows}
                     columns={columns}
