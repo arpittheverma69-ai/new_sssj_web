@@ -24,3 +24,18 @@ export interface InvoiceData {
     cgst_rate?: number;
     sgst_rate?: number;
 }
+export interface TaxRateRow {
+    id: number;
+    hsn_code: string;
+    description: string;
+    cgst_rate: string;
+    sgst_rate: string;
+    igst_rate: string;
+    is_default: boolean;
+};
+
+
+
+
+
+

@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ShopProfileData {
     shopName: string;
@@ -16,32 +16,115 @@ interface ShopProfileData {
 
 const ShopProfileTab = () => {
     const [formData, setFormData] = useState<ShopProfileData>({
-        shopName: 'J.V. JEWELLERS',
-        gstin: '09ADCPV2673H1Z7',
-        address: 'SHOP NO. -2, KRISHNA HEIGHT, JAY SINGH PURA',
-        city: 'MATHURA',
-        state: 'Uttar Pradesh',
-        stateCode: '09 (UP)',
-        vatTin: '09627100742',
-        panNumber: 'ADCPV2673H',
-        bankName: 'ICICI BANK C/A NO. 027405001417 (JVM)',
+        shopName: '',
+        gstin: '',
+        address: '',
+        city: '',
+        state: '',
+        stateCode: '',
+        vatTin: '',
+        panNumber: '',
+        bankName: '',
         branchIfsc: '',
     });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
+    const [states, setStates] = useState<Array<{ state: string, statecode: string }>>([]);
+
+    // Fetch shop profile data and states on component mount
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+
+                // Fetch states first
+                const statesResponse = await fetch('/api/states');
+                if (!statesResponse.ok) {
+                    throw new Error('Failed to fetch states');
+                }
+                const statesData = await statesResponse.json();
+                setStates(statesData);
+
+                // Then fetch shop profile
+                const profileResponse = await fetch('/api/setting/shopprofile');
+                if (!profileResponse.ok) {
+                    throw new Error('Failed to fetch shop profile');
+                }
+                const profileData = await profileResponse.json();
+                setFormData(profileData);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Unknown error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Handle form submission
-        console.log('Form submitted:', formData);
+    const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedState = states.find(s => s.state === e.target.value);
+        if (selectedState) {
+            setFormData(prev => ({
+                ...prev,
+                state: selectedState.state,
+                stateCode: `${selectedState.statecode} (${selectedState.state.slice(0, 2).toUpperCase()})`
+            }));
+        }
     };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch('/api/setting/shopprofile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save shop profile');
+            }
+
+            const result = await response.json();
+            setFormData(result.data);
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 3000);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading && !formData.shopName) {
+        return <div className="p-4 md:p-6">Loading shop profile...</div>;
+    }
+
+    if (error) {
+        return <div className="p-4 md:p-6 text-red-500">Error: {error}</div>;
+    }
 
     return (
         <div className="p-4 md:p-6">
             <h2 className="text-lg font-semibold mb-4">Shop Profile</h2>
+
+            {success && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
+                    Shop profile saved successfully!
+                </div>
+            )}
 
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -53,6 +136,7 @@ const ShopProfileTab = () => {
                             value={formData.shopName}
                             onChange={handleChange}
                             className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base"
+                            required
                         />
                     </div>
                     <div>
@@ -63,6 +147,7 @@ const ShopProfileTab = () => {
                             value={formData.gstin}
                             onChange={handleChange}
                             className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base"
+                            required
                         />
                     </div>
 
@@ -74,6 +159,7 @@ const ShopProfileTab = () => {
                             value={formData.address}
                             onChange={handleChange}
                             className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base"
+                            required
                         />
                     </div>
 
@@ -85,6 +171,7 @@ const ShopProfileTab = () => {
                             value={formData.city}
                             onChange={handleChange}
                             className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base"
+                            required
                         />
                     </div>
                     <div>
@@ -92,22 +179,28 @@ const ShopProfileTab = () => {
                         <select
                             name="state"
                             value={formData.state}
-                            onChange={handleChange}
+                            onChange={handleStateChange}
                             className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base"
+                            required
                         >
-                            <option>Uttar Pradesh</option>
+                            <option value="">Select State</option>
+                            {states.map((state) => (
+                                <option key={state.statecode} value={state.state}>
+                                    {state.state}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div>
                         <label className="block text-gray-600 text-sm md:text-base">State Code</label>
-                        <select
+                        <input
+                            type="text"
                             name="stateCode"
                             value={formData.stateCode}
-                            onChange={handleChange}
-                            className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base"
-                        >
-                            <option>09 (UP)</option>
-                        </select>
+                            readOnly
+                            className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base bg-gray-100"
+                            required
+                        />
                     </div>
 
                     <div>
@@ -157,9 +250,10 @@ const ShopProfileTab = () => {
                 <div className="mt-6">
                     <button
                         type="submit"
-                        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 text-sm md:text-base"
+                        disabled={loading}
+                        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 text-sm md:text-base disabled:bg-blue-300"
                     >
-                        Save Changes
+                        {loading ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
             </form>
@@ -167,4 +261,4 @@ const ShopProfileTab = () => {
     );
 };
 
-export default ShopProfileTab; 
+export default ShopProfileTab;

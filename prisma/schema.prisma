@@ -13,23 +13,31 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 model BusinessProfile {
   id             Int       @id @default(autoincrement())
   business_name  String    @db.VarChar(255)
   gstin          String    @unique @db.VarChar(15)
   address        String    @db.Text
   city           String    @db.VarChar(100)
-  state          String    @db.VarChar(50)
-  state_code     String    @db.VarChar(2)
-  pincode        String?   @db.VarChar(10)
   vat_tin        String?   @db.VarChar(20)
+
+  state_id       Int?                         // FK to States.id
+  state          States? @relation(fields: [state_id], references: [id])
+
   pan_number     String?   @db.VarChar(10)
   bank_name      String?   @db.VarChar(100)
   account_number String?   @db.VarChar(20)
   branch_ifsc    String?   @db.VarChar(20)
   created_at     DateTime  @default(now())
   updated_at     DateTime  @default(now()) @updatedAt
+}
+
+model States {
+  id                 Int              @id @default(autoincrement()) // use this as PK
+  state_name         String           @db.VarChar(50)
+  state_code         String           @db.VarChar(2)
+  state_numeric_code Int              @unique                      // make numeric and unique
+  business_profiles  BusinessProfile[]
 }
 
 model Customer {
