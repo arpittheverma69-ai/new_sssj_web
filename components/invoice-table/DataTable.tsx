@@ -1,33 +1,42 @@
 "use client";
 import { FaRegPenToSquare, FaTrashCan } from "react-icons/fa6";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRowId } from "@mui/x-data-grid";
 import { TextField, Box } from "@mui/material";
 import { useEffect, useState } from "react";
 import { TaxRateRow } from "@/types/invoiceTypes";
 
-export default function DataTable({ tableData, loading }: { tableData: TaxRateRow[], loading: boolean }) {
+type DataTableProps = {
+    tableData: TaxRateRow[];
+    loading: boolean;
+    handleEdit: (id: GridRowId) => void;
+    handleDelete: (id: number) => void;
+};
+
+export default function DataTable({
+    tableData,
+    loading,
+    handleEdit,
+    handleDelete
+}: DataTableProps) {
     const [search, setSearch] = useState("");
-
-    const rows: TaxRateRow[] = tableData;
-    console.log("Fetched rows:", rows);
-
     const [filteredRows, setFilteredRows] = useState<TaxRateRow[]>([]);
 
-    // 🔥 Now runs whenever `rows` or `search` changes
     useEffect(() => {
+        if (!tableData) return;
+
         setFilteredRows(
-            rows.filter(
+            tableData.filter(
                 (row) =>
-                    row.hsn_code.toLowerCase().includes(search.toLowerCase()) ||
-                    row.description.toLowerCase().includes(search.toLowerCase()) ||
-                    row.cgst_rate.toLowerCase().includes(search.toLowerCase()) ||
-                    row.sgst_rate.toLowerCase().includes(search.toLowerCase()) ||
-                    row.igst_rate.toLowerCase().includes(search.toLowerCase())
+                    row.hsn_code?.toLowerCase().includes(search.toLowerCase()) ||
+                    row.description?.toLowerCase().includes(search.toLowerCase()) ||
+                    row.cgst_rate?.toLowerCase().includes(search.toLowerCase()) ||
+                    row.sgst_rate?.toLowerCase().includes(search.toLowerCase()) ||
+                    row.igst_rate?.toLowerCase().includes(search.toLowerCase())
             )
         );
-    }, [search, rows]);
+    }, [search, tableData]);
 
-    const columns = [
+    const columns: GridColDef[] = [
         { field: "hsn_code", headerName: "HSN Code", flex: 1 },
         { field: "description", headerName: "Description", flex: 1 },
         { field: "cgst_rate", headerName: "CGST Rate", flex: 1 },
@@ -37,18 +46,18 @@ export default function DataTable({ tableData, loading }: { tableData: TaxRateRo
             field: "is_default",
             headerName: "Default",
             flex: 1,
-            renderCell: (params: any) => (params.value ? "Yes" : "No"), // ✅ show string
+            renderCell: (params) => (params.value ? "Yes" : "No"),
         },
         {
             field: "actions",
             headerName: "Actions",
             flex: 1,
-            renderCell: () => (
+            renderCell: (params) => (
                 <div className="w-full flex justify-around items-center h-full">
-                    <button>
+                    <button onClick={() => handleEdit(params.id)}>
                         <FaRegPenToSquare className="text-xl text-blue-500 hover:text-blue-800 cursor-pointer" />
                     </button>
-                    <button>
+                    <button onClick={() => handleDelete(params.row.id)}>
                         <FaTrashCan className="text-xl text-red-500 hover:text-red-800 cursor-pointer" />
                     </button>
                 </div>
@@ -57,25 +66,14 @@ export default function DataTable({ tableData, loading }: { tableData: TaxRateRo
     ];
 
     return (
-        <div
-            className="bg-white p-4 md:p-6 rounded-lg shadow-sm min-w-[700px]"
-            style={{ width: "100%", margin: "0 auto" }}
-        >
-            {/* Header */}
+        <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm min-w-[700px]">
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg md:text-xl font-bold text-slate-800">Recent Invoices</h3>
-                <a
-                    href="#"
-                    className="text-blue-500 text-sm md:text-base font-semibold hover:underline"
-                >
-                    View All
-                </a>
+                <h3 className="text-lg md:text-xl font-bold text-slate-800">Tax Rates</h3>
             </div>
 
-            {/* Search */}
             <Box mb={2}>
                 <TextField
-                    label="Search Invoices"
+                    label="Search Tax Rates"
                     variant="outlined"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -84,18 +82,17 @@ export default function DataTable({ tableData, loading }: { tableData: TaxRateRo
                 />
             </Box>
 
-            {/* DataGrid */}
             <div style={{ height: 350, width: "100%" }}>
                 <DataGrid
                     rows={filteredRows}
                     columns={columns}
                     pagination
                     loading={loading}
-                    getRowId={(row) => row.id} // ✅ important
+                    getRowId={(row) => row.id}
                     initialState={{
                         pagination: { paginationModel: { pageSize: 5 } },
                     }}
-                    pageSizeOptions={[5]}
+                    pageSizeOptions={[5, 10, 25]}
                     disableRowSelectionOnClick
                 />
             </div>

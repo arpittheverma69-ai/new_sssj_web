@@ -1,11 +1,15 @@
 "use client"
 import { useEffect, useState } from 'react';
 import { GridRowId } from '@mui/x-data-grid';
-import DataTable from '../invoice-table/DataTable';
 import { TaxRateRow } from '@/types/invoiceTypes';
+import dynamic from "next/dynamic";
 
-interface TaxRate {
-    id: number;
+const DataTable = dynamic(() => import("../invoice-table/DataTable"), {
+    ssr: false,
+    loading: () => <div>Loading table...</div>
+});
+
+interface TaxRateForm {
     hsnCode: string;
     description: string;
     cgstRate: string;
@@ -20,27 +24,38 @@ const TaxRatesTab = () => {
     const [editMode, setEditMode] = useState(false);
     const [currentId, setCurrentId] = useState<number | null>(null);
 
-    useEffect(() => {
-        fetchTaxRates();
-    }, []);
+    const [newTaxRate, setNewTaxRate] = useState<TaxRateForm>({
+        hsnCode: '',
+        description: '',
+        cgstRate: '1.5%',
+        sgstRate: '1.5%',
+        igstRate: '3%',
+        isDefault: false,
+    });
 
     const fetchTaxRates = async () => {
         try {
             setLoading(true);
-            const response = await fetch("/api/setting/taxrates");
+            const response = await fetch("/api/setting/taxrates", {
+                cache: 'no-store'
+            });
+
             if (!response.ok) {
                 throw new Error('Failed to fetch tax rates');
             }
+
             const data = await response.json();
-            setTableData(data.map((rate: any) => ({
+            const formattedData = data.map((rate: any) => ({
                 id: rate.id,
-                hsnCode: rate.hsn_code,
+                hsn_code: rate.hsn_code,
                 description: rate.description,
-                cgstRate: `${rate.cgst_rate}%`,
-                sgstRate: `${rate.sgst_rate}%`,
-                igstRate: `${rate.igst_rate}%`,
-                isDefault: rate.is_default,
-            })));
+                cgst_rate: `${rate.cgst_rate}%`,
+                sgst_rate: `${rate.sgst_rate}%`,
+                igst_rate: `${rate.igst_rate}%`,
+                is_default: rate.is_default,
+            }));
+
+            setTableData(formattedData);
         } catch (error) {
             console.error("Failed to fetch data:", error);
             alert('Failed to load tax rates');
@@ -49,14 +64,9 @@ const TaxRatesTab = () => {
         }
     };
 
-    const [newTaxRate, setNewTaxRate] = useState<Omit<TaxRate, 'id'>>({
-        hsnCode: '',
-        description: '',
-        cgstRate: '1.5%',
-        sgstRate: '1.5%',
-        igstRate: '3%',
-        isDefault: false,
-    });
+    useEffect(() => {
+        fetchTaxRates();
+    }, []);
 
     const handleEdit = (id: GridRowId) => {
         const taxRate = tableData.find(rate => rate.id === id);
@@ -78,10 +88,23 @@ const TaxRatesTab = () => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
 
-        setNewTaxRate((prev) => ({
+        setNewTaxRate(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value,
         }));
+    };
+
+    const resetForm = () => {
+        setNewTaxRate({
+            hsnCode: '',
+            description: '',
+            cgstRate: '1.5%',
+            sgstRate: '1.5%',
+            igstRate: '3%',
+            isDefault: false,
+        });
+        setEditMode(false);
+        setCurrentId(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -101,6 +124,7 @@ const TaxRatesTab = () => {
                 ? `/api/setting/taxrates/${currentId}`
                 : '/api/setting/taxrates';
             const method = editMode ? 'PUT' : 'POST';
+            console.log("editMode", editMode, method);
 
             const response = await fetch(url, {
                 method,
@@ -114,21 +138,8 @@ const TaxRatesTab = () => {
                 throw new Error(`Failed to ${editMode ? 'update' : 'create'} tax rate`);
             }
 
-            const result = await response.json();
-
-            // Reset form and fetch updated data
-            setNewTaxRate({
-                hsnCode: '',
-                description: '',
-                cgstRate: '1.5%',
-                sgstRate: '1.5%',
-                igstRate: '3%',
-                isDefault: false,
-            });
-            setEditMode(false);
-            setCurrentId(null);
-            fetchTaxRates();
-
+            await fetchTaxRates();
+            resetForm();
             alert(`Tax rate ${editMode ? 'updated' : 'added'} successfully!`);
         } catch (error) {
             console.error('Error submitting tax rate:', error);
@@ -142,7 +153,7 @@ const TaxRatesTab = () => {
         }
 
         try {
-            const response = await fetch(`/api/setting/taxrates/${id}`, {
+            const response = await fetch(`/api/setting/taxrates?id=${id}`, {
                 method: 'DELETE',
             });
 
@@ -150,7 +161,7 @@ const TaxRatesTab = () => {
                 throw new Error('Failed to delete tax rate');
             }
 
-            fetchTaxRates();
+            await fetchTaxRates();
             alert('Tax rate deleted successfully!');
         } catch (error) {
             console.error('Error deleting tax rate:', error);
@@ -158,34 +169,23 @@ const TaxRatesTab = () => {
         }
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const taxratedata = await fetch("/api/setting/taxrates");
-                const data = await taxratedata.json();
-                setTableData(data);
-            } catch (error) {
-                console.error("Failed to fetch data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
-
     return (
         <div className="p-4 md:p-6">
-            <div className="mb-6  overflow-x-scroll">
+            <div className="mb-6 overflow-x-auto">
                 <h2 className="text-lg md:text-xl font-semibold mb-2">Tax Rates</h2>
                 <p className="text-xs md:text-sm text-gray-600 mb-4">
                     Manage GST rates for different product categories
                 </p>
 
-                <DataTable tableData={tableData} loading={loading} />
+                <DataTable
+                    tableData={tableData}
+                    loading={loading}
+                    handleEdit={handleEdit}
+                    handleDelete={handleDelete}
+                />
             </div>
 
-            {/* Add Tax Rate */}<div className="bg-gray-50 rounded shadow p-4 md:p-6 w-full">
+            <div className="bg-gray-50 rounded shadow p-4 md:p-6 w-full">
                 <h2 className="text-lg font-semibold mb-4">
                     {editMode ? 'Edit Tax Rate' : 'Add New Tax Rate'}
                 </h2>
@@ -270,6 +270,7 @@ const TaxRatesTab = () => {
                             Set as default
                         </label>
                     </div>
+
                     <div className="flex space-x-3">
                         <button
                             type="submit"
@@ -281,18 +282,7 @@ const TaxRatesTab = () => {
                             <button
                                 type="button"
                                 className="bg-gray-500 text-white px-4 py-2 rounded text-sm md:text-base"
-                                onClick={() => {
-                                    setNewTaxRate({
-                                        hsnCode: '',
-                                        description: '',
-                                        cgstRate: '1.5%',
-                                        sgstRate: '1.5%',
-                                        igstRate: '3%',
-                                        isDefault: false,
-                                    });
-                                    setEditMode(false);
-                                    setCurrentId(null);
-                                }}
+                                onClick={resetForm}
                             >
                                 Cancel
                             </button>

@@ -1,55 +1,88 @@
 "use client"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+type TransactionType = 'retail' | 'wholesale' | 'exports';
+type InputMode = 'component' | 'quick' | 'barcode';
 
 interface InvoiceSettings {
-    invoicePrefix: string;
-    defaultTransactionType: string;
-    numberOfDigits: string;
-    defaultInputMode: string;
-    startingNumber: string;
-    invoiceCopies: {
-        original: boolean;
-        duplicate: boolean;
-        triplicate: boolean;
-    };
+    id?: number;
+    invoice_prefix: string;
+    default_transaction_type: TransactionType;
+    number_digits: number;
+    default_input_mode: InputMode;
+    starting_number: number;
+    generate_original: boolean;
+    generate_duplicate: boolean;
+    generate_triplicate: boolean;
 }
 
 const InvoiceSettingsTab = () => {
     const [settings, setSettings] = useState<InvoiceSettings>({
-        invoicePrefix: 'JVJ/D/',
-        defaultTransactionType: 'Retail Sales',
-        numberOfDigits: '3 (001-999)',
-        defaultInputMode: 'Component Entry',
-        startingNumber: '020',
-        invoiceCopies: {
-            original: true,
-            duplicate: true,
-            triplicate: true,
-        },
+        invoice_prefix: 'JVJ/D/',
+        default_transaction_type: 'retail',
+        number_digits: 3,
+        default_input_mode: 'component',
+        starting_number: 1,
+        generate_original: true,
+        generate_duplicate: true,
+        generate_triplicate: true,
     });
+
+    // Fetch settings from API on component mount
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch('/api/setting/invoicesetting');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch settings');
+                }
+                const data = await response.json();
+                setSettings(data);
+            } catch (error) {
+                console.error('Failed to fetch invoice settings:', error);
+                alert('Failed to load settings');
+            }
+        };
+
+        fetchSettings();
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
 
-        if (name.startsWith('invoiceCopies.')) {
-            const copyType = name.split('.')[1] as keyof InvoiceSettings['invoiceCopies'];
-            setSettings((prev) => ({
-                ...prev,
-                invoiceCopies: {
-                    ...prev.invoiceCopies,
-                    [copyType]: checked,
-                },
-            }));
-        } else {
-            setSettings((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-        }
+        setSettings(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked :
+                ['number_digits', 'starting_number'].includes(name) ?
+                    parseInt(value) || 0 :
+                    value
+        }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle form submission
-        console.log('Invoice settings submitted:', settings);
+
+        try {
+            const response = await fetch('/api/setting/invoicesetting', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(settings),
+            });
+
+            if (!response.ok) {
+                throw new Error(await response.text());
+            }
+
+            const updatedSettings = await response.json();
+            setSettings(updatedSettings);
+            alert('Settings saved successfully!');
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            alert(`Failed to save settings: ${error instanceof Error ? error.message : String(error)}`);
+        }
     };
 
     return (
@@ -64,8 +97,8 @@ const InvoiceSettingsTab = () => {
                         </label>
                         <input
                             type="text"
-                            name="invoicePrefix"
-                            value={settings.invoicePrefix}
+                            name="invoice_prefix"
+                            value={settings.invoice_prefix}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded mb-2 text-sm md:text-base"
                         />
@@ -79,14 +112,14 @@ const InvoiceSettingsTab = () => {
                             Default Transaction Type
                         </label>
                         <select
-                            name="defaultTransactionType"
-                            value={settings.defaultTransactionType}
+                            name="default_transaction_type"
+                            value={settings.default_transaction_type}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded text-sm md:text-base"
                         >
-                            <option>Retail Sales</option>
-                            <option>Wholesale</option>
-                            <option>Export</option>
+                            <option value="retail">Retail Sales</option>
+                            <option value="wholesale">Wholesale</option>
+                            <option value="exports">Export</option>
                         </select>
                     </div>
 
@@ -95,14 +128,14 @@ const InvoiceSettingsTab = () => {
                             Number of Digits
                         </label>
                         <select
-                            name="numberOfDigits"
-                            value={settings.numberOfDigits}
+                            name="number_digits"
+                            value={settings.number_digits}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded text-sm md:text-base"
                         >
-                            <option>3 (001-999)</option>
-                            <option>4 (0001-9999)</option>
-                            <option>5 (00001-99999)</option>
+                            <option value={3}>3 (001-999)</option>
+                            <option value={4}>4 (0001-9999)</option>
+                            <option value={5}>5 (00001-99999)</option>
                         </select>
                     </div>
 
@@ -111,14 +144,14 @@ const InvoiceSettingsTab = () => {
                             Default Input Mode
                         </label>
                         <select
-                            name="defaultInputMode"
-                            value={settings.defaultInputMode}
+                            name="default_input_mode"
+                            value={settings.default_input_mode}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded text-sm md:text-base"
                         >
-                            <option>Component Entry</option>
-                            <option>Quick Entry</option>
-                            <option>Barcode Scan</option>
+                            <option value="component">Component Entry</option>
+                            <option value="quick">Quick Entry</option>
+                            <option value="barcode">Barcode Scan</option>
                         </select>
                     </div>
 
@@ -127,15 +160,16 @@ const InvoiceSettingsTab = () => {
                             Starting Number
                         </label>
                         <input
-                            type="text"
-                            name="startingNumber"
-                            value={settings.startingNumber}
+                            type="number"
+                            name="starting_number"
+                            value={settings.starting_number}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded text-sm md:text-base"
+                            min="1"
                         />
                         <p className="text-xs md:text-sm text-gray-500">
-                            Next invoice will be: {settings.invoicePrefix}
-                            {settings.startingNumber}
+                            Next invoice will be: {settings.invoice_prefix}
+                            {settings.starting_number.toString().padStart(settings.number_digits, '0')}
                         </p>
                     </div>
 
@@ -147,8 +181,8 @@ const InvoiceSettingsTab = () => {
                             <label className="flex items-center">
                                 <input
                                     type="checkbox"
-                                    name="invoiceCopies.original"
-                                    checked={settings.invoiceCopies.original}
+                                    name="generate_original"
+                                    checked={settings.generate_original}
                                     onChange={handleChange}
                                     className="mr-2"
                                 />
@@ -157,8 +191,8 @@ const InvoiceSettingsTab = () => {
                             <label className="flex items-center">
                                 <input
                                     type="checkbox"
-                                    name="invoiceCopies.duplicate"
-                                    checked={settings.invoiceCopies.duplicate}
+                                    name="generate_duplicate"
+                                    checked={settings.generate_duplicate}
                                     onChange={handleChange}
                                     className="mr-2"
                                 />
@@ -167,8 +201,8 @@ const InvoiceSettingsTab = () => {
                             <label className="flex items-center">
                                 <input
                                     type="checkbox"
-                                    name="invoiceCopies.triplicate"
-                                    checked={settings.invoiceCopies.triplicate}
+                                    name="generate_triplicate"
+                                    checked={settings.generate_triplicate}
                                     onChange={handleChange}
                                     className="mr-2"
                                 />

@@ -51,34 +51,6 @@ export async function POST(request: Request) {
     }
 }
 
-export async function PUT(request: Request) {
-    try {
-        const { id, ...data } = await request.json();
-
-        // If this is set as default, unset any other defaults first
-        if (data.is_default) {
-            await prisma.taxRate.updateMany({
-                where: {
-                    is_default: true,
-                    id: { not: id },
-                },
-                data: { is_default: false },
-            });
-        }
-
-        const taxRate = await prisma.taxRate.update({
-            where: { id },
-            data,
-        });
-
-        return NextResponse.json(taxRate);
-    } catch (error) {
-        return NextResponse.json(
-            { error: 'Failed to update tax rate' },
-            { status: 500 }
-        );
-    }
-}
 
 export async function DELETE(request: Request) {
     try {
