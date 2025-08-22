@@ -36,11 +36,11 @@ export default function InvoiceTable() {
             flex: 1,
             renderCell: () => (
                 <div className="w-full flex justify-around items-center h-full">
-                    <button>
-                        <FaRegPenToSquare className="text-xl text-blue-500 hover:text-blue-800 cursor-pointer" />
+                    <button className="p-2 rounded-[16px] hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors duration-200">
+                        <FaRegPenToSquare className="text-xl text-blue-500 hover:text-blue-600 cursor-pointer" />
                     </button>
-                    <button>
-                        <FaTrashCan className="text-xl text-red-500 hover:text-red-800 cursor-pointer" />
+                    <button className="p-2 rounded-[16px] hover:bg-red-50 dark:hover:bg-red-950 transition-colors duration-200">
+                        <FaTrashCan className="text-xl text-red-500 hover:text-red-600 cursor-pointer" />
                     </button>
                 </div>
             ),
@@ -60,19 +60,19 @@ export default function InvoiceTable() {
 
     return (
         <div
-            className="bg-white p-4 md:p-6 rounded-lg shadow-sm"
-            style={{ width: "100%", margin: "0 auto" }} // ensures fixed width
+            className="bg-card p-6 md:p-8 rounded-[24px] shadow-lg shadow-black/5 border border-border"
+            style={{ width: "100%", margin: "0 auto" }}
         >
             {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg md:text-xl font-bold text-slate-800">Recent Invoices</h3>
-                <a href="#" className="text-blue-500 text-sm md:text-base font-semibold hover:underline">
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl md:text-2xl font-bold text-foreground">Recent Invoices</h3>
+                <a href="#" className="text-primary text-sm md:text-base font-semibold hover:underline transition-colors duration-200">
                     View All
                 </a>
             </div>
 
             {/* Search */}
-            <Box mb={2}>
+            <Box mb={3}>
                 <TextField
                     label="Search Invoices"
                     variant="outlined"
@@ -80,6 +80,17 @@ export default function InvoiceTable() {
                     onChange={(e) => setSearch(e.target.value)}
                     fullWidth
                     size="small"
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: '20px',
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--primary)',
+                            },
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'var(--primary)',
+                            },
+                        },
+                    }}
                 />
             </Box>
 
@@ -94,6 +105,19 @@ export default function InvoiceTable() {
                     }}
                     pageSizeOptions={[5]}
                     disableRowSelectionOnClick
+                    sx={{
+                        border: 'none',
+                        '& .MuiDataGrid-cell': {
+                            borderBottom: '1px solid var(--border)',
+                        },
+                        '& .MuiDataGrid-columnHeaders': {
+                            backgroundColor: 'var(--muted)',
+                            borderBottom: '2px solid var(--border)',
+                        },
+                        '& .MuiDataGrid-footerContainer': {
+                            borderTop: '1px solid var(--border)',
+                        },
+                    }}
                 />
             </div>
         </div>

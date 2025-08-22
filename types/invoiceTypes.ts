@@ -34,8 +34,15 @@ export interface TaxRateRow {
     is_default: boolean;
 };
 
+export interface State {
+    id: number;
+    state_name: string;
+    state_code: string;
+    state_numeric_code: number;
+}
 
-
-
-
+export interface ApiState {
+    state: string;
+    statecode: string;
+}
 

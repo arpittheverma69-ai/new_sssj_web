@@ -39,15 +39,19 @@ model States {
   state_code         String            @db.VarChar(2)
   state_numeric_code Int               @unique // make numeric and unique
   business_profiles  BusinessProfile[]
+  Customer           Customer[]
 }
 
 model Customer {
-  id         Int       @id @default(autoincrement())
-  name       String    @db.VarChar(255)
-  address    String    @db.Text
-  city       String    @db.VarChar(100)
-  state      String    @db.VarChar(50)
-  state_code String    @db.VarChar(2)
+  id      Int    @id @default(autoincrement())
+  name    String @db.VarChar(255)
+  address String @db.Text
+  city    String @db.VarChar(100)
+
+  state_id Int? // FK to States.id
+  state    States? @relation(fields: [state_id], references: [id])
+
+  pan_number String?   @db.VarChar(10)
   pincode    String?   @db.VarChar(10)
   gstin      String?   @unique @db.VarChar(15)
   phone      String    @db.VarChar(15)

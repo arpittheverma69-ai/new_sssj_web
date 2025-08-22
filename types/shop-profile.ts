@@ -1,3 +1,5 @@
+import { InvoiceData, State } from "./invoiceTypes"
+
 export interface ShopProfile {
     id?: number
     business_name: string
@@ -27,4 +29,19 @@ export interface ShopProfileFormData {
     bank_name?: string
     account_number?: string
     branch_ifsc?: string
+}
+
+export interface Customer {
+    id: number;
+    name: string;
+    email?: string;
+    phone: string;
+    address: string;
+    city: string;
+    pincode?: string;
+    gstin?: string;
+    state_id?: number;
+    state?: State;
+    created_at: string;
+    updated_at: string;
 }

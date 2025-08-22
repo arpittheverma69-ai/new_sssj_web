@@ -1,5 +1,6 @@
 import { LineItem } from '@/types/invoiceTypes';
 import React from 'react';
+import { Trash2, Package, Hash, FileText, Scale, DollarSign, Calculator } from 'lucide-react';
 
 interface LineItemsTableProps {
     lineItems: LineItem[];
@@ -7,56 +8,144 @@ interface LineItemsTableProps {
 }
 
 const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem }) => {
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(amount);
+    };
+
+    const formatQuantity = (quantity: number, unit: string) => {
+        return `${quantity.toFixed(3)} ${unit}`;
+    };
+
     return (
-        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-background rounded-[20px] border border-border overflow-hidden">
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">HSN/SAC</th>
-                            <th scope="col" className="px-6 py-3">Description</th>
-                            <th scope="col" className="px-6 py-3">Quantity</th>
-                            <th scope="col" className="px-6 py-3">Rate</th>
-                            <th scope="col" className="px-6 py-3">Taxable Value</th>
-                            <th scope="col" className="px-6 py-3">Actions</th>
+                <table className="w-full">
+                    <thead>
+                        <tr className="bg-muted/50 border-b border-border">
+                            <th scope="col" className="px-6 py-4 text-left">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <Hash className="w-4 h-4 text-muted-foreground" />
+                                    HSN/SAC
+                                </div>
+                            </th>
+                            <th scope="col" className="px-6 py-4 text-left">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <FileText className="w-4 h-4 text-muted-foreground" />
+                                    Description
+                                </div>
+                            </th>
+                            <th scope="col" className="px-6 py-4 text-left">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <Scale className="w-4 h-4 text-muted-foreground" />
+                                    Quantity
+                                </div>
+                            </th>
+                            <th scope="col" className="px-6 py-4 text-left">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <DollarSign className="w-4 h-4 text-muted-foreground" />
+                                    Rate
+                                </div>
+                            </th>
+                            <th scope="col" className="px-6 py-4 text-left">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <Calculator className="w-4 h-4 text-muted-foreground" />
+                                    Taxable Value
+                                </div>
+                            </th>
+                            <th scope="col" className="px-6 py-4 text-center">
+                                <span className="text-sm font-semibold text-foreground">Actions</span>
+                            </th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-border">
                         {lineItems.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="text-center py-10 px-6 text-gray-500">
-                                    No items added yet
+                                <td colSpan={6} className="text-center py-16 px-6">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                                            <Package className="w-8 h-8 text-muted-foreground" />
+                                        </div>
+                                        <div className="text-muted-foreground font-medium">No line items added yet</div>
+                                        <div className="text-sm text-muted-foreground">Start by adding your first product or service above</div>
+                                    </div>
                                 </td>
                             </tr>
                         ) : (
-                            lineItems.map((item) => (
-                                <tr key={item.id} className="bg-white border-b">
-                                    <td className="px-6 py-4">{item.hsn_sac_code}</td>
-                                    <td className="px-6 py-4">{item.description}</td>
+                            lineItems.map((item, index) => (
+                                <tr 
+                                    key={item.id} 
+                                    className={`hover:bg-muted/30 transition-colors duration-200 ${
+                                        index % 2 === 0 ? 'bg-background' : 'bg-muted/5'
+                                    }`}
+                                >
                                     <td className="px-6 py-4">
-                                        {item.quantity.toFixed(3)} {item.unit}
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 bg-blue-500/10 rounded-[12px] flex items-center justify-center">
+                                                <Hash className="w-4 h-4 text-blue-600" />
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-foreground">{item.hsn_sac_code}</div>
+                                                <div className="text-xs text-muted-foreground">HSN Code</div>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-4">₹{item.rate.toFixed(2)}</td>
-                                    <td className="px-6 py-4">₹{item.taxableValue.toFixed(2)}</td>
                                     <td className="px-6 py-4">
+                                        <div className="max-w-xs">
+                                            <div className="font-medium text-foreground">{item.description}</div>
+                                            <div className="text-xs text-muted-foreground">Product/Service</div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 bg-green-500/10 rounded-[12px] flex items-center justify-center">
+                                                <Scale className="w-4 h-4 text-green-600" />
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-foreground">
+                                                    {formatQuantity(item.quantity, item.unit)}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">Quantity</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 bg-purple-500/10 rounded-[12px] flex items-center justify-center">
+                                                <DollarSign className="w-4 h-4 text-purple-600" />
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-foreground">
+                                                    {formatCurrency(item.rate)}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">Per {item.unit}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 bg-orange-500/10 rounded-[12px] flex items-center justify-center">
+                                                <Calculator className="w-4 h-4 text-orange-600" />
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-foreground text-lg">
+                                                    {formatCurrency(item.taxableValue)}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">Taxable Value</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
                                         <button
                                             onClick={() => onRemoveItem(item.id)}
-                                            className="text-red-500 hover:text-red-700"
+                                            className="w-10 h-10 bg-red-500/10 hover:bg-red-500/20 text-red-600 hover:text-red-700 rounded-[16px] flex items-center justify-center transition-all duration-200 hover:scale-110"
+                                            title="Remove item"
                                         >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-5 w-5"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                />
-                                            </svg>
+                                            <Trash2 className="w-4 h-4" />
                                         </button>
                                     </td>
                                 </tr>
@@ -65,6 +154,23 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                     </tbody>
                 </table>
             </div>
+
+            {/* Summary Row */}
+            {lineItems.length > 0 && (
+                <div className="bg-primary/5 border-t border-primary/20 px-6 py-4">
+                    <div className="flex justify-between items-center">
+                        <div className="text-sm text-muted-foreground">
+                            Total Items: <span className="font-semibold text-foreground">{lineItems.length}</span>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-sm text-muted-foreground">Total Taxable Value:</div>
+                            <div className="text-xl font-bold text-primary">
+                                {formatCurrency(lineItems.reduce((sum, item) => sum + item.taxableValue, 0))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

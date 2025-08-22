@@ -2,6 +2,28 @@
 import React, { useState } from 'react';
 import InvoiceSlipPreview from '../create-invoice/InvoiceSlipPreview';
 import { LineItem } from '@/types/invoiceTypes';
+import { 
+    FileText, 
+    Calendar, 
+    Hash, 
+    User, 
+    Truck, 
+    Calculator, 
+    Package, 
+    CheckCircle, 
+    Download, 
+    Send, 
+    ArrowLeft, 
+    Eye, 
+    Printer, 
+    Share2, 
+    AlertCircle, 
+    Info,
+    DollarSign,
+    Receipt,
+    Clock,
+    Shield
+} from 'lucide-react';
 
 interface ReviewGeneratePageProps {
     invoiceData: any;
@@ -21,6 +43,8 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
         duplicateCopy: true,
         triplicateCopy: true,
     });
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
     const cgstAmount = taxableValue * (parseFloat(cgstRate) / 100);
@@ -34,201 +58,334 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
         }));
     };
 
-    const handleGeneratePDF = () => {
-        // PDF generation logic would go here
-        alert('PDF generation would be implemented here');
+    const handleGeneratePDF = async () => {
+        setIsGenerating(true);
+        // Simulate PDF generation
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setIsGenerating(false);
+        alert('PDF generated successfully!');
     };
 
-    const handleSubmitInvoice = () => {
-        // Invoice submission logic would go here
-        alert('Invoice submission would be implemented here');
+    const handleSubmitInvoice = async () => {
+        setIsSubmitting(true);
+        // Simulate invoice submission
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setIsSubmitting(false);
+        alert('Invoice submitted successfully!');
+    };
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(amount);
+    };
+
+    const getTransactionTypeIcon = (type: string) => {
+        switch (type) {
+            case 'retail': return <Receipt className="w-5 h-5" />;
+            case 'inter-city': return <Truck className="w-5 h-5" />;
+            case 'purchase': return <Package className="w-5 h-5" />;
+            default: return <FileText className="w-5 h-5" />;
+        }
+    };
+
+    const getTransactionTypeLabel = (type: string) => {
+        switch (type) {
+            case 'retail': return 'Retail Sales';
+            case 'inter-city': return 'Inter-city Sales';
+            case 'purchase': return 'Purchase';
+            default: return type;
+        }
     };
 
     return (
-        <div className="form-step">
-            <p className="text-sm text-gray-500 mb-4">Step 3: Review & Generate Invoice</p>
-
-            <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-6">Invoice Review</h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div>
-                        <h3 className="text-lg font-medium mb-2">Invoice Details</h3>
-                        <div className="space-y-2">
-                            <p>
-                                <strong>Invoice Number:</strong> {invoiceData.invoice_number}
-                            </p>
-                            <p>
-                                <strong>Invoice Date:</strong>{' '}
-                                {new Date(invoiceData.invoice_date).toLocaleDateString()}
-                            </p>
-                            <p>
-                                <strong>Transaction Type:</strong>{' '}
-                                {invoiceData.type === 'retail'
-                                    ? 'Retail Sales'
-                                    : invoiceData.type === 'inter-city'
-                                        ? 'Inter-city Sales'
-                                        : 'Purchase'}
-                            </p>
-                            <p>
-                                <strong>Buyer Name:</strong> {invoiceData.buyer_name}
-                            </p>
-                        </div>
+        <div className="max-w-7xl mx-auto p-6 md:p-8">
+            {/* Header */}
+            <div className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-[20px] flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-medium mb-2">Tax Summary</h3>
-                        <div className="space-y-1">
-                            <div className="flex justify-between py-1">
-                                <span>Taxable Value:</span>
-                                <span>₹{taxableValue.toFixed(2)}</span>
+                        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Review & Generate</h1>
+                        <p className="text-muted-foreground text-lg">Final review and generation</p>
+                    </div>
+                </div>
+                <div className="text-sm text-muted-foreground">Step 3 of 3</div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+                {/* Main Content */}
+                <div className="xl:col-span-3 space-y-8">
+                    {/* Invoice Review Section */}
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
+                            <div className="flex items-center gap-3">
+                                <FileText className="w-6 h-6 text-white" />
+                                <h2 className="text-xl font-semibold text-white">Invoice Review</h2>
                             </div>
-                            <div className="flex justify-between py-1">
-                                <span>CGST ({cgstRate}%):</span>
-                                <span>₹{cgstAmount.toFixed(2)}</span>
+                        </div>
+                        
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                {/* Invoice Details */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                                        <Hash className="w-5 h-5 text-blue-500" />
+                                        Invoice Details
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                            <span className="text-muted-foreground">Invoice Number:</span>
+                                            <span className="font-semibold text-foreground">{invoiceData.invoice_number}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                            <span className="text-muted-foreground">Invoice Date:</span>
+                                            <span className="font-semibold text-foreground">
+                                                {new Date(invoiceData.invoice_date).toLocaleDateString('en-IN')}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                            <span className="text-muted-foreground">Transaction Type:</span>
+                                            <div className="flex items-center gap-2">
+                                                {getTransactionTypeIcon(invoiceData.type)}
+                                                <span className="font-semibold text-foreground">
+                                                    {getTransactionTypeLabel(invoiceData.type)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                            <span className="text-muted-foreground">Buyer Name:</span>
+                                            <span className="font-semibold text-foreground">{invoiceData.buyer_name}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Tax Summary */}
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                                        <Calculator className="w-5 h-5 text-green-500" />
+                                        Tax Summary
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                            <span className="text-muted-foreground">Taxable Value:</span>
+                                            <span className="font-semibold text-foreground">{formatCurrency(taxableValue)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                            <span className="text-muted-foreground">CGST ({cgstRate}%):</span>
+                                            <span className="font-semibold text-foreground">{formatCurrency(cgstAmount)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                            <span className="text-muted-foreground">SGST ({sgstRate}%):</span>
+                                            <span className="font-semibold text-foreground">{formatCurrency(sgstAmount)}</span>
+                                        </div>
+                                        <div className="border-t border-border my-3"></div>
+                                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-[16px] border border-green-200">
+                                            <span className="text-lg font-bold text-foreground">Total Invoice Value:</span>
+                                            <span className="text-xl font-bold text-green-600">{formatCurrency(totalInvoice)}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex justify-between py-1">
-                                <span>SGST ({sgstRate}%):</span>
-                                <span>₹{sgstAmount.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    {/* Line Items Section */}
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6">
+                            <div className="flex items-center gap-3">
+                                <Package className="w-6 h-6 text-white" />
+                                <h2 className="text-xl font-semibold text-white">Line Items</h2>
                             </div>
-                            <div className="border-t border-gray-200 my-2"></div>
-                            <div className="flex justify-between font-semibold py-1">
-                                <span>Total Invoice Value:</span>
-                                <span>₹{totalInvoice.toFixed(2)}</span>
+                        </div>
+                        
+                        <div className="p-6">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-border">
+                                            <th className="text-left p-3 font-semibold text-foreground">HSN/SAC</th>
+                                            <th className="text-left p-3 font-semibold text-foreground">Description</th>
+                                            <th className="text-right p-3 font-semibold text-foreground">Quantity</th>
+                                            <th className="text-right p-3 font-semibold text-foreground">Rate</th>
+                                            <th className="text-right p-3 font-semibold text-foreground">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {lineItems.map((item, index) => (
+                                            <tr key={item.id} className={`border-b border-border/50 ${index % 2 === 0 ? 'bg-muted/20' : ''}`}>
+                                                <td className="p-3 font-mono text-sm">{item.hsn_sac_code}</td>
+                                                <td className="p-3 font-medium">{item.description}</td>
+                                                <td className="p-3 text-right">
+                                                    <span className="font-semibold">{item.quantity.toFixed(3)}</span>
+                                                    <span className="text-muted-foreground ml-1">{item.unit}</span>
+                                                </td>
+                                                <td className="p-3 text-right font-semibold">{formatCurrency(item.rate)}</td>
+                                                <td className="p-3 text-right font-bold text-foreground">{formatCurrency(item.taxableValue)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Invoice Slip Preview */}
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-6">
+                            <div className="flex items-center gap-3">
+                                <Eye className="w-6 h-6 text-white" />
+                                <h2 className="text-xl font-semibold text-white">Invoice Slip Preview</h2>
+                            </div>
+                        </div>
+                        
+                        <div className="p-6">
+                            <InvoiceSlipPreview
+                                invoiceData={invoiceData}
+                                lineItems={lineItems}
+                                cgstRate={parseFloat(cgstRate)}
+                                sgstRate={parseFloat(sgstRate)}
+                            />
                         </div>
                     </div>
                 </div>
 
-                <h3 className="text-lg font-medium mb-2">Line Items</h3>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th className="px-2 py-3">HSN/SAC</th>
-                                <th className="px-2 py-3">Description</th>
-                                <th className="px-2 py-3 text-right">Quantity</th>
-                                <th className="px-2 py-3 text-right">Rate</th>
-                                <th className="px-2 py-3 text-right">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {lineItems.map((item) => (
-                                <tr key={item.id} className="border-b">
-                                    <td className="py-2">{item.hsn_sac_code}</td>
-                                    <td className="py-2">{item.description}</td>
-                                    <td className="py-2 text-right">
-                                        {item.quantity.toFixed(3)} {item.unit}
-                                    </td>
-                                    <td className="py-2 text-right">₹{item.rate.toFixed(2)}</td>
-                                    <td className="py-2 text-right">₹{item.taxableValue.toFixed(2)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Invoice Slip Preview */}
-                <InvoiceSlipPreview
-                    invoiceData={invoiceData}
-                    lineItems={lineItems}
-                    cgstRate={parseFloat(cgstRate)}
-                    sgstRate={parseFloat(sgstRate)}
-                />
-
-                {/* Generation Options */}
-                <div className="mt-8">
-                    <h3 className="text-lg font-medium mb-2">Generation Options</h3>
-
-                    <div className="mb-4">
-                        <label className="block font-medium mb-2">Invoice Copies</label>
-                        <div className="flex flex-wrap gap-4">
-                            <label className="inline-flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedCopies.originalCopy}
-                                    onChange={() => handleCopyChange('originalCopy')}
-                                    className="form-checkbox h-5 w-5 text-blue-600"
-                                />
-                                <span className="ml-2">Original for Recipient</span>
-                            </label>
-                            <label className="inline-flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedCopies.duplicateCopy}
-                                    onChange={() => handleCopyChange('duplicateCopy')}
-                                    className="form-checkbox h-5 w-5 text-blue-600"
-                                />
-                                <span className="ml-2">Duplicate for Transporter</span>
-                            </label>
-                            <label className="inline-flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedCopies.triplicateCopy}
-                                    onChange={() => handleCopyChange('triplicateCopy')}
-                                    className="form-checkbox h-5 w-5 text-blue-600"
-                                />
-                                <span className="ml-2">Triplicate for Supplier</span>
-                            </label>
+                {/* Right Sidebar */}
+                <div className="xl:col-span-1 space-y-6">
+                    {/* Generation Options */}
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-indigo-500 to-blue-500 p-4">
+                            <div className="flex items-center gap-2">
+                                <Printer className="w-5 h-5 text-white" />
+                                <h3 className="font-semibold text-white">Generation Options</h3>
+                            </div>
+                        </div>
+                        
+                        <div className="p-4 space-y-4">
+                            <div>
+                                <label className="block font-medium text-foreground mb-3">Invoice Copies</label>
+                                <div className="space-y-3">
+                                    {[
+                                        { key: 'originalCopy', label: 'Original for Recipient', icon: <FileText className="w-4 h-4" /> },
+                                        { key: 'duplicateCopy', label: 'Duplicate for Transporter', icon: <Truck className="w-4 h-4" /> },
+                                        { key: 'triplicateCopy', label: 'Triplicate for Supplier', icon: <Package className="w-4 h-4" /> }
+                                    ].map(({ key, label, icon }) => (
+                                        <label key={key} className="flex items-center gap-3 p-3 rounded-[12px] hover:bg-muted/50 cursor-pointer transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedCopies[key as keyof typeof selectedCopies]}
+                                                onChange={() => handleCopyChange(key as keyof typeof selectedCopies)}
+                                                className="w-4 h-4 text-primary border-border rounded focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                            />
+                                            <div className="flex items-center gap-2">
+                                                {icon}
+                                                <span className="text-sm text-foreground">{label}</span>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Footer Navigation */}
-                <div className="mt-8 flex flex-col-reverse sm:flex-row justify-between items-center">
-                    <button
-                        onClick={prevStep}
-                        className="mt-4 sm:mt-0 font-semibold text-gray-600 py-2 px-4 rounded-lg hover:bg-gray-100 flex items-center"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 mr-2"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Line Items
-                    </button>
-                    <div>
-                        <button
-                            onClick={handleGeneratePDF}
-                            className="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-sm hover:bg-blue-700 flex items-center justify-center mr-4"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 mr-2"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
+                    {/* Quick Actions */}
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-4">
+                            <div className="flex items-center gap-2">
+                                <CheckCircle className="w-5 h-5 text-white" />
+                                <h3 className="font-semibold text-white">Quick Actions</h3>
+                            </div>
+                        </div>
+                        
+                        <div className="p-4 space-y-3">
+                            <button
+                                onClick={handleGeneratePDF}
+                                disabled={isGenerating}
+                                className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-[16px] font-medium hover:bg-primary/90 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                            Generate PDF
-                        </button>
-                        <button
-                            onClick={handleSubmitInvoice}
-                            className="bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow-sm hover:bg-green-700 flex items-center justify-center"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 mr-2"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
+                                {isGenerating ? (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <Download className="w-4 h-4" />
+                                )}
+                                {isGenerating ? 'Generating...' : 'Generate PDF'}
+                            </button>
+                            
+                            <button
+                                onClick={handleSubmitInvoice}
+                                disabled={isSubmitting}
+                                className="w-full bg-green-600 text-white py-3 px-4 rounded-[16px] font-medium hover:bg-green-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                            Submit Invoice
-                        </button>
+                                {isSubmitting ? (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <Send className="w-4 h-4" />
+                                )}
+                                {isSubmitting ? 'Submitting...' : 'Submit Invoice'}
+                            </button>
+                            
+                            <button className="w-full bg-secondary text-secondary-foreground py-3 px-4 rounded-[16px] font-medium hover:bg-accent hover:text-accent-foreground transition-all duration-200 flex items-center justify-center gap-2">
+                                <Share2 className="w-4 h-4" />
+                                Share Invoice
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Invoice Info */}
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-4">
+                            <div className="flex items-center gap-2">
+                                <Info className="w-5 h-5 text-white" />
+                                <h3 className="font-semibold text-white">Invoice Info</h3>
+                            </div>
+                        </div>
+                        
+                        <div className="p-4 space-y-3">
+                            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-[12px]">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                                <div>
+                                    <div className="text-sm font-medium text-foreground">Created</div>
+                                    <div className="text-xs text-muted-foreground">Just now</div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-[12px]">
+                                <Shield className="w-4 h-4 text-muted-foreground" />
+                                <div>
+                                    <div className="text-sm font-medium text-foreground">Status</div>
+                                    <div className="text-xs text-muted-foreground">Draft</div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-[12px]">
+                                <DollarSign className="w-4 h-4 text-muted-foreground" />
+                                <div>
+                                    <div className="text-sm font-medium text-foreground">Total Value</div>
+                                    <div className="text-xs text-muted-foreground">{formatCurrency(totalInvoice)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Footer Navigation */}
+            <div className="mt-8 flex flex-col-reverse sm:flex-row justify-between items-center gap-4">
+                <button
+                    onClick={prevStep}
+                    className="bg-secondary text-secondary-foreground px-6 py-3 rounded-[20px] font-medium hover:bg-accent hover:text-accent-foreground transition-all duration-200 flex items-center gap-2 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Line Items
+                </button>
+                
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Review all details before generating the invoice</span>
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import LineItemsTable from '../create-invoice/LineItemsTable';
 import { LineItem } from '@/types/invoiceTypes';
+import { Plus, ArrowLeft, ArrowRight, Calculator, Package, Info, AlertCircle } from 'lucide-react';
 
 interface LineItemsPageProps {
     lineItems: LineItem[];
@@ -70,241 +71,346 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         nextStep();
     };
 
-    return (
-        <div className="form-step">
-            <p className="text-sm text-gray-500 mb-4">Step 2: Add Line Items</p>
+    const calculateTotals = () => {
+        const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
+        const cgstAmount = taxableValue * (parseFloat(cgstRate) / 100);
+        const sgstAmount = taxableValue * (parseFloat(sgstRate) / 100);
+        const total = taxableValue + cgstAmount + sgstAmount;
+        
+        return { taxableValue, cgstAmount, sgstAmount, total };
+    };
 
-            {/* Add Line Items */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="p-6">
-                    <h3 className="text-lg font-semibold mb-4">Add Line Items</h3>
-                    <p className="text-sm text-gray-500 mt-2">Component Entry Mode</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mt-4">
+    const totals = calculateTotals();
+
+    return (
+        <div className="max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="mb-8">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-primary rounded-[20px] flex items-center justify-center text-white">
+                        <Package className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-foreground">Add Line Items</h1>
+                        <p className="text-muted-foreground">Step 2: Configure products and services</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+                {/* Main Content */}
+                <div className="xl:col-span-3 space-y-8">
+                    {/* Add Line Items Card */}
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-green-500/10 to-green-500/5 p-6 border-b border-border">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-green-500 rounded-[20px] flex items-center justify-center text-white">
+                                    <Plus className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-foreground">Add Line Items</h2>
+                                    <p className="text-muted-foreground">Component Entry Mode</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="p-6 space-y-6">
+                            {/* Form Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+                                {/* HSN/SAC Code */}
                         <div className="xl:col-span-1">
-                            <label htmlFor="hsn-sac" className="text-sm font-medium text-gray-600">
+                                    <label className="block text-sm font-semibold text-foreground mb-2">
                                 HSN/SAC Code
                             </label>
                             <select
-                                id="hsn-sac"
                                 value={formData.hsnSac}
                                 onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
                             >
                                 <option>7113 - Jewellery</option>
                                 <option>7114 - Precious Stones</option>
+                                        <option>7115 - Imitation Jewellery</option>
+                                        <option>7116 - Gold Jewellery</option>
                             </select>
                         </div>
+
+                                {/* Description */}
                         <div className="md:col-span-2 xl:col-span-1">
-                            <label htmlFor="description" className="text-sm font-medium text-gray-600">
+                                    <label className="block text-sm font-semibold text-foreground mb-2">
                                 Description
                             </label>
                             <input
                                 type="text"
-                                id="description"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                        placeholder="Product description"
                             />
                         </div>
+
+                                {/* Quantity */}
                         <div>
-                            <label htmlFor="quantity" className="text-sm font-medium text-gray-600">
+                                    <label className="block text-sm font-semibold text-foreground mb-2">
                                 Quantity
                             </label>
                             <input
                                 type="text"
-                                id="quantity"
                                 value={formData.quantity}
                                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                        placeholder="0.000"
                             />
                         </div>
+
+                                {/* Unit */}
                         <div>
-                            <label htmlFor="unit" className="text-sm font-medium text-gray-600">
+                                    <label className="block text-sm font-semibold text-foreground mb-2">
                                 Unit
                             </label>
                             <select
-                                id="unit"
                                 value={formData.unit}
                                 onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
                             >
                                 <option>KGS</option>
                                 <option>GMS</option>
                                 <option>PCS</option>
+                                        <option>NOS</option>
                             </select>
                         </div>
+
+                                {/* Rate */}
                         <div>
-                            <label htmlFor="rate" className="text-sm font-medium text-gray-600">
-                                Rate per KGS
+                                    <label className="block text-sm font-semibold text-foreground mb-2">
+                                        Rate per {formData.unit}
                             </label>
                             <input
                                 type="text"
-                                id="rate"
                                 value={formData.rate}
                                 onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                        placeholder="0.00"
                             />
                         </div>
-                        <div className="flex items-end xl:col-span-5">
+                            </div>
+
+                            {/* Add Item Button */}
+                            <div className="flex justify-end">
                             <button
                                 onClick={handleAddItem}
-                                className="w-full xl:w-auto mt-4 xl:mt-0 ml-auto bg-green-500 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-green-600 flex items-center justify-center"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-5 w-5 mr-2"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
+                                    className="bg-green-500 text-white px-8 py-4 rounded-[20px] hover:bg-green-600 transition-all duration-200 flex items-center gap-3 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 hover:-translate-y-0.5 font-semibold text-lg"
                                 >
-                                    <path
-                                        fillRule="evenodd"
-                                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                                        clipRule="evenodd"
-                                    />
-                                </svg>
+                                    <Plus className="w-5 h-5" />
                                 Add Item
                             </button>
+                            </div>
+
+                            {/* Example Section */}
+                            <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 p-6 rounded-[20px] border border-blue-500/20">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-start gap-3">
+                                        <Info className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                                        <div>
+                                            <div className="font-semibold text-foreground mb-2">Example Calculation</div>
+                                            <div className="text-sm text-muted-foreground">
+                                                <span className="font-medium">10.468 KGS</span> of Silver Ornaments at{' '}
+                                                <span className="font-medium">₹56,000.08</span> per KG ={' '}
+                                                <span className="font-bold text-blue-600">₹5,86,208.83</span> taxable value
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={handleUseExample}
+                                        className="text-sm font-semibold text-blue-600 hover:text-blue-700 whitespace-nowrap px-4 py-2 rounded-[16px] bg-blue-500/10 hover:bg-blue-500/20 transition-all duration-200"
+                                    >
+                                        Use Example
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="mt-6 p-4 bg-green-50 rounded-lg flex items-center justify-between">
-                        <div className="flex items-center">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 text-green-500 mr-2 flex-shrink-0"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                            >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                            <p className="text-sm text-green-800">
-                                Example: 10.468 KGS of Silver Ornaments at ₹56,000.08 per KG = ₹5,86,208.83 taxable value
-                            </p>
+
+                    {/* Line Items Table */}
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-purple-500/10 to-purple-500/5 p-6 border-b border-border">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-purple-500 rounded-[20px] flex items-center justify-center text-white">
+                                    <Package className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-foreground">Line Items</h2>
+                                    <p className="text-muted-foreground">
+                                        {lineItems.length === 0 ? 'No items added yet' : `${lineItems.length} item${lineItems.length !== 1 ? 's' : ''} added`}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
+                        
+                        <div className="p-6">
+                            {lineItems.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Package className="w-8 h-8 text-muted-foreground" />
+                                    </div>
+                                    <div className="text-muted-foreground mb-2">No line items added yet</div>
+                                    <div className="text-sm text-muted-foreground">Start by adding your first product or service above</div>
+                                </div>
+                            ) : (
+                                <LineItemsTable lineItems={lineItems} onRemoveItem={removeLineItem} />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Navigation Buttons */}
+                    <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4">
                         <button
-                            onClick={handleUseExample}
-                            className="ml-4 text-sm font-semibold text-green-700 hover:text-green-800 whitespace-nowrap"
+                            onClick={prevStep}
+                            className="w-full sm:w-auto bg-secondary text-secondary-foreground px-6 py-3 rounded-[20px] hover:bg-accent hover:text-accent-foreground transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
                         >
-                            Use Example
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Invoice Details
                         </button>
-                    </div>
+                        
+                        <button
+                            onClick={handleContinue}
+                            disabled={lineItems.length === 0}
+                            className={`w-full sm:w-auto px-8 py-3 rounded-[20px] transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-lg ${
+                                lineItems.length === 0
+                                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                    : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5'
+                            }`}
+                        >
+                            Continue to Review
+                            <ArrowRight className="w-4 h-4" />
+                        </button>
                 </div>
             </div>
 
-            {/* Line Items Table */}
-            <LineItemsTable lineItems={lineItems} onRemoveItem={removeLineItem} />
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Right Sidebar */}
+                <div className="space-y-6">
                 {/* Tax Configuration */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold mb-4">Tax Configuration</h3>
-                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500/10 to-orange-500/5 p-4 border-b border-border">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-orange-500 rounded-[16px] flex items-center justify-center text-white">
+                                    <Calculator className="w-4 h-4" />
+                                </div>
+                                <h3 className="font-semibold text-foreground">Tax Configuration</h3>
+                            </div>
+                        </div>
+                        <div className="p-4 space-y-4">
                         <div>
-                            <label htmlFor="cgst" className="text-sm font-medium text-gray-600">
+                                <label className="block text-sm font-medium text-foreground mb-2">
                                 CGST Rate (%)
                             </label>
                             <select
-                                id="cgst"
                                 value={cgstRate}
                                 onChange={(e) => setCgstRate(e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    className="w-full px-3 py-2 border border-border rounded-[16px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
                             >
                                 <option value="1.5">1.5%</option>
                                 <option value="2.5">2.5%</option>
                                 <option value="6">6%</option>
+                                    <option value="9">9%</option>
+                                    <option value="12">12%</option>
+                                    <option value="18">18%</option>
+                                    <option value="28">28%</option>
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="sgst" className="text-sm font-medium text-gray-600">
+                                <label className="block text-sm font-medium text-foreground mb-2">
                                 SGST Rate (%)
                             </label>
                             <select
-                                id="sgst"
                                 value={sgstRate}
                                 onChange={(e) => setSgstRate(e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    className="w-full px-3 py-2 border border-border rounded-[16px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
                             >
                                 <option value="1.5">1.5%</option>
                                 <option value="2.5">2.5%</option>
                                 <option value="6">6%</option>
+                                    <option value="9">9%</option>
+                                    <option value="12">12%</option>
+                                    <option value="18">18%</option>
+                                    <option value="28">28%</option>
                             </select>
-                        </div>
+                            </div>
                     </div>
                 </div>
 
                 {/* Invoice Summary */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold mb-4">Invoice Summary</h3>
-                    <div className="mt-4 text-gray-700">
-                        <div className="flex justify-between text-sm">
-                            <span>Taxable Value:</span>
-                            <span className="font-medium">
-                                ₹{lineItems.reduce((sum, item) => sum + item.taxableValue, 0).toFixed(2)}
-                            </span>
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-blue-500/10 to-blue-500/5 p-4 border-b border-border">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-blue-500 rounded-[16px] flex items-center justify-center text-white">
+                                    <Calculator className="w-4 h-4" />
+                                </div>
+                                <h3 className="font-semibold text-foreground">Invoice Summary</h3>
+                            </div>
                         </div>
-                        <div className="flex justify-between text-sm mt-2">
-                            <span>SGST ({sgstRate}%):</span>
-                            <span className="font-medium">
-                                ₹{(lineItems.reduce((sum, item) => sum + item.taxableValue, 0) * (parseFloat(sgstRate) / 100)).toFixed(2)}
+                        <div className="p-4 space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Taxable Value:</span>
+                                    <span className="font-semibold text-foreground">
+                                        ₹{totals.taxableValue.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">SGST ({sgstRate}%):</span>
+                                    <span className="font-semibold text-foreground">
+                                        ₹{totals.sgstAmount.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">CGST ({cgstRate}%):</span>
+                                    <span className="font-semibold text-foreground">
+                                        ₹{totals.cgstAmount.toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div className="border-t border-border pt-4">
+                                <div className="flex justify-between items-center">
+                                    <span className="font-bold text-lg text-foreground">Total Invoice Value:</span>
+                                    <span className="text-2xl font-bold text-primary">
+                                        ₹{totals.total.toFixed(2)}
                             </span>
+                                </div>
+                            </div>
+
+                            {lineItems.length === 0 && (
+                                <div className="mt-4 p-3 bg-yellow-500/10 rounded-[16px] border border-yellow-500/20">
+                                    <div className="flex items-center gap-2">
+                                        <AlertCircle className="w-4 h-4 text-yellow-600" />
+                                        <span className="text-sm text-yellow-700">Add line items to see calculations</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div className="flex justify-between text-sm mt-2">
-                            <span>CGST ({cgstRate}%):</span>
-                            <span className="font-medium">
-                                ₹{(lineItems.reduce((sum, item) => sum + item.taxableValue, 0) * (parseFloat(cgstRate) / 100)).toFixed(2)}
-                            </span>
+                    </div>
+
+                    {/* Help & Tips */}
+                    <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
+                        <div className="bg-gradient-to-r from-green-500/10 to-green-500/5 p-4 border-b border-border">
+                            <h3 className="font-semibold text-foreground">Help & Tips</h3>
                         </div>
-                        <div className="border-t border-gray-200 my-4"></div>
-                        <div className="flex justify-between items-center">
-                            <span className="font-semibold">Total Invoice Value:</span>
-                            <span className="text-2xl font-bold">
-                                ₹{(
-                                    lineItems.reduce((sum, item) => sum + item.taxableValue, 0) *
-                                    (1 + (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100)
-                                ).toFixed(2)}
-                            </span>
+                        <div className="p-4 space-y-3 text-sm text-muted-foreground">
+                            <div className="flex items-start gap-2">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                <span>HSN/SAC codes are standardized product classifications</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                <span>Quantity and rate determine the taxable value</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
+                                <span>Tax rates are automatically applied to calculate totals</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Footer Navigation */}
-            <div className="mt-8 flex flex-col-reverse sm:flex-row justify-between items-center">
-                <button
-                    onClick={prevStep}
-                    className="mt-4 sm:mt-0 font-semibold text-gray-600 py-2 px-4 rounded-lg hover:bg-gray-100 flex items-center"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Invoice Details
-                </button>
-                <button
-                    onClick={handleContinue}
-                    className="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-blue-700 flex items-center justify-center"
-                >
-                    Continue to Review
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 ml-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                </button>
             </div>
         </div>
     );
