@@ -60,18 +60,88 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
 
     const handleGeneratePDF = async () => {
         setIsGenerating(true);
-        // Simulate PDF generation
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setIsGenerating(false);
-        alert('PDF generated successfully!');
+        try {
+            const { downloadInvoicePDF } = await import('@/utils/invoicePdfGenerator');
+            const pdfData = {
+                invoiceData,
+                lineItems,
+                cgstRate: parseFloat(cgstRate),
+                sgstRate: parseFloat(sgstRate)
+            };
+            await downloadInvoicePDF(pdfData);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Error generating PDF. Please try again.');
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const handleSubmitInvoice = async () => {
         setIsSubmitting(true);
-        // Simulate invoice submission
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
-        alert('Invoice submitted successfully!');
+        
+        try {
+            // Prepare invoice data for API
+            const invoicePayload = {
+                invoice_number: invoiceData.invoice_number,
+                invoice_date: invoiceData.invoice_date,
+                transaction_type: invoiceData.transaction_type,
+                input_mode: invoiceData.input_mode,
+                eway_bill: invoiceData.eway_bill,
+                buyer_id: invoiceData.buyer_id,
+                buyer_name: invoiceData.buyer_name,
+                buyer_address: invoiceData.buyer_address,
+                buyer_gstin: invoiceData.buyer_gstin,
+                buyer_state_code: invoiceData.buyer_state_code,
+                tax_type: invoiceData.tax_type,
+                total_invoice_value: totalInvoice,
+                line_items: lineItems.map(item => ({
+                    hsn_sac_code: item.hsn_sac_code,
+                    description: item.description,
+                    quantity: item.quantity,
+                    unit: item.unit,
+                    rate: item.rate,
+                    taxable_value: item.taxableValue,
+                    taxes: [
+                        {
+                            tax_name: 'CGST',
+                            tax_rate: cgstRate,
+                            tax_amount: item.taxableValue * Number(cgstRate) / 100
+                        },
+                        {
+                            tax_name: 'SGST',
+                            tax_rate: sgstRate,
+                            tax_amount: item.taxableValue * Number(sgstRate) / 100
+                        }
+                    ]
+                }))
+            };
+
+            const response = await fetch('/api/invoices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(invoicePayload),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit invoice');
+            }
+
+            const result = await response.json();
+            
+            setIsSubmitting(false);
+            alert('Invoice submitted successfully! Invoice ID: ' + result.id);
+            
+            // Optionally redirect to invoices list or reset form
+            // window.location.href = '/dashboard/all-invoice';
+            
+        } catch (error) {
+            console.error('Error submitting invoice:', error);
+            setIsSubmitting(false);
+            alert('Failed to submit invoice. Please try again.');
+        }
     };
 
     const formatCurrency = (amount: number) => {

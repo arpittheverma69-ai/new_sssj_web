@@ -16,32 +16,32 @@ const SideItems = () => {
     const navItems = [
         {
             name: "Dashboard",
-            link: "/",
+            link: "/dashboard",
             icon: analytics
         },
         {
             name: "Create Invoice",
-            link: "/create-invoice",
+            link: "/dashboard/create-invoice",
             icon: plus
         },
         {
             name: "All Invoices",
-            link: "/all-invoice",
+            link: "/dashboard/all-invoice",
             icon: note
         },
         {
             name: "Customers",
-            link: "/customers",
+            link: "/dashboard/customers",
             icon: Individual
         },
         {
             name: "Reports",
-            link: "/reports",
+            link: "/dashboard/reports",
             icon: Report
         },
         {
             name: "Settings",
-            link: "/setting",
+            link: "/dashboard/setting",
             icon: setting
         },
     ];

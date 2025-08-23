@@ -1,20 +1,29 @@
 "use client"
-import { InvoiceData } from '@/types/invoiceTypes';
-import React, { useState } from 'react';
+import { InvoiceData, State } from '@/types/invoiceTypes';
+import React, { useEffect, useState } from 'react';
 import { Calendar, Hash, Truck, User, MapPin, Building2, CreditCard, Calculator, ArrowRight } from 'lucide-react';
+import { Customer } from '@/types/shop-profile';
 
 interface InvoiceDetailsPageProps {
     invoiceData: InvoiceData;
     updateInvoiceData: (data: Partial<InvoiceData>) => void;
+    selectedCustomer: (data: Partial<Customer>) => void;
     nextStep: () => void;
+    states: State[];
+    setInvoiceData: (data: Partial<InvoiceData>) => void;
 }
 
 const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
     invoiceData,
     updateInvoiceData,
+    selectedCustomer,
     nextStep,
+    setInvoiceData,
+    states,
 }) => {
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [customers, setCustomers] = useState<Customer[]>();
+    const [defaultCustomer, setDefaultCustomer] = useState(false);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -31,6 +40,47 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
         if (validateForm()) {
             nextStep();
         }
+    };
+
+    useEffect(() => {
+        const fetchCustomer = async () => {
+            try {
+                const customerdata = await fetch('/api/customer/');
+                if (!customerdata.ok) {
+                    throw new Error('Failed to fetch customer');
+                }
+                const data = await customerdata.json();
+                console.log("Customer data", data);
+                setCustomers(data);
+            } catch (error) {
+                throw new Error('Unknown error in fetching customers');
+            }
+        }
+        fetchCustomer();
+    }, [])
+
+    const selectCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        if (e.target.value === "") {
+            setInvoiceData({
+                eway_bill: '',
+                customer_id: '',
+                buyer_name: '',
+                buyer_address: '',
+                buyer_gstin: '',
+                buyer_state: '',
+                buyer_state_code: '',
+            })
+        }
+        const selectedCustomerData = customers?.find(
+            (custo) => custo.id === Number(e.target.value)
+        );
+
+        if (selectedCustomerData) {
+            selectedCustomer(selectedCustomerData); // pass the actual customer object
+            setDefaultCustomer(true);
+        }
+
+        updateInvoiceData({ customer_id: e.target.value });
     };
 
     const transactionTypes = [
@@ -76,7 +126,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="p-6 space-y-6">
                             {/* Transaction Type */}
                             <div>
@@ -85,25 +135,23 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                     {transactionTypes.map((type) => (
                                         <label
                                             key={type.value}
-                                            className={`relative cursor-pointer group transition-all duration-200 ${
-                                                invoiceData.type === type.value
-                                                    ? 'scale-105'
-                                                    : 'hover:scale-105'
-                                            }`}
+                                            className={`relative cursor-pointer group transition-all duration-200 ${invoiceData.type === type.value
+                                                ? 'scale-105'
+                                                : 'hover:scale-105'
+                                                }`}
                                         >
-                                <input
-                                    type="radio"
-                                    name="type"
+                                            <input
+                                                type="radio"
+                                                name="type"
                                                 value={type.value}
                                                 checked={invoiceData.type === type.value}
                                                 onChange={() => updateInvoiceData({ type: type.value as any })}
                                                 className="sr-only"
                                             />
-                                            <div className={`p-4 rounded-[20px] border-2 transition-all duration-200 ${
-                                                invoiceData.type === type.value
-                                                    ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-500/25'
-                                                    : 'border-border hover:border-blue-300 bg-card'
-                                            }`}>
+                                            <div className={`p-4 rounded-[20px] border-2 transition-all duration-200 ${invoiceData.type === type.value
+                                                ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-500/25'
+                                                : 'border-border hover:border-blue-300 bg-card'
+                                                }`}>
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-8 h-8 ${type.color} rounded-[16px] flex items-center justify-center text-white text-lg`}>
                                                         {type.icon}
@@ -114,10 +162,10 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                                     </div>
                                                 </div>
                                             </div>
-                            </label>
+                                        </label>
                                     ))}
-                        </div>
-                    </div>
+                                </div>
+                            </div>
 
                             {/* Input Mode */}
                             <div>
@@ -126,25 +174,23 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                     {inputModes.map((mode) => (
                                         <label
                                             key={mode.value}
-                                            className={`relative cursor-pointer group transition-all duration-200 ${
-                                                invoiceData.mode === mode.value
-                                                    ? 'scale-105'
-                                                    : 'hover:scale-105'
-                                            }`}
+                                            className={`relative cursor-pointer group transition-all duration-200 ${invoiceData.mode === mode.value
+                                                ? 'scale-105'
+                                                : 'hover:scale-105'
+                                                }`}
                                         >
-                                <input
-                                    type="radio"
-                                    name="mode"
+                                            <input
+                                                type="radio"
+                                                name="mode"
                                                 value={mode.value}
                                                 checked={invoiceData.mode === mode.value}
                                                 onChange={() => updateInvoiceData({ mode: mode.value as any })}
                                                 className="sr-only"
                                             />
-                                            <div className={`p-4 rounded-[20px] border-2 transition-all duration-200 ${
-                                                invoiceData.mode === mode.value
-                                                    ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-500/25'
-                                                    : 'border-border hover:border-blue-300 bg-card'
-                                            }`}>
+                                            <div className={`p-4 rounded-[20px] border-2 transition-all duration-200 ${invoiceData.mode === mode.value
+                                                ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-500/25'
+                                                : 'border-border hover:border-blue-300 bg-card'
+                                                }`}>
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-8 h-8 ${mode.color} rounded-[16px] flex items-center justify-center text-white text-lg`}>
                                                         {mode.icon}
@@ -155,77 +201,75 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                                     </div>
                                                 </div>
                                             </div>
-                            </label>
+                                        </label>
                                     ))}
-                        </div>
-                    </div>
+                                </div>
+                            </div>
 
                             {/* Invoice Details */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
+                                <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">
                                         Invoice Date <span className="text-destructive">*</span>
                                     </label>
                                     <div className="relative">
                                         <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <input
-                                type="date"
-                                value={invoiceData.invoice_date}
-                                onChange={(e) => updateInvoiceData({ invoice_date: e.target.value })}
-                                            className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${
-                                                errors.invoice_date ? 'border-destructive' : 'hover:border-primary/50'
-                                            }`}
-                                required
-                            />
+                                        <input
+                                            type="date"
+                                            value={invoiceData.invoice_date}
+                                            onChange={(e) => updateInvoiceData({ invoice_date: e.target.value })}
+                                            className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${errors.invoice_date ? 'border-destructive' : 'hover:border-primary/50'
+                                                }`}
+                                            required
+                                        />
                                     </div>
-                            {errors.invoice_date && (
+                                    {errors.invoice_date && (
                                         <div className="text-destructive text-xs mt-2 flex items-center gap-1">
                                             <span>⚠</span> {errors.invoice_date}
                                         </div>
-                            )}
-                        </div>
+                                    )}
+                                </div>
 
-                        <div>
+                                <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">
                                         Invoice Number <span className="text-destructive">*</span>
                                     </label>
                                     <div className="relative">
                                         <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <input
-                                type="text"
-                                value={invoiceData.invoice_number}
-                                onChange={(e) => updateInvoiceData({ invoice_number: e.target.value })}
-                                            className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${
-                                                errors.invoice_number ? 'border-destructive' : 'hover:border-primary/50'
-                                            }`}
+                                        <input
+                                            type="text"
+                                            value={invoiceData.invoice_number}
+                                            onChange={(e) => updateInvoiceData({ invoice_number: e.target.value })}
+                                            className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${errors.invoice_number ? 'border-destructive' : 'hover:border-primary/50'
+                                                }`}
                                             placeholder="JVJ/021"
-                                required
-                            />
+                                            required
+                                        />
                                     </div>
-                            {errors.invoice_number && (
+                                    {errors.invoice_number && (
                                         <div className="text-destructive text-xs mt-2 flex items-center gap-1">
                                             <span>⚠</span> {errors.invoice_number}
                                         </div>
-                            )}
-                        </div>
-                    </div>
+                                    )}
+                                </div>
+                            </div>
 
                             {/* E-way Bill */}
-                            <div>
+                            {/* <div>
                                 <label className="block text-sm font-semibold text-foreground mb-2">
                                     E-way Bill Number <span className="text-muted-foreground text-xs">(Optional)</span>
                                 </label>
                                 <div className="relative">
                                     <Truck className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
-                            type="text"
-                            value={invoiceData.eway_bill}
-                            onChange={(e) => updateInvoiceData({ eway_bill: e.target.value })}
+                                    <input
+                                        type="text"
+                                        value={invoiceData.eway_bill}
+                                        onChange={(e) => updateInvoiceData({ eway_bill: e.target.value })}
                                         className="w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
                                         placeholder="Enter e-way bill number"
-                        />
+                                    />
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
 
@@ -242,21 +286,22 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="p-6 space-y-6">
                             {/* Customer Selection */}
                             <div>
                                 <label className="block text-sm font-semibold text-foreground mb-2">Select Customer</label>
-                        <select
-                            value={invoiceData.customer_id}
-                            onChange={(e) => updateInvoiceData({ customer_id: e.target.value })}
+                                <select
+                                    value={invoiceData.customer_id}
+                                    onChange={(e) => selectCustomer(e)}
                                     className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
                                 >
                                     <option value="">Select a customer from your database</option>
-                                    <option value="1">John Doe - Customer 1</option>
-                                    <option value="2">Jane Smith - Customer 2</option>
-                        </select>
-                    </div>
+                                    {customers?.map((customer, index) => (
+                                        <option key={index} value={customer.id}>{`${customer.name}, (${customer.phone})`}</option>
+                                    ))}
+                                </select>
+                            </div>
 
                             {/* Buyer Name */}
                             <div>
@@ -265,23 +310,23 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                 </label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
-                            type="text"
-                            value={invoiceData.buyer_name}
-                            onChange={(e) => updateInvoiceData({ buyer_name: e.target.value })}
-                                        className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${
-                                            errors.buyer_name ? 'border-destructive' : 'hover:border-primary/50'
-                                        }`}
+                                    <input
+                                        type="text"
+                                        value={invoiceData.buyer_name}
+                                        disabled={defaultCustomer}
+                                        onChange={(e) => updateInvoiceData({ buyer_name: e.target.value })}
+                                        className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${errors.buyer_name ? 'border-destructive' : 'hover:border-primary/50'
+                                            }`}
                                         placeholder="Enter buyer's full name"
-                            required
-                        />
+                                        required
+                                    />
                                 </div>
-                        {errors.buyer_name && (
+                                {errors.buyer_name && (
                                     <div className="text-destructive text-xs mt-2 flex items-center gap-1">
                                         <span>⚠</span> {errors.buyer_name}
                                     </div>
-                        )}
-                    </div>
+                                )}
+                            </div>
 
                             {/* Address */}
                             <div>
@@ -290,59 +335,71 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                 </label>
                                 <div className="relative">
                                     <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                        <textarea
-                            value={invoiceData.buyer_address}
-                            onChange={(e) => updateInvoiceData({ buyer_address: e.target.value })}
-                                        className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 resize-none ${
-                                            errors.buyer_address ? 'border-destructive' : 'hover:border-primary/50'
-                                        }`}
+                                    <textarea
+                                        value={invoiceData.buyer_address}
+                                        disabled={defaultCustomer}
+                                        onChange={(e) => updateInvoiceData({ buyer_address: e.target.value })}
+                                        className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 resize-none ${errors.buyer_address ? 'border-destructive' : 'hover:border-primary/50'
+                                            }`}
                                         placeholder="Enter complete billing address"
                                         rows={3}
-                            required
-                        />
+                                        required
+                                    />
                                 </div>
-                        {errors.buyer_address && (
+                                {errors.buyer_address && (
                                     <div className="text-destructive text-xs mt-2 flex items-center gap-1">
                                         <span>⚠</span> {errors.buyer_address}
                                     </div>
-                        )}
-                    </div>
+                                )}
+                            </div>
 
                             {/* GSTIN and State */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
+                                <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">GSTIN</label>
                                     <div className="relative">
                                         <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <input
-                                type="text"
-                                value={invoiceData.buyer_gstin}
-                                onChange={(e) => updateInvoiceData({ buyer_gstin: e.target.value })}
+                                        <input
+                                            type="text"
+                                            value={invoiceData.buyer_gstin}
+                                            disabled={defaultCustomer}
+                                            onChange={(e) => updateInvoiceData({ buyer_gstin: e.target.value })}
                                             className="w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
                                             placeholder="22AAAAA0000A1Z5"
-                            />
-                        </div>
+                                        />
+                                    </div>
                                 </div>
 
-                        <div>
-                                    <label className="block text-sm font-semibold text-foreground mb-2">State & Code</label>
-                            <select
-                                value={invoiceData.buyer_state}
-                                onChange={(e) => updateInvoiceData({
-                                    buyer_state: e.target.value,
-                                    buyer_state_code: e.target.value === 'UP' ? '09' : '27'
-                                })}
+                                <div>
+                                    <label className="block text-sm font-semibold text-foreground mb-2">
+                                        State & Code
+                                    </label>
+                                    <select
+                                        value={invoiceData.buyer_state_code}
+                                        disabled={defaultCustomer}
+                                        onChange={(e) => {
+                                            const selectedState = states.find(
+                                                (state) => state.state_code === e.target.value
+                                            );
+                                            if (selectedState) {
+                                                updateInvoiceData({
+                                                    buyer_state: selectedState.state_name,
+                                                    buyer_state_code: selectedState.state_code,
+                                                });
+                                            }
+                                        }}
                                         className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
-                            >
-                                <option value="">Select State</option>
-                                <option value="UP">Uttar Pradesh (09)</option>
-                                <option value="MH">Maharashtra (27)</option>
-                                        <option value="DL">Delhi (07)</option>
-                                        <option value="KA">Karnataka (29)</option>
-                                        <option value="TN">Tamil Nadu (33)</option>
-                            </select>
-                        </div>
-                    </div>
+                                    >
+                                        <option value="">Select State</option>
+                                        {states.map((state) => (
+                                            <option key={state.id} value={state.state_code}>
+                                                {state.state_name} ({state.state_code})
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                </div>
+                            </div>
 
                             {/* Tax Type Display */}
                             <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 p-4 rounded-[20px] border border-blue-500/20">
@@ -359,13 +416,13 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
 
                     {/* Continue Button */}
                     <div className="flex justify-end">
-                    <button
-                        onClick={handleContinue}
+                        <button
+                            onClick={handleContinue}
                             className="bg-primary text-primary-foreground px-8 py-4 rounded-[20px] hover:bg-primary/90 transition-all duration-200 flex items-center gap-3 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 font-semibold text-lg"
-                    >
+                        >
                             Continue to Line Items
                             <ArrowRight className="w-5 h-5" />
-                    </button>
+                        </button>
                     </div>
                 </div>
 
@@ -419,7 +476,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <div className="font-medium text-foreground mb-2">Input Modes</div>
                                 <div className="space-y-2 text-sm text-muted-foreground">

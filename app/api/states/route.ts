@@ -1,7 +1,5 @@
-import { PrismaClient } from '@/lib/generated/prisma'
-import { NextResponse } from 'next/server'
-
-const prisma = new PrismaClient()
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 export async function GET() {
     try {
@@ -22,7 +20,5 @@ export async function GET() {
             { error: 'Failed to fetch states' },
             { status: 500 }
         )
-    } finally {
-        await prisma.$disconnect()
     }
 }

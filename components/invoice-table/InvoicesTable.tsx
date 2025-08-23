@@ -1,47 +1,200 @@
 "use client";
-import { FaRegPenToSquare, FaTrashCan } from "react-icons/fa6";
+import { FaRegPenToSquare, FaTrashCan, FaEye, FaDownload, FaFlag } from "react-icons/fa6";
 import * as React from "react";
-import { DataGrid } from "@mui/x-data-grid";
-import { TextField, Box } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { TextField, Box, Chip, IconButton, Tooltip } from "@mui/material";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { downloadInvoicePDF } from "@/utils/pdfGenerator";
+import { toast } from "react-toastify";
+
+interface Invoice {
+    id: number;
+    invoice_number: string;
+    invoice_date: string;
+    buyer_name: string;
+    transaction_type: string;
+    total_invoice_value: number;
+    buyer_address: string;
+    buyer_gstin?: string;
+    line_items: Array<{
+        description: string;
+        quantity: number;
+        unit: string;
+        rate: number;
+        taxable_value: number;
+        taxes: Array<{
+            tax_name: string;
+            tax_rate: number;
+            tax_amount: number;
+        }>;
+    }>;
+    flagged?: boolean;
+}
 
 export default function InvoiceTable() {
     const [search, setSearch] = React.useState("");
+    const [invoices, setInvoices] = React.useState<Invoice[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const [selectedInvoice, setSelectedInvoice] = React.useState<Invoice | null>(null);
+    const [viewModalOpen, setViewModalOpen] = React.useState(false);
+    const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
+    const [filteredRows, setFilteredRows] = React.useState<Invoice[]>([]);
 
-    type InvoiceRow = {
-        id: number;
-        invoiceNo: string;
-        date: string;
-        customer: string;
-        type: string;
-        amount: string;
+    // Fetch invoices on component mount
+    React.useEffect(() => {
+        fetchInvoices();
+    }, []);
+
+    const fetchInvoices = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch('/api/invoices');
+            const data = await response.json();
+            setInvoices(data.invoices || []);
+        } catch (error) {
+            toast.error('Failed to fetch invoices');
+            console.error('Error fetching invoices:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const rows: InvoiceRow[] = [
-        { id: 1, invoiceNo: "INV001", date: "2025-08-10", customer: "John Doe", type: "Service", amount: "$250" },
-        { id: 2, invoiceNo: "INV002", date: "2025-08-11", customer: "Jane Smith", type: "Product", amount: "$500" },
-        { id: 3, invoiceNo: "INV003", date: "2025-08-12", customer: "David Wilson", type: "Service", amount: "$150" },
-    ];
+    const handleView = (invoice: Invoice) => {
+        setSelectedInvoice(invoice);
+        setViewModalOpen(true);
+    };
 
-    const [filteredRows, setFilteredRows] = React.useState<InvoiceRow[]>(rows);
+    const handleEdit = (invoice: Invoice) => {
+        // Navigate to edit page or open edit modal
+        window.location.href = `/create-invoice?edit=${invoice.id}`;
+    };
 
-    const columns = [
-        { field: "invoiceNo", headerName: "Invoice No.", flex: 1 },
-        { field: "date", headerName: "Date", flex: 1 },
-        { field: "customer", headerName: "Customer", flex: 1 },
-        { field: "type", headerName: "Type", flex: 1 },
-        { field: "amount", headerName: "Amount", flex: 1 },
+    const handleDelete = (invoice: Invoice) => {
+        setSelectedInvoice(invoice);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!selectedInvoice) return;
+        
+        try {
+            const response = await fetch(`/api/invoices/${selectedInvoice.id}`, {
+                method: 'DELETE',
+            });
+            
+            if (response.ok) {
+                toast.success('Invoice deleted successfully');
+                fetchInvoices();
+                setDeleteModalOpen(false);
+                setSelectedInvoice(null);
+            } else {
+                toast.error('Failed to delete invoice');
+            }
+        } catch (error) {
+            toast.error('Error deleting invoice');
+            console.error('Error:', error);
+        }
+    };
+
+    const handleDownload = (invoice: Invoice) => {
+        try {
+            downloadInvoicePDF(invoice);
+            toast.success('PDF downloaded successfully');
+        } catch (error) {
+            toast.error('Failed to download PDF');
+            console.error('Error:', error);
+        }
+    };
+
+    const toggleFlag = async (invoice: Invoice) => {
+        try {
+            const response = await fetch(`/api/invoices/${invoice.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...invoice, flagged: !invoice.flagged }),
+            });
+            
+            if (response.ok) {
+                fetchInvoices();
+                toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`);
+            }
+        } catch (error) {
+            toast.error('Failed to update flag');
+        }
+    };
+
+    const columns: GridColDef[] = [
+        { 
+            field: "invoice_number", 
+            headerName: "Invoice No.", 
+            flex: 1,
+            renderCell: (params) => (
+                <div className="flex items-center gap-2">
+                    {params.row.flagged && (
+                        <FaFlag className="text-red-500" size={12} />
+                    )}
+                    {params.value}
+                </div>
+            )
+        },
+        { 
+            field: "invoice_date", 
+            headerName: "Date", 
+            flex: 1,
+            valueFormatter: (params: any) => new Date(params.value).toLocaleDateString()
+        },
+        { field: "buyer_name", headerName: "Customer", flex: 1 },
+        { 
+            field: "transaction_type", 
+            headerName: "Type", 
+            flex: 1,
+            renderCell: (params) => (
+                <Chip 
+                    label={params.value} 
+                    size="small" 
+                    color={params.value === 'retail' ? 'primary' : 'default'}
+                />
+            )
+        },
+        { 
+            field: "total_invoice_value", 
+            headerName: "Amount", 
+            flex: 1,
+            valueFormatter: (params: any) => `₹${Number(params.value).toFixed(2)}`
+        },
         {
             field: "actions",
             headerName: "Actions",
-            flex: 1,
-            renderCell: () => (
-                <div className="w-full flex justify-around items-center h-full">
-                    <button className="p-2 rounded-[16px] hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors duration-200">
-                        <FaRegPenToSquare className="text-xl text-blue-500 hover:text-blue-600 cursor-pointer" />
-                    </button>
-                    <button className="p-2 rounded-[16px] hover:bg-red-50 dark:hover:bg-red-950 transition-colors duration-200">
-                        <FaTrashCan className="text-xl text-red-500 hover:text-red-600 cursor-pointer" />
-                    </button>
+            flex: 1.5,
+            sortable: false,
+            renderCell: (params) => (
+                <div className="flex gap-1 items-center h-full">
+                    <Tooltip title="View">
+                        <IconButton size="small" onClick={() => handleView(params.row)}>
+                            <FaEye className="text-blue-500" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Edit">
+                        <IconButton size="small" onClick={() => handleEdit(params.row)}>
+                            <FaRegPenToSquare className="text-green-500" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Download PDF">
+                        <IconButton size="small" onClick={() => handleDownload(params.row)}>
+                            <FaDownload className="text-purple-500" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title={params.row.flagged ? "Unflag" : "Flag"}>
+                        <IconButton size="small" onClick={() => toggleFlag(params.row)}>
+                            <FaFlag className={params.row.flagged ? "text-red-500" : "text-gray-400"} />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                        <IconButton size="small" onClick={() => handleDelete(params.row)}>
+                            <FaTrashCan className="text-red-500" />
+                        </IconButton>
+                    </Tooltip>
                 </div>
             ),
         },
@@ -49,14 +202,14 @@ export default function InvoiceTable() {
 
     React.useEffect(() => {
         setFilteredRows(
-            rows.filter(
-                (row) =>
-                    row.invoiceNo.toLowerCase().includes(search.toLowerCase()) ||
-                    row.customer.toLowerCase().includes(search.toLowerCase()) ||
-                    row.type.toLowerCase().includes(search.toLowerCase())
+            invoices.filter(
+                (invoice) =>
+                    invoice.invoice_number.toLowerCase().includes(search.toLowerCase()) ||
+                    invoice.buyer_name.toLowerCase().includes(search.toLowerCase()) ||
+                    invoice.transaction_type.toLowerCase().includes(search.toLowerCase())
             )
         );
-    }, [search]);
+    }, [search, invoices]);
 
     return (
         <div
@@ -95,15 +248,16 @@ export default function InvoiceTable() {
             </Box>
 
             {/* DataGrid container */}
-            <div style={{ height: 350, width: '100%' }}>
+            <div style={{ height: 400, width: '100%' }}>
                 <DataGrid
                     rows={filteredRows}
                     columns={columns}
+                    loading={loading}
                     pagination
                     initialState={{
-                        pagination: { paginationModel: { pageSize: 5 } },
+                        pagination: { paginationModel: { pageSize: 10 } },
                     }}
-                    pageSizeOptions={[5]}
+                    pageSizeOptions={[5, 10, 25]}
                     disableRowSelectionOnClick
                     sx={{
                         border: 'none',
@@ -120,6 +274,115 @@ export default function InvoiceTable() {
                     }}
                 />
             </div>
+
+            {/* View Modal */}
+            <Modal
+                isOpen={viewModalOpen}
+                onClose={() => setViewModalOpen(false)}
+                title="Invoice Details"
+                size="lg"
+            >
+                {selectedInvoice && (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Invoice Number</label>
+                                <p className="mt-1 text-sm text-gray-900">{selectedInvoice.invoice_number}</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Date</label>
+                                <p className="mt-1 text-sm text-gray-900">
+                                    {new Date(selectedInvoice.invoice_date).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Customer</label>
+                                <p className="mt-1 text-sm text-gray-900">{selectedInvoice.buyer_name}</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Total Amount</label>
+                                <p className="mt-1 text-sm text-gray-900">₹{selectedInvoice.total_invoice_value.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Line Items</label>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Description
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Qty
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Rate
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Amount
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {selectedInvoice.line_items.map((item, index) => (
+                                            <tr key={index}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {item.description}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {item.quantity} {item.unit}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₹{item.rate.toFixed(2)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₹{item.taxable_value.toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-end space-x-3">
+                            <Button variant="outline" onClick={() => setViewModalOpen(false)}>
+                                Close
+                            </Button>
+                            <Button onClick={() => handleDownload(selectedInvoice)}>
+                                Download PDF
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                title="Confirm Delete"
+                size="sm"
+            >
+                {selectedInvoice && (
+                    <div className="space-y-4">
+                        <p className="text-sm text-gray-600">
+                            Are you sure you want to delete invoice <strong>{selectedInvoice.invoice_number}</strong>? 
+                            This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button variant="danger" onClick={confirmDelete}>
+                                Delete
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 }

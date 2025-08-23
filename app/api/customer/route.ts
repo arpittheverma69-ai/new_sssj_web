@@ -1,10 +1,8 @@
-import { PrismaClient } from '@/lib/generated/prisma'
-import { NextResponse } from 'next/server'
-
-const prisma = new PrismaClient()
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 // POST - Create a new customer
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
         const data = await request.json()
 
@@ -56,8 +54,6 @@ export async function POST(request: Request) {
             { error: 'Failed to create customer' },
             { status: 500 }
         );
-    } finally {
-        await prisma.$disconnect();
     }
 }
 
@@ -76,7 +72,5 @@ export async function GET() {
             { error: 'Failed to fetch customers' },
             { status: 500 }
         );
-    } finally {
-        await prisma.$disconnect();
     }
 }
