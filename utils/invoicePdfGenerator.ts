@@ -2,38 +2,38 @@ import { InvoiceData, LineItem } from '@/types/invoiceTypes';
 import { numberToWords } from '@/utils/numberToWords';
 
 interface InvoicePdfData {
-  invoiceData: InvoiceData;
-  lineItems: LineItem[];
+    invoiceData: InvoiceData;
+    lineItems: LineItem[];
 }
 
 export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
-  // Calculate totals
-  const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
-  const cgstRate = 1.5;
-  const sgstRate = 1.5;
-  const cgstAmount = taxableValue * cgstRate / 100;
-  const sgstAmount = taxableValue * sgstRate / 100;
-  const totalInvoice = taxableValue + cgstAmount + sgstAmount;
+    // Calculate totals
+    const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
+    const cgstRate = 1.5;
+    const sgstRate = 1.5;
+    const cgstAmount = taxableValue * cgstRate / 100;
+    const sgstAmount = taxableValue * sgstRate / 100;
+    const totalInvoice = taxableValue + cgstAmount + sgstAmount;
 
-  // Copy types for the 3 pages
-  const copyTypes = [
-    "Original for Recipient",
-    "DUPLICATE FOR TRANSPORTER", 
-    "Triplicate for Supplier"
-  ];
+    // Copy types for the 3 pages
+    const copyTypes = [
+        "ORIGINAL FOR RECIPIENT",
+        "DUPLICATE FOR TRANSPORTER",
+        "TRIPLICATE FOR SUPPLIER"
+    ];
 
-  // numberToWords is imported and used within the template below
+    // numberToWords is imported and used within the template below
 
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = months[date.getMonth()];
-    const year = date.getFullYear().toString().slice(-2);
-    return `${day}-${month}-${year}`;
-  };
+    const formatDate = (dateString: string): string => {
+        const date = new Date(dateString);
+        const day = date.getDate().toString().padStart(2, '0');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = months[date.getMonth()];
+        const year = date.getFullYear().toString().slice(-2);
+        return `${day}-${month}-${year}`;
+    };
 
-  return `
+    return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,7 +49,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
     </style>
 </head>
 <body class="bg-white">
-    <div class="w-[642.5px] mx-auto text-[10px] my-4">
+    <div class="w-[672.5px] mx-auto text-[10px]">
         <div class="flex justify-between w-[100%]">
             <div class="w-[50%]"></div>
             <div class="w-[50%] flex justify-between">
@@ -88,14 +88,14 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                                 <p>Invoice No.</p>
                                 <p>e-Way Bill No.</p>
                             </div>
-                            <div class="flex justify-between">
+                            <div class="flex justify-between -mt-1">
                                 <p class="font-bold text-[10px]">${invoiceData.invoice_number}</p>
                                 <p>${invoiceData.eway_bill || ''}</p>
                             </div>
                         </div>
                         <div class="border-l border-black p-1">
                             <div>Dated</div>
-                            <div class="text-[11px] font-bold">${formatDate(invoiceData.invoice_date)}</div>
+                            <div class="text-[11px] font-bold  -mt-1">${formatDate(invoiceData.invoice_date)}</div>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 border-b border-black h-[28.2px]">
@@ -122,13 +122,13 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         <div class="p-1">Dispatch Doc No.</div>
                         <div class="p-1 border-l border-black">Delivery Note Date</div>
                     </div>
-                    <div class="grid grid-cols-1 h-[90.7px]">
+                    <div class="grid grid-cols-1 h-[70.7px]">
                         <div class="p-1">Terms of Delivery</div>
                     </div>
                 </div>
             </div>
 
-            <table class="w-full border-collapse border-t border-b border-black h-[438px]">
+            <table class="w-full border-collapse border-t border-b border-black h-[410px]">
                 <thead>
                     <tr class="border-b border-black text-[9px] h-[38px]">
                         <th class="border-r border-black w-[15.11px]">SI No.</th>
@@ -142,7 +142,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                 </thead>
                 <tbody>
                     ${lineItems.map((item, index) => `
-                    <tr class="border-t border-black font-bold">
+                    <tr class=" font-bold max-h-[20px]">
                         <td class="border-r border-black text-center">${index + 1}</td>
                         <td class="border-r border-black">${item.description}</td>
                         <td class="border-r border-black text-center">${item.hsn_sac_code}</td>
@@ -152,7 +152,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         <td class="text-right">${item.taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                     </tr>
                     `).join('')}
-                    <tr class="font-bold">
+                    <tr class="font-bold h-[15px]">
                         <td class="border-r border-black" rowspan="4"></td>
                         <td class="border-r border-black text-right">CGST @ ${cgstRate}%</td>
                         <td class="border-r border-black"></td>
@@ -161,7 +161,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         <td class="border-r border-black text-right"></td>
                         <td class="text-right">${cgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                     </tr>
-                    <tr>
+                    <tr class="font-bold h-[15px]">
                         <td class="border-r border-black text-right">SGST @ ${sgstRate}%</td>
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black"></td>
@@ -169,8 +169,13 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         <td class="border-r border-black text-right"></td>
                         <td class="text-right">${sgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                     </tr>
-                    <tr>
-                        <td class="border-r border-black text-right">Less :</td>
+                    <tr class="font-bold h-[15px]">
+                        <td class="border-r border-black">
+                            <div class="w-full flex justify-between">
+                                <div class="font-normal">Less :</div>
+                                <div class"font-bold">ROUNDED OFF</div>
+                            </div>
+                        </td>
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black"></td>
@@ -186,14 +191,14 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         <td class="border-r border-black font-bold">${lineItems.reduce((sum, item) => sum + item.quantity, 0).toFixed(3)} ${lineItems[0]?.unit || 'KGS'}</td>
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black"></td>
-                        <td class="font-bold h-[18.90px] font-bold text-[12px]">₹ ${totalInvoice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="font-bold h-[18.90px] text-[12px]">₹ ${totalInvoice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                     </tr>
                 </tfoot>
             </table>
             
             <div class="h-[34px] relative">
                 <div class="p-0.5">
-                    <p><span class="font-bold">Amount Chargeable (in words)</span></p>
+                    <p><span class="font-normal">Amount Chargeable (in words)</span></p>
                     <span class="font-bold">Indian ${numberToWords(totalInvoice)}</span>
                 </div>
                 <p class="text-right absolute right-1 top-1">E. & O.E</p>
@@ -201,42 +206,42 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
 
             <table class="w-full border-collapse border-t border-b border-black h-[60.50px]">
                 <thead>
-                    <tr class="border-b border-black">
-                        <th class="border-r border-black h-[17px]" rowspan="2">HSN/SAC</th>
-                        <th class="border-r border-black" rowspan="2">Taxable Value</th>
-                        <th class="border-r border-black h-[17px]" colspan="2">CGST</th>
-                        <th class="border-r border-black" colspan="2">SGST/UTGST</th>
-                        <th class="p-1" rowspan="2">Total Tax Amount</th>
+                    <tr class="border-b border-black ">
+                        <th class="border-r border-black h-[17px] w-[38%] font-normal" rowspan="2">HSN/SAC</th>
+                        <th class="border-r border-black font-normal" rowspan="2">Taxable Value</th>
+                        <th class="border-r border-black font-normal h-[17px]" colspan="2">CGST</th>
+                        <th class="border-r border-black font-normal" colspan="2">SGST/UTGST</th>
+                        <th class="p-1 font-normal" rowspan="2">Total Tax Amount</th>
                     </tr>
                     <tr class="border-b border-black">
-                        <th class="border-r border-black">Rate</th>
-                        <th class="border-r border-black">Amount</th>
-                        <th class="border-r border-black">Rate</th>
-                        <th class="border-r border-black">Amount</th>
+                        <th class="border-r border-black font-normal">Rate</th>
+                        <th class="border-r border-black font-normal">Amount</th>
+                        <th class="border-r border-black font-normal">Rate</th>
+                        <th class="border-r border-black font-normal">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${lineItems.map(item => `
                     <tr class="h-[13.22px]">
                         <td class="border-r border-black">${item.hsn_sac_code}</td>
-                        <td class="border-r border-black">${item.taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                        <td class="border-r border-black">${cgstRate.toFixed(2)}%</td>
-                        <td class="border-r border-black">${(item.taxableValue * cgstRate / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                        <td class="border-r border-black">${sgstRate.toFixed(2)}%</td>
-                        <td class="border-r border-black">${(item.taxableValue * sgstRate / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                        <td class="">${(item.taxableValue * (cgstRate + sgstRate) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="border-r border-black text-right">${item.taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="border-r border-black text-right">${cgstRate.toFixed(2)}%</td>
+                        <td class="border-r border-black text-right">${(item.taxableValue * cgstRate / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="border-r border-black text-right">${sgstRate.toFixed(2)}%</td>
+                        <td class="border-r border-black text-right">${(item.taxableValue * sgstRate / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-right">${(item.taxableValue * (cgstRate + sgstRate) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                     </tr>
                     `).join('')}
                 </tbody>
                 <tfoot>
                     <tr class="border-t border-black h-[17px]">
-                        <td class="font-bold border-r border-black">Total</td>
-                        <td class="font-bold border-r border-black">${taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                        <td class="border-r border-black"></td>
-                        <td class="font-bold border-r border-black">${cgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                        <td class="border-r border-black"></td>
-                        <td class="font-bold border-r border-black">${sgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                        <td class="font-bold">${(cgstAmount + sgstAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="font-bold border-r border-black text-right">Total</td>
+                        <td class="font-bold border-r border-black text-right">${taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="border-r border-black text-right"></td>
+                        <td class="font-bold border-r border-black text-right">${cgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="border-r border-black text-right"></td>
+                        <td class="font-bold border-r border-black text-right">${sgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="font-bold text-right">${(cgstAmount + sgstAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                     </tr>
                 </tfoot>
             </table>
@@ -299,74 +304,74 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
 };
 
 // Build combined HTML with up to 3 copies, only header text differs
-export function generateInvoiceHTML(data: { invoiceData: InvoiceData; lineItems: LineItem[]; cgstRate?: number; sgstRate?: number; copies?: Array<'Original for Recipient' | 'DUPLICATE FOR TRANSPORTER' | 'Triplicate for Supplier'>; }) {
-  const base = generateInvoicePDF(data.invoiceData, data.lineItems);
-  const headMatch = base.match(/<head[\s\S]*?<\/head>/i);
-  const bodyMatch = base.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  const head = headMatch ? headMatch[0] : '<head><meta charset="UTF-8"><title>Tax Invoice</title><script src="https://cdn.tailwindcss.com"></script></head>';
-  const body = bodyMatch ? bodyMatch[1] : '';
+export function generateInvoiceHTML(data: { invoiceData: InvoiceData; lineItems: LineItem[]; cgstRate?: number; sgstRate?: number; copies?: Array<'ORIGINAL FOR RECIPIENT' | 'DUPLICATE FOR TRANSPORTER' | 'TRIPLICATE FOR SUPPLIER'>; }) {
+    const base = generateInvoicePDF(data.invoiceData, data.lineItems);
+    const headMatch = base.match(/<head[\s\S]*?<\/head>/i);
+    const bodyMatch = base.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const head = headMatch ? headMatch[0] : '<head><meta charset="UTF-8"><title>Tax Invoice</title><script src="https://cdn.tailwindcss.com"></script></head>';
+    const body = bodyMatch ? bodyMatch[1] : '';
 
-  const copyTypes: string[] = data.copies && data.copies.length ? data.copies : [
-    'Original for Recipient',
-    'DUPLICATE FOR TRANSPORTER',
-    'Triplicate for Supplier'
-  ];
+    const copyTypes: string[] = data.copies && data.copies.length ? data.copies : [
+        'ORIGINAL FOR RECIPIENT',
+        'DUPLICATE FOR TRANSPORTER',
+        'TRIPLICATE FOR SUPPLIER'
+    ];
 
-  const pages = copyTypes.map((copy, idx) => {
-    const pageHtml = body.replace(/\((?:Original for Recipient|DUPLICATE FOR TRANSPORTER|Triplicate for Supplier)\)/i, `(${copy})`);
-    // Add page break after each page except last
-    const breakDiv = idx < copyTypes.length - 1 ? '<div class="page-break"></div>' : '';
-    return pageHtml + breakDiv;
-  }).join('\n');
+    const pages = copyTypes.map((copy, idx) => {
+        const pageHtml = body.replace(/\((?:ORIGINAL FOR RECIPIENT|DUPLICATE FOR TRANSPORTER|TRIPLICATE FOR SUPPLIER)\)/i, `(${copy})`);
+        // Add page break after each page except last
+        const breakDiv = idx < copyTypes.length - 1 ? '<div class="page-break"></div>' : '';
+        return pageHtml + breakDiv;
+    }).join('\n');
 
-  const style = `
+    const style = `
     <style>
       @media print { .page-break { page-break-after: always; } }
       .page-break { page-break-after: always; }
     </style>
   `;
 
-  return `<!DOCTYPE html><html lang="en">${head.replace('</head>', style + '</head>')}<body class="bg-white">${pages}</body></html>`;
+    return `<!DOCTYPE html><html lang="en">${head.replace('</head>', style + '</head>')}<body class="bg-white">${pages}</body></html>`;
 }
 
 export const downloadInvoicePDF = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; copies?: string[] }) => {
-  const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, copies: data.copies as any });
-  
-  // Create a new window with the HTML content for printing
-  const printWindow = window.open('', '_blank');
-  if (printWindow) {
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    
-    // Wait for content to load then trigger print
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
-    };
-  }
+    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, copies: data.copies as any });
+
+    // Create a new window with the HTML content for printing
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+
+        // Wait for content to load then trigger print
+        printWindow.onload = () => {
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        };
+    }
 };
 
 export const generatePDFBlob = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; copies?: string[] }): Promise<Blob> => {
-  // For client-side PDF generation, we'll use the browser's print to PDF functionality
-  // This requires user interaction but provides exact formatting
-  const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, copies: data.copies as any });
-  
-  return new Promise((resolve) => {
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    
-    iframe.contentDocument?.write(htmlContent);
-    iframe.contentDocument?.close();
-    
-    // This is a simplified approach - in production, you'd want to use a proper PDF library
-    // or server-side PDF generation
-    setTimeout(() => {
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      document.body.removeChild(iframe);
-      resolve(blob);
-    }, 1000);
-  });
+    // For client-side PDF generation, we'll use the browser's print to PDF functionality
+    // This requires user interaction but provides exact formatting
+    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, copies: data.copies as any });
+
+    return new Promise((resolve) => {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        iframe.contentDocument?.write(htmlContent);
+        iframe.contentDocument?.close();
+
+        // This is a simplified approach - in production, you'd want to use a proper PDF library
+        // or server-side PDF generation
+        setTimeout(() => {
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            document.body.removeChild(iframe);
+            resolve(blob);
+        }, 1000);
+    });
 };

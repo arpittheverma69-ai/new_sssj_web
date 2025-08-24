@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react';
-import { Download, FileText, Printer, Eye } from 'lucide-react';
+import { Download, Printer, Eye } from 'lucide-react';
 import { InvoiceData, LineItem } from '@/types/invoiceTypes';
 import { generateInvoiceHTML, downloadInvoicePDF } from '@/utils/invoicePdfGenerator';
 
@@ -94,7 +94,7 @@ const PDFGeneratorButton: React.FC<PDFGeneratorButtonProps> = ({
               <div className="text-xs text-muted-foreground">Save invoice as PDF file</div>
             </div>
           </button>
-          
+
           <button
             onClick={() => handleGeneratePDF('preview')}
             className="w-full p-3 text-left hover:bg-muted/50 transition-colors flex items-center gap-3 border-t border-border"
@@ -105,7 +105,7 @@ const PDFGeneratorButton: React.FC<PDFGeneratorButtonProps> = ({
               <div className="text-xs text-muted-foreground">View invoice in new tab</div>
             </div>
           </button>
-          
+
           <button
             onClick={() => handleGeneratePDF('print')}
             className="w-full p-3 text-left hover:bg-muted/50 transition-colors flex items-center gap-3 border-t border-border"

@@ -198,7 +198,7 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
                                 <td colSpan={7} className="font-bold p-2">
                                     <div className="flex justify-between">
                                         <span>
-                                            Amount Chargeable (in words)<br />
+                                            Amount Chargeable (in 787878787778words)<br />
                                             <span className="font-[700] text-[13px]">
                                                 Indian Rupees {numberToWords(Math.round(totalInvoice))} Only
                                             </span>
@@ -307,7 +307,7 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
                                 <p>A/c No.                    : </p>
                                 <p>Branch & IFS Code : </p>
                             </div>
-                            <div className="text-end border-t border-black py-0.5 px-2 border-l border-black">
+                            <div className="text-end border-t py-0.5 px-2 border-l border-black">
                                 <p className="font-bold pb-7">for J.V. JEWELLERS</p>
                                 <p className="">Authorised Signatory</p>
                             </div>

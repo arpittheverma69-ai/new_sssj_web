@@ -1,10 +1,10 @@
 "use client"
 import React from 'react';
-import InvoiceDetailsPage from './InvoiceDetailsPage';
 import LineItemsPage from './LineItemsPage';
 import ReviewGeneratePage from './ReviewGeneratePage';
 import { useInvoiceForm } from '@/hooks/useInvoiceForm';
 import InvoiceStepper from '../create-invoice/InvoiceStepper';
+import InvoiceDetailsPage from './InvoiceDetailsPage';
 
 const CreateInvoice: React.FC = () => {
     const invoiceForm = useInvoiceForm();

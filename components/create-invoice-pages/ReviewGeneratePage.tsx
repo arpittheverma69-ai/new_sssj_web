@@ -2,22 +2,22 @@
 import React, { useState } from 'react';
 import InvoiceSlipPreview from '../create-invoice/InvoiceSlipPreview';
 import { LineItem } from '@/types/invoiceTypes';
-import { 
-    FileText, 
-    Calendar, 
-    Hash, 
-    User, 
-    Truck, 
-    Calculator, 
-    Package, 
-    CheckCircle, 
-    Download, 
-    Send, 
-    ArrowLeft, 
-    Eye, 
-    Printer, 
-    Share2, 
-    AlertCircle, 
+import {
+    FileText,
+    Calendar,
+    Hash,
+    User,
+    Truck,
+    Calculator,
+    Package,
+    CheckCircle,
+    Download,
+    Send,
+    ArrowLeft,
+    Eye,
+    Printer,
+    Share2,
+    AlertCircle,
     Info,
     DollarSign,
     Receipt,
@@ -79,7 +79,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
 
     const handleSubmitInvoice = async () => {
         setIsSubmitting(true);
-        
+
         try {
             // Prepare invoice data for API
             const invoicePayload = {
@@ -130,13 +130,13 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
             }
 
             const result = await response.json();
-            
+
             setIsSubmitting(false);
             alert('Invoice submitted successfully! Invoice ID: ' + result.id);
-            
+
             // Optionally redirect to invoices list or reset form
             // window.location.href = '/dashboard/all-invoice';
-            
+
         } catch (error) {
             console.error('Error submitting invoice:', error);
             setIsSubmitting(false);
@@ -198,7 +198,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 <h2 className="text-xl font-semibold text-white">Invoice Review</h2>
                             </div>
                         </div>
-                        
+
                         <div className="p-6">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Invoice Details */}
@@ -272,7 +272,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 <h2 className="text-xl font-semibold text-white">Line Items</h2>
                             </div>
                         </div>
-                        
+
                         <div className="p-6">
                             <div className="overflow-x-auto">
                                 <table className="w-full">
@@ -312,7 +312,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 <h2 className="text-xl font-semibold text-white">Invoice Slip Preview</h2>
                             </div>
                         </div>
-                        
+
                         <div className="p-6">
                             <InvoiceSlipPreview
                                 invoiceData={invoiceData}
@@ -334,7 +334,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 <h3 className="font-semibold text-white">Generation Options</h3>
                             </div>
                         </div>
-                        
+
                         <div className="p-4 space-y-4">
                             <div>
                                 <label className="block font-medium text-foreground mb-3">Invoice Copies</label>
@@ -370,7 +370,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 <h3 className="font-semibold text-white">Quick Actions</h3>
                             </div>
                         </div>
-                        
+
                         <div className="p-4 space-y-3">
                             <button
                                 onClick={handleGeneratePDF}
@@ -384,7 +384,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 )}
                                 {isGenerating ? 'Generating...' : 'Generate PDF'}
                             </button>
-                            
+
                             <button
                                 onClick={handleSubmitInvoice}
                                 disabled={isSubmitting}
@@ -397,7 +397,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 )}
                                 {isSubmitting ? 'Submitting...' : 'Submit Invoice'}
                             </button>
-                            
+
                             <button className="w-full bg-secondary text-secondary-foreground py-3 px-4 rounded-[16px] font-medium hover:bg-accent hover:text-accent-foreground transition-all duration-200 flex items-center justify-center gap-2">
                                 <Share2 className="w-4 h-4" />
                                 Share Invoice
@@ -413,7 +413,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 <h3 className="font-semibold text-white">Invoice Info</h3>
                             </div>
                         </div>
-                        
+
                         <div className="p-4 space-y-3">
                             <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-[12px]">
                                 <Clock className="w-4 h-4 text-muted-foreground" />
@@ -422,7 +422,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                     <div className="text-xs text-muted-foreground">Just now</div>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-[12px]">
                                 <Shield className="w-4 h-4 text-muted-foreground" />
                                 <div>
@@ -430,7 +430,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                     <div className="text-xs text-muted-foreground">Draft</div>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-[12px]">
                                 <DollarSign className="w-4 h-4 text-muted-foreground" />
                                 <div>
@@ -452,7 +452,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                     <ArrowLeft className="w-4 h-4" />
                     Back to Line Items
                 </button>
-                
+
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <AlertCircle className="w-4 h-4" />
                     <span>Review all details before generating the invoice</span>
