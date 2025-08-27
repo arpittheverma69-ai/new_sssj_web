@@ -1,12 +1,16 @@
 "use client"
 import { useState, useEffect } from 'react';
+import { showToast, apiToast } from '@/utils/toast';
 
-type TransactionType = 'retail' | 'wholesale' | 'exports';
-type InputMode = 'component' | 'quick' | 'barcode';
+type TransactionType = 'retail' | 'inter_state' | 'purchase';
+type InputMode = 'component' | 'direct' | 'reverse';
 
 interface InvoiceSettings {
     id?: number;
     invoice_prefix: string;
+    prefix_retail?: string;
+    prefix_inter_city?: string;
+    prefix_outer_state?: string;
     default_transaction_type: TransactionType;
     number_digits: number;
     default_input_mode: InputMode;
@@ -19,6 +23,9 @@ interface InvoiceSettings {
 const InvoiceSettingsTab = () => {
     const [settings, setSettings] = useState<InvoiceSettings>({
         invoice_prefix: 'JVJ/D/',
+        prefix_retail: 'JVJ/D/',
+        prefix_inter_city: 'JVJ/D/',
+        prefix_outer_state: 'JVJ/S/',
         default_transaction_type: 'retail',
         number_digits: 3,
         default_input_mode: 'component',
@@ -32,15 +39,24 @@ const InvoiceSettingsTab = () => {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch('/api/setting/invoicesetting');
-                if (!response.ok) {
-                    throw new Error('Failed to fetch settings');
-                }
-                const data = await response.json();
-                setSettings(data);
+                await apiToast.call(
+                    async () => {
+                        const response = await fetch('/api/setting/invoicesetting');
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch settings');
+                        }
+                        const data = await response.json();
+                        setSettings(data);
+                        return data;
+                    },
+                    {
+                        loading: 'Loading invoice settings...',
+                        success: 'Settings loaded successfully',
+                        error: 'Failed to load invoice settings'
+                    }
+                );
             } catch (error) {
                 console.error('Failed to fetch invoice settings:', error);
-                alert('Failed to load settings');
             }
         };
 
@@ -64,24 +80,33 @@ const InvoiceSettingsTab = () => {
         e.preventDefault();
 
         try {
-            const response = await fetch('/api/setting/invoicesetting', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
+            await apiToast.call(
+                async () => {
+                    const response = await fetch('/api/setting/invoicesetting', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(settings),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.details || errorData.error || 'Failed to save settings');
+                    }
+
+                    const updatedSettings = await response.json();
+                    setSettings(updatedSettings);
+                    return updatedSettings;
                 },
-                body: JSON.stringify(settings),
-            });
-
-            if (!response.ok) {
-                throw new Error(await response.text());
-            }
-
-            const updatedSettings = await response.json();
-            setSettings(updatedSettings);
-            alert('Settings saved successfully!');
+                {
+                    loading: 'Saving invoice settings...',
+                    success: 'Settings saved successfully!',
+                    error: 'Failed to save settings'
+                }
+            );
         } catch (error) {
             console.error('Error saving settings:', error);
-            alert(`Failed to save settings: ${error instanceof Error ? error.message : String(error)}`);
         }
     };
 
@@ -109,6 +134,48 @@ const InvoiceSettingsTab = () => {
 
                     <div>
                         <label className="block font-medium text-xs md:text-sm mb-1">
+                            Retail Sales Prefix
+                        </label>
+                        <input
+                            type="text"
+                            name="prefix_retail"
+                            value={settings.prefix_retail || ''}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border rounded mb-2 text-sm md:text-base"
+                        />
+                        <p className="text-xs md:text-sm text-gray-500">Default: JVJ/D/</p>
+                    </div>
+
+                    <div>
+                        <label className="block font-medium text-xs md:text-sm mb-1">
+                            Inter-city Sales Prefix
+                        </label>
+                        <input
+                            type="text"
+                            name="prefix_inter_city"
+                            value={settings.prefix_inter_city || ''}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border rounded mb-2 text-sm md:text-base"
+                        />
+                        <p className="text-xs md:text-sm text-gray-500">Default: JVJ/D/</p>
+                    </div>
+
+                    <div>
+                        <label className="block font-medium text-xs md:text-sm mb-1">
+                            Outer-city/State Sales Prefix
+                        </label>
+                        <input
+                            type="text"
+                            name="prefix_outer_state"
+                            value={settings.prefix_outer_state || ''}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border rounded mb-2 text-sm md:text-base"
+                        />
+                        <p className="text-xs md:text-sm text-gray-500">Default: JVJ/S/</p>
+                    </div>
+
+                    <div>
+                        <label className="block font-medium text-xs md:text-sm mb-1">
                             Default Transaction Type
                         </label>
                         <select
@@ -118,8 +185,8 @@ const InvoiceSettingsTab = () => {
                             className="w-full px-3 py-2 border rounded text-sm md:text-base"
                         >
                             <option value="retail">Retail Sales</option>
-                            <option value="wholesale">Wholesale</option>
-                            <option value="exports">Export</option>
+                            <option value="inter_state">Inter State</option>
+                            <option value="purchase">Purchase</option>
                         </select>
                     </div>
 
@@ -150,8 +217,8 @@ const InvoiceSettingsTab = () => {
                             className="w-full px-3 py-2 border rounded text-sm md:text-base"
                         >
                             <option value="component">Component Entry</option>
-                            <option value="quick">Quick Entry</option>
-                            <option value="barcode">Barcode Scan</option>
+                            <option value="direct">Direct Entry</option>
+                            <option value="reverse">Reverse Entry</option>
                         </select>
                     </div>
 

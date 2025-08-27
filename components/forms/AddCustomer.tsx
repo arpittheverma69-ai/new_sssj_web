@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { toast } from "react-toastify";
+import { showToast, apiToast } from "@/utils/toast";
 import { ApiState, State } from "@/types/invoiceTypes";
 
 interface AddCustomerProps {
@@ -45,7 +45,9 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
 
                 setStates(transformedStates);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Unknown error');
+                const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                setError(errorMessage);
+                showToast.error('Failed to load states: ' + errorMessage);
             } finally {
                 setLoading(false);
             }
@@ -63,58 +65,61 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Validate required fields
+        if (!formData.name || !formData.address || !formData.city || !formData.phone) {
+            setError('Name, address, city, and phone are required fields');
+            showToast.error('Please fill in all required fields');
+            return;
+        }
+
         try {
-            // Validate required fields
-            if (!formData.name || !formData.address || !formData.city || !formData.phone) {
-                setError('Name, address, city, and phone are required fields');
-                return;
-            }
+            await apiToast.call(
+                async () => {
+                    // Prepare data for submission
+                    const submissionData = {
+                        ...formData,
+                        state_id: formData.state_id ? parseInt(formData.state_id) : null
+                    };
 
-            // Prepare data for submission
-            const submissionData = {
-                ...formData,
-                state_id: formData.state_id ? parseInt(formData.state_id) : null
-            };
+                    const response = await fetch('/api/customer', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(submissionData),
+                    });
 
-            const response = await fetch('/api/customer', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to save customer');
+                    }
+
+                    const result = await response.json();
+                    
+                    // Close modal and reset form on success
+                    setOpen(false);
+                    setFormData({
+                        name: "",
+                        gstin: "",
+                        state_id: "",
+                        address: "",
+                        city: "",
+                        pincode: "",
+                        phone: "",
+                        email: "",
+                        pan_no: ""
+                    });
+                    setError(null);
+                    
+                    return result;
                 },
-                body: JSON.stringify(submissionData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to save customer');
-            }
-
-            const result = await response.json();
-            toast('Customer Added Successfully', {
-                position: "top-right",
-                autoClose: 4000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                type: "success",
-                theme: "colored",
-            });
-            console.log("Customer saved successfully:", result);
-            // console.log("Customer saved successfully:", formData);
-            setOpen(false); // Close the modal on success
-
-            // Reset form
-            setFormData({
-                name: "",
-                gstin: "",
-                state_id: "",
-                address: "",
-                city: "",
-                pincode: "",
-                phone: "",
-                email: "",
-                pan_no: ""
-            });
-
+                {
+                    loading: 'Adding customer...',
+                    success: 'Customer added successfully!',
+                    error: 'Failed to add customer'
+                }
+            );
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');
         }

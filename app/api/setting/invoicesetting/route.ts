@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 // GET - Fetch current invoice settings
@@ -12,6 +12,9 @@ export async function GET() {
             const defaultSettings = await prisma.invoiceSetting.create({
                 data: {
                     invoice_prefix: 'JVJ/D/',
+                    prefix_retail: 'JVJ/D/',
+                    prefix_inter_city: 'JVJ/D/',
+                    prefix_outer_state: 'JVJ/S/',
                     default_transaction_type: 'retail',
                     number_digits: 3,
                     default_input_mode: 'component',
@@ -38,6 +41,7 @@ export async function GET() {
 export async function PUT(request: Request) {
     try {
         const data = await request.json();
+        console.log('Received data:', JSON.stringify(data, null, 2));
 
         // Get current settings to determine if we're updating or creating
         const currentSettings = await prisma.invoiceSetting.findFirst();
@@ -49,20 +53,31 @@ export async function PUT(request: Request) {
             );
         }
 
+        // Remove id and other non-updatable fields from data
+        const { id, created_at, updated_at, ...updateData } = data;
+        console.log('Update data:', JSON.stringify(updateData, null, 2));
+        
         // Update existing settings
         const updatedSettings = await prisma.invoiceSetting.update({
             where: { id: currentSettings.id },
             data: {
-                ...data,
+                ...updateData,
                 updated_at: new Date(),
             },
         });
 
         return NextResponse.json(updatedSettings);
     } catch (error) {
-        console.error('Error updating invoice settings:', error);
+        console.error('Error updating invoice settings:');
+        console.error('Error message:', error instanceof Error ? error.message : String(error));
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        console.error('Full error:', error);
+        
         return NextResponse.json(
-            { error: 'Failed to update invoice settings' },
+            { 
+                error: 'Failed to update invoice settings',
+                details: error instanceof Error ? error.message : String(error)
+            },
             { status: 500 }
         );
     }

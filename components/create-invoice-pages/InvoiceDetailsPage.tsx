@@ -1,7 +1,7 @@
 "use client"
-import { InvoiceData, State } from '@/types/invoiceTypes';
+import { InvoiceData, State, transactionTypes } from '@/types/invoiceTypes';
 import React, { useEffect, useState } from 'react';
-import { Calendar, Hash, Truck, User, MapPin, Building2, CreditCard, Calculator, ArrowRight } from 'lucide-react';
+import { Calendar, Hash, User, MapPin, Building2, CreditCard, Calculator, ArrowRight } from 'lucide-react';
 import { Customer } from '@/types/shop-profile';
 
 interface InvoiceDetailsPageProps {
@@ -10,7 +10,6 @@ interface InvoiceDetailsPageProps {
     selectedCustomer: (data: Partial<Customer>) => void;
     nextStep: () => void;
     states: State[];
-    setInvoiceData: (data: Partial<InvoiceData>) => void;
 }
 
 const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
@@ -18,7 +17,6 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
     updateInvoiceData,
     selectedCustomer,
     nextStep,
-    setInvoiceData,
     states,
 }) => {
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -61,7 +59,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
 
     const selectCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
         if (e.target.value === "") {
-            setInvoiceData({
+            updateInvoiceData({
                 eway_bill: '',
                 customer_id: '',
                 buyer_name: '',
@@ -70,6 +68,8 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                 buyer_state: '',
                 buyer_state_code: '',
             })
+        } else {
+            updateInvoiceData({ customer_id: e.target.value })
         }
         const selectedCustomerData = customers?.find(
             (custo) => custo.id === Number(e.target.value)
@@ -82,12 +82,6 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
 
         updateInvoiceData({ customer_id: e.target.value });
     };
-
-    const transactionTypes = [
-        { value: 'retail', label: 'Retail Sales', description: 'Local sales with CGST + SGST', icon: '🏪', color: 'bg-blue-500' },
-        { value: 'inter-city', label: 'Inter-city Sales', description: 'Out-of-state sales with IGST', icon: '🚚', color: 'bg-purple-500' },
-        { value: 'purchase', label: 'Purchase', description: 'Inward procurement', icon: '📦', color: 'bg-green-500' }
-    ];
 
     const inputModes = [
         { value: 'component', label: 'Component Entry', description: 'Auto-calculated tax breakdown', icon: '🧮', color: 'bg-indigo-500' },

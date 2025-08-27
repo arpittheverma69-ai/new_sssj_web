@@ -4,9 +4,7 @@ import InvoiceSlipPreview from '../create-invoice/InvoiceSlipPreview';
 import { LineItem } from '@/types/invoiceTypes';
 import {
     FileText,
-    Calendar,
     Hash,
-    User,
     Truck,
     Calculator,
     Package,
@@ -77,6 +75,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
         }
     };
 
+
     const handleSubmitInvoice = async () => {
         setIsSubmitting(true);
 
@@ -85,15 +84,15 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
             const invoicePayload = {
                 invoice_number: invoiceData.invoice_number,
                 invoice_date: invoiceData.invoice_date,
-                transaction_type: invoiceData.transaction_type,
-                input_mode: invoiceData.input_mode,
+                transaction_type: invoiceData.type,
+                input_mode: invoiceData.mode,
                 eway_bill: invoiceData.eway_bill,
-                buyer_id: invoiceData.buyer_id,
+                buyer_id: Number(invoiceData.customer_id || 0),
                 buyer_name: invoiceData.buyer_name,
                 buyer_address: invoiceData.buyer_address,
                 buyer_gstin: invoiceData.buyer_gstin,
                 buyer_state_code: invoiceData.buyer_state_code,
-                tax_type: invoiceData.tax_type,
+                // tax_type: invoiceData.tax_type,
                 total_invoice_value: totalInvoice,
                 line_items: lineItems.map(item => ({
                     hsn_sac_code: item.hsn_sac_code,
@@ -116,6 +115,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                     ]
                 }))
             };
+            console.log("invoicePayload", invoicePayload);
 
             const response = await fetch('/api/invoices', {
                 method: 'POST',

@@ -112,7 +112,7 @@ export default function InvoiceTable() {
             const response = await fetch(`/api/invoices/${invoice.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...invoice, flagged: !invoice.flagged }),
+                body: JSON.stringify({ flagged: !invoice.flagged }),
             });
             
             if (response.ok) {

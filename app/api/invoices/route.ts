@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
 
     const where = search
       ? {
-          OR: [
-            { invoice_number: { contains: search, mode: "insensitive" as any } },
-            { buyer_name: { contains: search, mode: "insensitive" as any } },
-          ],
-        }
+        OR: [
+          { invoice_number: { contains: search, mode: "insensitive" as any } },
+          { buyer_name: { contains: search, mode: "insensitive" as any } },
+        ],
+      }
       : {};
 
     const [invoices, total] = await Promise.all([
@@ -58,21 +58,88 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
+    // Normalize payload keys from client
+    const transactionType: string | undefined = data.transaction_type ?? data.type;
+    const inputMode: string | undefined = data.input_mode ?? data.mode;
+    const buyerStateCodeRaw = data.buyer_state_code;
+    const buyerStateCode = buyerStateCodeRaw === undefined || buyerStateCodeRaw === null
+      ? null
+      : Number.isNaN(Number(buyerStateCodeRaw))
+        ? null
+        : Number(buyerStateCodeRaw);
+
+    if (!transactionType) {
+      return NextResponse.json({ error: "transaction_type is required" }, { status: 400 });
+    }
+
+    // Determine tax_type and invoice prefix from settings based on transaction type
+    const settings = await prisma.invoiceSetting.findFirst();
+
+    // Fallback defaults if settings missing
+    const prefixRetail = settings?.prefix_retail ?? settings?.invoice_prefix ?? "JVJ/D/";
+    const prefixInterCity = settings?.prefix_inter_city ?? prefixRetail;
+    const prefixOuterState = settings?.prefix_outer_state ?? "JVJ/S/";
+
+    const numberDigits = settings?.number_digits ?? 3;
+    const startingNumber = settings?.starting_number ?? 1;
+
+    let taxType: string = "CGST+SGST";
+    let chosenPrefix: string = prefixRetail;
+    const txLower = String(transactionType).toLowerCase();
+    if (txLower === "outer-city" || txLower === "outer_state" || txLower === "outerstate" || txLower === "inter_state" || txLower === "interstate") {
+      // Specifically treat outer-city/outer_state as IGST; inter_state often implies IGST
+      if (txLower.startsWith("outer")) {
+        chosenPrefix = prefixOuterState;
+      } else {
+        chosenPrefix = prefixInterCity; // keep separate prefix if desired
+      }
+      taxType = "IGST";
+    } else if (txLower === "inter-city" || txLower === "intercity") {
+      taxType = "CGST+SGST";
+      chosenPrefix = prefixInterCity;
+    } else {
+      // retail or default
+      taxType = "CGST+SGST";
+      chosenPrefix = prefixRetail;
+    }
+
+    // Generate invoice number if not provided
+    let invoiceNumber: string = data.invoice_number;
+    if (!invoiceNumber || typeof invoiceNumber !== "string" || invoiceNumber.trim() === "") {
+      // Find last sequence with same prefix
+      const last = await prisma.invoice.findFirst({
+        where: { invoice_number: { startsWith: chosenPrefix } as any },
+        orderBy: { created_at: "desc" },
+        select: { invoice_number: true },
+      });
+
+      const lastSeq = (() => {
+        const raw = last?.invoice_number || "";
+        const match = raw.replace(chosenPrefix, "");
+        const num = parseInt(match, 10);
+        return Number.isFinite(num) ? num : undefined;
+      })();
+
+      const nextSeq = (lastSeq ?? startingNumber - 1) + 1;
+      const padded = String(nextSeq).padStart(numberDigits, "0");
+      invoiceNumber = `${chosenPrefix}${padded}`;
+    }
 
     const invoice = await prisma.invoice.create({
       data: {
-        invoice_number: data.invoice_number,
+        invoice_number: invoiceNumber,
         invoice_date: new Date(data.invoice_date),
-        transaction_type: data.transaction_type,
-        input_mode: data.input_mode,
+        transaction_type: transactionType!,
+        input_mode: inputMode!,
         eway_bill: data.eway_bill,
         buyer_id: data.buyer_id,
         buyer_name: data.buyer_name,
         buyer_address: data.buyer_address,
         buyer_gstin: data.buyer_gstin,
-        buyer_state_code: data.buyer_state_code,
-        tax_type: data.tax_type,
+        buyer_state_code: buyerStateCode,
+        tax_type: taxType,
         total_invoice_value: data.total_invoice_value,
+        flagged: false,
         line_items: {
           create: data.line_items.map((item: any) => ({
             hsn_sac_code: item.hsn_sac_code,

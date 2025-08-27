@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { GridRowId } from '@mui/x-data-grid';
 import { TaxRateRow } from '@/types/invoiceTypes';
+import { showToast, apiToast } from '@/utils/toast';
 import dynamic from "next/dynamic";
 
 const DataTable = dynamic(() => import("../invoice-table/DataTable"), {
@@ -58,7 +59,7 @@ const TaxRatesTab = () => {
             setTableData(formattedData);
         } catch (error) {
             console.error("Failed to fetch data:", error);
-            alert('Failed to load tax rates');
+            showToast.error('Failed to load tax rates');
         } finally {
             setLoading(false);
         }
@@ -111,39 +112,46 @@ const TaxRatesTab = () => {
         e.preventDefault();
 
         try {
-            const taxRateData = {
-                hsn_code: newTaxRate.hsnCode,
-                description: newTaxRate.description,
-                cgst_rate: parseFloat(newTaxRate.cgstRate.replace('%', '')),
-                sgst_rate: parseFloat(newTaxRate.sgstRate.replace('%', '')),
-                igst_rate: parseFloat(newTaxRate.igstRate.replace('%', '')),
-                is_default: newTaxRate.isDefault,
-            };
+            await apiToast.call(
+                async () => {
+                    const taxRateData = {
+                        hsn_code: newTaxRate.hsnCode,
+                        description: newTaxRate.description,
+                        cgst_rate: parseFloat(newTaxRate.cgstRate.replace('%', '')),
+                        sgst_rate: parseFloat(newTaxRate.sgstRate.replace('%', '')),
+                        igst_rate: parseFloat(newTaxRate.igstRate.replace('%', '')),
+                        is_default: newTaxRate.isDefault,
+                    };
 
-            const url = editMode && currentId
-                ? `/api/setting/taxrates/${currentId}`
-                : '/api/setting/taxrates';
-            const method = editMode ? 'PUT' : 'POST';
-            console.log("editMode", editMode, method);
+                    const url = editMode && currentId
+                        ? `/api/setting/taxrates/${currentId}`
+                        : '/api/setting/taxrates';
+                    const method = editMode ? 'PUT' : 'POST';
 
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
+                    const response = await fetch(url, {
+                        method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(taxRateData),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to ${editMode ? 'update' : 'create'} tax rate`);
+                    }
+
+                    await fetchTaxRates();
+                    resetForm();
+                    return response.json();
                 },
-                body: JSON.stringify(taxRateData),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to ${editMode ? 'update' : 'create'} tax rate`);
-            }
-
-            await fetchTaxRates();
-            resetForm();
-            alert(`Tax rate ${editMode ? 'updated' : 'added'} successfully!`);
+                {
+                    loading: `${editMode ? 'Updating' : 'Adding'} tax rate...`,
+                    success: `Tax rate ${editMode ? 'updated' : 'added'} successfully!`,
+                    error: `Failed to ${editMode ? 'update' : 'create'} tax rate`
+                }
+            );
         } catch (error) {
             console.error('Error submitting tax rate:', error);
-            alert(`Failed to ${editMode ? 'update' : 'create'} tax rate`);
         }
     };
 
@@ -153,19 +161,27 @@ const TaxRatesTab = () => {
         }
 
         try {
-            const response = await fetch(`/api/setting/taxrates?id=${id}`, {
-                method: 'DELETE',
-            });
+            await apiToast.call(
+                async () => {
+                    const response = await fetch(`/api/setting/taxrates?id=${id}`, {
+                        method: 'DELETE',
+                    });
 
-            if (!response.ok) {
-                throw new Error('Failed to delete tax rate');
-            }
+                    if (!response.ok) {
+                        throw new Error('Failed to delete tax rate');
+                    }
 
-            await fetchTaxRates();
-            alert('Tax rate deleted successfully!');
+                    await fetchTaxRates();
+                    return response.json();
+                },
+                {
+                    loading: 'Deleting tax rate...',
+                    success: 'Tax rate deleted successfully!',
+                    error: 'Failed to delete tax rate'
+                }
+            );
         } catch (error) {
             console.error('Error deleting tax rate:', error);
-            alert('Failed to delete tax rate');
         }
     };
 
