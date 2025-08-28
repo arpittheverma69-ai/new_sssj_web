@@ -47,8 +47,8 @@ export interface ApiState {
 }
 
 export const transactionTypes = [
-    { value: 'retail', taxType: "CGST + SGST", label: 'Retail Sales', description: 'Local sales with CGST + SGST', icon: '🏪', color: 'bg-blue-500' },
-    { value: 'inter-city', taxType: "CGST + SGST", label: 'Inter-city Sales', description: 'Within-state but inter-city sales with CGST + SGST', icon: '🏙️', color: 'bg-cyan-500' },
-    { value: 'outer-city', taxType: "IGST", label: 'Outer-city Sales', description: 'Out-of-state sales with IGST', icon: '🚚', color: 'bg-purple-500' },
+    { value: 'retail', taxType: "CGST + SGST", label: 'Retail Sales', description: 'Intra-state sales with CGST + SGST', icon: '🏪', color: 'bg-blue-500' },
+    { value: 'inter_state', taxType: "IGST", label: 'Inter-state Sales', description: 'Inter-state sales with IGST', icon: '🏙️', color: 'bg-cyan-500' },
+    { value: 'outer_state', taxType: "IGST", label: 'Outer-state Sales', description: 'Out-of-state sales with IGST', icon: '🚚', color: 'bg-purple-500' },
     // { value: 'purchase', label: 'Purchase', description: 'Inward procurement', icon: '📦', color: 'bg-green-500' }
 ];

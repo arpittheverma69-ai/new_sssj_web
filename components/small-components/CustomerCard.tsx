@@ -1,9 +1,14 @@
-
 import { Customer } from "@/types/shop-profile";
 import { Edit, Eye, Mail, MapPin, MoreVertical, Phone } from "lucide-react";
 
+interface CustomerCardProps {
+    customer: Customer;
+    onView?: (customer: Customer) => void;
+    onEdit?: (customer: Customer) => void;
+}
+
 // Customer Card Component
-export const CustomerCard = ({ customer }: { customer: Customer }) => (
+export const CustomerCard = ({ customer, onView, onEdit }: CustomerCardProps) => (
     <div className="bg-card rounded-[24px] border border-border hover:border-primary/50 transition-all duration-200 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1">
         <div className="p-6">
             {/* Header */}
@@ -73,11 +78,17 @@ export const CustomerCard = ({ customer }: { customer: Customer }) => (
 
             {/* Actions */}
             <div className="flex gap-2">
-                <button className="flex-1 bg-primary text-primary-foreground py-2 px-3 rounded-[12px] text-sm font-medium hover:bg-primary/90 transition-colors duration-200 flex items-center justify-center gap-2">
+                <button 
+                    onClick={() => onView?.(customer)}
+                    className="flex-1 bg-primary text-primary-foreground py-2 px-3 rounded-[12px] text-sm font-medium hover:bg-primary/90 transition-colors duration-200 flex items-center justify-center gap-2"
+                >
                     <Eye className="w-4 h-4" />
                     View
                 </button>
-                <button className="flex-1 bg-secondary text-secondary-foreground py-2 px-3 rounded-[12px] text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors duration-200 flex items-center justify-center gap-2">
+                <button 
+                    onClick={() => onEdit?.(customer)}
+                    className="flex-1 bg-secondary text-secondary-foreground py-2 px-3 rounded-[12px] text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors duration-200 flex items-center justify-center gap-2"
+                >
                     <Edit className="w-4 h-4" />
                     Edit
                 </button>

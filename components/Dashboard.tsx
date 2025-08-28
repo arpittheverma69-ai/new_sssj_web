@@ -406,7 +406,7 @@ export default function Dashboard() {
                 fill: false,
             },
             {
-                label: 'Inter-city Sales',
+                label: 'Inter-state Sales',
                 data: [8000, 11000, 9000, 12000, 15000, 13000, 17000],
                 backgroundColor: 'rgba(124, 58, 237, 0.7)',
                 borderColor: 'rgba(124, 58, 237, 1)',
@@ -441,7 +441,7 @@ export default function Dashboard() {
 
     // Doughnut chart data for category breakdown
     const doughnutChartData: ChartData = {
-        labels: ['Retail Sales', 'Inter-city Sales', 'Purchases', 'Services'],
+        labels: ['Retail Sales', 'Inter-state Sales', 'Purchases', 'Services'],
         datasets: [
             {
                 label: 'Revenue Distribution',

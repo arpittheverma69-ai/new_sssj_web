@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { downloadInvoicePDF } from "@/utils/pdfGenerator";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 interface Invoice {
     id: number;
@@ -33,6 +34,7 @@ interface Invoice {
 }
 
 export default function InvoiceTable() {
+    const router = useRouter();
     const [search, setSearch] = React.useState("");
     const [invoices, setInvoices] = React.useState<Invoice[]>([]);
     const [loading, setLoading] = React.useState(true);
@@ -40,10 +42,17 @@ export default function InvoiceTable() {
     const [viewModalOpen, setViewModalOpen] = React.useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
     const [filteredRows, setFilteredRows] = React.useState<Invoice[]>([]);
+    // Avoid SSR hydration mismatches with MUI DataGrid by rendering after mount
+    const [isClient, setIsClient] = React.useState(false);
 
     // Fetch invoices on component mount
     React.useEffect(() => {
         fetchInvoices();
+    }, []);
+
+    // Mark as mounted (client-only rendering)
+    React.useEffect(() => {
+        setIsClient(true);
     }, []);
 
     const fetchInvoices = async () => {
@@ -66,8 +75,8 @@ export default function InvoiceTable() {
     };
 
     const handleEdit = (invoice: Invoice) => {
-        // Navigate to edit page or open edit modal
-        window.location.href = `/create-invoice?edit=${invoice.id}`;
+        // Navigate to the edit page under dashboard
+        router.push(`/dashboard/create-invoice?edit=${invoice.id}`);
     };
 
     const handleDelete = (invoice: Invoice) => {
@@ -210,6 +219,25 @@ export default function InvoiceTable() {
             )
         );
     }, [search, invoices]);
+
+    if (!isClient) {
+        // Optional placeholder to keep layout stable during SSR
+        return (
+            <div
+                className="bg-card p-6 md:p-8 rounded-[24px] shadow-lg shadow-black/5 border border-border"
+                style={{ width: "100%", margin: "0 auto" }}
+            >
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl md:text-2xl font-bold text-foreground">Recent Invoices</h3>
+                    <span className="text-muted-foreground text-sm">Loading...</span>
+                </div>
+                <Box mb={3}>
+                    <TextField label="Search Invoices" variant="outlined" fullWidth size="small" disabled />
+                </Box>
+                <div style={{ height: 400, width: '100%' }} />
+            </div>
+        );
+    }
 
     return (
         <div

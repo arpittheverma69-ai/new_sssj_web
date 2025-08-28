@@ -17,6 +17,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     lineItems,
     addLineItem,
     removeLineItem,
+    invoiceData,
     nextStep,
     prevStep,
 }) => {
@@ -71,13 +72,16 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         nextStep();
     };
 
+    const isIGST = String(invoiceData?.type || '').toLowerCase() === 'inter_state' || String(invoiceData?.type || '').toLowerCase() === 'outer_state';
     const calculateTotals = () => {
         const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
-        const cgstAmount = taxableValue * (parseFloat(cgstRate) / 100);
-        const sgstAmount = taxableValue * (parseFloat(sgstRate) / 100);
-        const total = taxableValue + cgstAmount + sgstAmount;
+        const cgstAmt = isIGST ? 0 : taxableValue * (parseFloat(cgstRate) / 100);
+        const sgstAmt = isIGST ? 0 : taxableValue * (parseFloat(sgstRate) / 100);
+        const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
+        const igstAmt = isIGST ? taxableValue * (igstRate / 100) : 0;
+        const total = taxableValue + cgstAmt + sgstAmt + igstAmt;
         
-        return { taxableValue, cgstAmount, sgstAmount, total };
+        return { taxableValue, cgstAmount: cgstAmt, sgstAmount: sgstAmt, igstAmount: igstAmt, igstRate, total };
     };
 
     const totals = calculateTotals();
@@ -299,43 +303,45 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                             </div>
                         </div>
                         <div className="p-4 space-y-4">
-                        <div>
+                            <div>
                                 <label className="block text-sm font-medium text-foreground mb-2">
-                                CGST Rate (%)
-                            </label>
-                            <select
-                                value={cgstRate}
-                                onChange={(e) => setCgstRate(e.target.value)}
+                                    CGST Rate (%)
+                                </label>
+                                <select
+                                    value={cgstRate}
+                                    onChange={(e) => setCgstRate(e.target.value)}
+                                    disabled={isIGST}
                                     className="w-full px-3 py-2 border border-border rounded-[16px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
-                            >
-                                <option value="1.5">1.5%</option>
-                                <option value="2.5">2.5%</option>
-                                <option value="6">6%</option>
+                                >
+                                    <option value="1.5">1.5%</option>
+                                    <option value="2.5">2.5%</option>
+                                    <option value="6">6%</option>
                                     <option value="9">9%</option>
                                     <option value="12">12%</option>
                                     <option value="18">18%</option>
                                     <option value="28">28%</option>
-                            </select>
-                        </div>
-                        <div>
-                                <label className="block text-sm font-medium text-foreground mb-2">
-                                SGST Rate (%)
-                            </label>
-                            <select
-                                value={sgstRate}
-                                onChange={(e) => setSgstRate(e.target.value)}
-                                    className="w-full px-3 py-2 border border-border rounded-[16px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
-                            >
-                                <option value="1.5">1.5%</option>
-                                <option value="2.5">2.5%</option>
-                                <option value="6">6%</option>
-                                    <option value="9">9%</option>
-                                    <option value="12">12%</option>
-                                    <option value="18">18%</option>
-                                    <option value="28">28%</option>
-                            </select>
+                                </select>
                             </div>
-                    </div>
+                            <div>
+                                <label className="block text-sm font-medium text-foreground mb-2">
+                                    SGST Rate (%)
+                                </label>
+                                <select
+                                    value={sgstRate}
+                                    onChange={(e) => setSgstRate(e.target.value)}
+                                    disabled={isIGST}
+                                    className="w-full px-3 py-2 border border-border rounded-[16px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                >
+                                    <option value="1.5">1.5%</option>
+                                    <option value="2.5">2.5%</option>
+                                    <option value="6">6%</option>
+                                    <option value="9">9%</option>
+                                    <option value="12">12%</option>
+                                    <option value="18">18%</option>
+                                    <option value="28">28%</option>
+                                </select>
+                            </div>
+                        </div>
                 </div>
 
                 {/* Invoice Summary */}
@@ -356,18 +362,29 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         ₹{totals.taxableValue.toFixed(2)}
                                     </span>
                                 </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">SGST ({sgstRate}%):</span>
-                                    <span className="font-semibold text-foreground">
-                                        ₹{totals.sgstAmount.toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">CGST ({cgstRate}%):</span>
-                                    <span className="font-semibold text-foreground">
-                                        ₹{totals.cgstAmount.toFixed(2)}
-                                    </span>
-                                </div>
+                                {isIGST ? (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">IGST ({totals.igstRate}%):</span>
+                                        <span className="font-semibold text-foreground">
+                                            ₹{totals.igstAmount.toFixed(2)}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">SGST ({sgstRate}%):</span>
+                                            <span className="font-semibold text-foreground">
+                                                ₹{totals.sgstAmount.toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">CGST ({cgstRate}%):</span>
+                                            <span className="font-semibold text-foreground">
+                                                ₹{totals.cgstAmount.toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                             
                             <div className="border-t border-border pt-4">

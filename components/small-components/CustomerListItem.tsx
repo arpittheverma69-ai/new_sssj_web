@@ -1,8 +1,14 @@
 import { Customer } from "@/types/shop-profile";
-import { MoreVertical } from "lucide-react";
+import { Edit, Eye, MoreVertical } from "lucide-react";
+
+interface CustomerListItemProps {
+    customer: Customer;
+    onView?: (customer: Customer) => void;
+    onEdit?: (customer: Customer) => void;
+}
 
 // Customer List Item Component
-export const CustomerListItem = ({ customer }: { customer: Customer }) => (
+export const CustomerListItem = ({ customer, onView, onEdit }: CustomerListItemProps) => (
     <div className="bg-card rounded-[20px] border border-border hover:border-primary/50 transition-all duration-200 hover:shadow-lg hover:shadow-primary/10">
         <div className="p-4">
             <div className="flex items-center gap-4">
@@ -23,6 +29,20 @@ export const CustomerListItem = ({ customer }: { customer: Customer }) => (
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => onView?.(customer)}
+                        className="p-2 hover:bg-primary/10 rounded-[12px] transition-colors duration-200 text-primary"
+                        title="View Customer"
+                    >
+                        <Eye className="w-4 h-4" />
+                    </button>
+                    <button 
+                        onClick={() => onEdit?.(customer)}
+                        className="p-2 hover:bg-secondary/10 rounded-[12px] transition-colors duration-200 text-secondary-foreground"
+                        title="Edit Customer"
+                    >
+                        <Edit className="w-4 h-4" />
+                    </button>
                     <button className="p-2 hover:bg-muted rounded-[12px] transition-colors duration-200">
                         <MoreVertical className="w-4 h-4 text-muted-foreground" />
                     </button>

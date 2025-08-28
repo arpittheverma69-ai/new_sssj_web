@@ -5,6 +5,10 @@ import { Plus, Search, Users, Star, MoreVertical } from 'lucide-react'
 import { Customer } from '@/types/shop-profile';
 import { CustomerCard } from './small-components/CustomerCard';
 import { CustomerListItem } from './small-components/CustomerListItem';
+import { Modal } from './ui/Modal';
+import { Input } from './ui/Input';
+import { Button } from './ui/Button';
+import { toast } from 'react-toastify';
 
 // Mock customer data - replace with actual data from your database
 const mockCustomers = [
@@ -105,27 +109,91 @@ const Customers = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [sortBy, setSortBy] = useState<'name' | 'created_at'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-    // const [currentPage, setCurrentPage] = useState(1);
+    
+    // Modal states
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [viewModalOpen, setViewModalOpen] = useState(false);
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        gstin: '',
+        pan_number: '',
+        pincode: '',
+        state_id: 1
+    });
 
     useEffect(() => {
-        const fetchCustomers = async () => {
-            try {
-                setLoading(true);
-                const customersResponse = await fetch('/api/customer');
-                if (!customersResponse.ok) {
-                    throw new Error('Failed to fetch customers');
-                }
-                const data = await customersResponse.json();
-                setCustomers(data);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Unknown error');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchCustomers();
     }, []);
+
+    const fetchCustomers = async () => {
+        try {
+            setLoading(true);
+            const customersResponse = await fetch('/api/customer');
+            if (!customersResponse.ok) {
+                throw new Error('Failed to fetch customers');
+            }
+            const data = await customersResponse.json();
+            setCustomers(data);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Handle view customer
+    const handleView = (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setViewModalOpen(true);
+    };
+
+    // Handle edit customer
+    const handleEdit = (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setFormData({
+            name: customer.name,
+            email: customer.email || '',
+            phone: customer.phone,
+            address: customer.address,
+            city: customer.city || '',
+            gstin: customer.gstin || '',
+            pan_number: customer.pan_number || '',
+            pincode: customer.pincode || '',
+            state_id: customer.state_id || 1
+        });
+        setEditModalOpen(true);
+    };
+
+    // Handle form submission for editing
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedCustomer) return;
+        
+        try {
+            const response = await fetch(`/api/customers/${selectedCustomer.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+            
+            if (response.ok) {
+                toast.success('Customer updated successfully');
+                fetchCustomers();
+                setEditModalOpen(false);
+                setSelectedCustomer(null);
+            } else {
+                toast.error('Failed to update customer');
+            }
+        } catch (error) {
+            toast.error('Error updating customer');
+            console.error('Error:', error);
+        }
+    };
 
     // Filter and search customers
     const filteredCustomers = customers
@@ -281,10 +349,8 @@ const Customers = () => {
                         >
                             <option value="name-asc">Name A-Z</option>
                             <option value="name-desc">Name Z-A</option>
-                            <option value="totalAmount-desc">Highest Revenue</option>
-                            <option value="totalAmount-asc">Lowest Revenue</option>
-                            <option value="lastInvoice-desc">Recent Activity</option>
-                            <option value="totalInvoices-desc">Most Invoices</option>
+                            <option value="created_at-desc">Recently Added</option>
+                            <option value="created_at-asc">Oldest First</option>
                         </select>
                     </div>
                 </div>
@@ -354,7 +420,12 @@ const Customers = () => {
             ) : viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredCustomers.map(customer => (
-                        <CustomerCard key={customer.id} customer={customer} />
+                        <CustomerCard 
+                            key={customer.id} 
+                            customer={customer}
+                            onView={handleView}
+                            onEdit={handleEdit}
+                        />
                     ))}
                 </div>
             ) : (
@@ -373,10 +444,153 @@ const Customers = () => {
 
                     {/* List Items */}
                     {filteredCustomers.map(customer => (
-                        <CustomerListItem key={customer.id} customer={customer} />
+                        <CustomerListItem 
+                            key={customer.id} 
+                            customer={customer} 
+                            onView={handleView}
+                            onEdit={handleEdit}
+                        />
                     ))}
                 </div>
             )}
+
+            {/* View Customer Modal */}
+            <Modal
+                isOpen={viewModalOpen}
+                onClose={() => setViewModalOpen(false)}
+                title="Customer Details"
+                size="lg"
+            >
+                {selectedCustomer && (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm text-muted-foreground">Name</label>
+                                <p className="font-medium">{selectedCustomer.name}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground">Phone</label>
+                                <p className="font-medium">{selectedCustomer.phone}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground">Email</label>
+                                <p className="font-medium">{selectedCustomer.email || '-'}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground">GSTIN</label>
+                                <p className="font-medium">{selectedCustomer.gstin || '-'}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground">PAN</label>
+                                <p className="font-medium">{selectedCustomer.pan_number || '-'}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground">Pincode</label>
+                                <p className="font-medium">{selectedCustomer.pincode || '-'}</p>
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="text-sm text-muted-foreground">Address</label>
+                                <p className="font-medium">{selectedCustomer.address}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground">City</label>
+                                <p className="font-medium">{selectedCustomer.city || '-'}</p>
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground">State</label>
+                                <p className="font-medium">{selectedCustomer.state?.state_name || '-'}</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end">
+                            <Button variant="outline" onClick={() => setViewModalOpen(false)}>Close</Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Edit Customer Modal */}
+            <Modal
+                isOpen={editModalOpen}
+                onClose={() => setEditModalOpen(false)}
+                title="Edit Customer"
+                size="lg"
+            >
+                {selectedCustomer && (
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input 
+                                label="Name"
+                                name="name"
+                                value={formData.name || ''}
+                                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                required
+                            />
+                            <Input 
+                                label="Phone"
+                                name="phone"
+                                value={formData.phone || ''}
+                                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                                required
+                            />
+                            <Input 
+                                label="Email"
+                                type="email"
+                                name="email"
+                                value={formData.email || ''}
+                                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                            />
+                            <Input 
+                                label="GSTIN"
+                                name="gstin"
+                                value={formData.gstin || ''}
+                                onChange={(e) => setFormData(prev => ({ ...prev, gstin: e.target.value }))}
+                            />
+                            <Input 
+                                label="PAN"
+                                name="pan_number"
+                                value={formData.pan_number || ''}
+                                onChange={(e) => setFormData(prev => ({ ...prev, pan_number: e.target.value }))}
+                            />
+                            <Input 
+                                label="Pincode"
+                                name="pincode"
+                                value={formData.pincode || ''}
+                                onChange={(e) => setFormData(prev => ({ ...prev, pincode: e.target.value }))}
+                            />
+                            <Input 
+                                label="City"
+                                name="city"
+                                value={formData.city || ''}
+                                onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                            />
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-foreground">State ID</label>
+                                <input
+                                    type="number"
+                                    name="state_id"
+                                    value={formData.state_id || 1}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, state_id: Number(e.target.value) || 1 }))}
+                                    className="w-full border border-border rounded-[20px] px-4 py-3 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium mb-1 text-foreground">Address</label>
+                                <textarea
+                                    name="address"
+                                    value={formData.address || ''}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                                    rows={3}
+                                    className="w-full border border-border rounded-[20px] px-4 py-3 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 resize-none"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <Button type="button" variant="outline" onClick={() => setEditModalOpen(false)}>Cancel</Button>
+                            <Button type="submit">Save Changes</Button>
+                        </div>
+                    </form>
+                )}
+            </Modal>
         </div>
     )
 }

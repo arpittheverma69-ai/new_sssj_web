@@ -40,6 +40,7 @@ export interface Customer {
     city: string;
     pincode?: string;
     gstin?: string;
+    pan_number?: string;
     state_id?: number;
     state?: State;
     created_at: string;

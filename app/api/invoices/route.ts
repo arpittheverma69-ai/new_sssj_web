@@ -86,17 +86,12 @@ export async function POST(request: NextRequest) {
     let taxType: string = "CGST+SGST";
     let chosenPrefix: string = prefixRetail;
     const txLower = String(transactionType).toLowerCase();
-    if (txLower === "outer-city" || txLower === "outer_state" || txLower === "outerstate" || txLower === "inter_state" || txLower === "interstate") {
-      // Specifically treat outer-city/outer_state as IGST; inter_state often implies IGST
-      if (txLower.startsWith("outer")) {
-        chosenPrefix = prefixOuterState;
-      } else {
-        chosenPrefix = prefixInterCity; // keep separate prefix if desired
-      }
+    if (txLower === "outer_state") {
+      chosenPrefix = prefixOuterState;
       taxType = "IGST";
-    } else if (txLower === "inter-city" || txLower === "intercity") {
-      taxType = "CGST+SGST";
+    } else if (txLower === "inter_state") {
       chosenPrefix = prefixInterCity;
+      taxType = "IGST";
     } else {
       // retail or default
       taxType = "CGST+SGST";

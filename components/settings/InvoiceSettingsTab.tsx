@@ -148,7 +148,7 @@ const InvoiceSettingsTab = () => {
 
                     <div>
                         <label className="block font-medium text-xs md:text-sm mb-1">
-                            Inter-city Sales Prefix
+                            Inter-state Sales Prefix
                         </label>
                         <input
                             type="text"
@@ -162,7 +162,7 @@ const InvoiceSettingsTab = () => {
 
                     <div>
                         <label className="block font-medium text-xs md:text-sm mb-1">
-                            Outer-city/State Sales Prefix
+                            Outer-state Sales Prefix
                         </label>
                         <input
                             type="text"

@@ -109,5 +109,6 @@ export const useInvoiceForm = () => {
         prevStep,
         selectedCustomer,
         setCurrentStep,
+        setLineItems, // expose for edit flow
     };
 };

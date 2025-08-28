@@ -65,7 +65,7 @@ model Invoice {
   id                  Int        @id @default(autoincrement())
   invoice_number      String     @unique @db.VarChar(50)
   invoice_date        DateTime
-  transaction_type    String     @db.VarChar(20) // 'retail', 'inter-city', 'purchase'
+  transaction_type    String     @db.VarChar(20) // 'retail', 'inter_state', 'outer_state', 'purchase'
   input_mode          String     @db.VarChar(20) // 'component', 'direct', 'reverse'
   eway_bill           String?    @db.VarChar(50)
   buyer_id            Int?

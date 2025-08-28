@@ -396,15 +396,23 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             </div>
 
                             {/* Tax Type Display */}
-                            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 p-4 rounded-[20px] border border-blue-500/20">
-                                <div className="flex items-center gap-3">
-                                    <Calculator className="w-5 h-5 text-blue-500" />
-                                    <div>
-                                        <div className="font-semibold text-foreground">Tax Type: CGST + SGST</div>
-                                        <div className="text-sm text-muted-foreground">Applicable for intra-state transactions</div>
+                            {(() => {
+                                const t = String(invoiceData.type || '').toLowerCase();
+                                const isIGST = t === 'inter_state' || t === 'outer_state';
+                                return (
+                                    <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 p-4 rounded-[20px] border border-blue-500/20">
+                                        <div className="flex items-center gap-3">
+                                            <Calculator className="w-5 h-5 text-blue-500" />
+                                            <div>
+                                                <div className="font-semibold text-foreground">Tax Type: {isIGST ? 'IGST' : 'CGST + SGST'}</div>
+                                                <div className="text-sm text-muted-foreground">
+                                                    {isIGST ? 'Applicable for inter/outer-state transactions' : 'Applicable for intra-state transactions'}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
+                                );
+                            })()}
                         </div>
                     </div>
 
@@ -462,7 +470,11 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                                        <span>Inter-city: IGST</span>
+                                        <span>Inter-state: IGST</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                        <span>Outer-state: IGST</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>

@@ -38,8 +38,13 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
         <div className="mt-8 border-t pt-6">
             <h3 className="text-lg font-medium mb-4">Invoice Slip Preview</h3>
 
-            <div id="invoice-slip-container" className="border rounded-lg p-4 bg-gray-50">
-                <div id="invoice-content" className="bg-white p-4 mx-auto" style={{ width: '210mm', transform: 'scale(0.8)', transformOrigin: 'top left' }}>
+            <div id="invoice-slip-container" className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-[80vh]">
+                <div id="invoice-content" className="bg-white text-[10px] mx-auto min-w-[672px] max-w-[672px] transform-gpu"
+                    style={{
+                        transform: 'scale(0.9)',
+                        transformOrigin: 'top center',
+                        width: '672.5px'
+                    }}>
                     {/* Header Section */}
                     <div className="flex justify-between items-center">
                         <div className="w-[40%]"></div>

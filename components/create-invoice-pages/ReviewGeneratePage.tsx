@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import InvoiceSlipPreview from '../create-invoice/InvoiceSlipPreview';
 import { LineItem } from '@/types/invoiceTypes';
 import {
@@ -22,6 +22,7 @@ import {
     Clock,
     Shield
 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 interface ReviewGeneratePageProps {
     invoiceData: any;
@@ -34,6 +35,8 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     lineItems,
     prevStep,
 }) => {
+    const searchParams = useSearchParams();
+    const editId = searchParams.get('edit');
     const [cgstRate] = useState('1.5');
     const [sgstRate] = useState('1.5');
     const [selectedCopies, setSelectedCopies] = useState({
@@ -45,9 +48,12 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
-    const cgstAmount = taxableValue * (parseFloat(cgstRate) / 100);
-    const sgstAmount = taxableValue * (parseFloat(sgstRate) / 100);
-    const totalInvoice = taxableValue + cgstAmount + sgstAmount;
+    const isIGST = String(invoiceData?.type || '').toLowerCase() === 'inter_state' || String(invoiceData?.type || '').toLowerCase() === 'outer_state';
+    const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
+    const cgstAmount = isIGST ? 0 : taxableValue * (parseFloat(cgstRate) / 100);
+    const sgstAmount = isIGST ? 0 : taxableValue * (parseFloat(sgstRate) / 100);
+    const igstAmount = isIGST ? taxableValue * (igstRate / 100) : 0;
+    const totalInvoice = taxableValue + cgstAmount + sgstAmount + igstAmount;
 
     const handleCopyChange = (copy: keyof typeof selectedCopies) => {
         setSelectedCopies(prev => ({
@@ -81,18 +87,27 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
 
         try {
             // Prepare invoice data for API
-            const invoicePayload = {
+            const derivedTaxType = (() => {
+                const t = (invoiceData.type || '').toLowerCase();
+                if (t === 'outer_state' || t === 'inter_state') return 'IGST';
+                return 'CGST+SGST';
+            })();
+
+            const invoicePayload: any = {
                 invoice_number: invoiceData.invoice_number,
-                invoice_date: invoiceData.invoice_date,
+                // Only send date if present; otherwise let backend keep existing
+                invoice_date: invoiceData.invoice_date ? invoiceData.invoice_date : undefined,
                 transaction_type: invoiceData.type,
                 input_mode: invoiceData.mode,
                 eway_bill: invoiceData.eway_bill,
-                buyer_id: Number(invoiceData.customer_id || 0),
+                // Only send buyer_id if present; avoid 0 which is invalid
+                buyer_id: invoiceData.customer_id ? Number(invoiceData.customer_id) : undefined,
                 buyer_name: invoiceData.buyer_name,
                 buyer_address: invoiceData.buyer_address,
                 buyer_gstin: invoiceData.buyer_gstin,
-                buyer_state_code: invoiceData.buyer_state_code,
-                // tax_type: invoiceData.tax_type,
+                // Convert to number or omit
+                buyer_state_code: invoiceData.buyer_state_code ? Number(invoiceData.buyer_state_code) : undefined,
+                tax_type: derivedTaxType,
                 total_invoice_value: totalInvoice,
                 line_items: lineItems.map(item => ({
                     hsn_sac_code: item.hsn_sac_code,
@@ -101,24 +116,36 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                     unit: item.unit,
                     rate: item.rate,
                     taxable_value: item.taxableValue,
-                    taxes: [
-                        {
-                            tax_name: 'CGST',
-                            tax_rate: cgstRate,
-                            tax_amount: item.taxableValue * Number(cgstRate) / 100
-                        },
-                        {
-                            tax_name: 'SGST',
-                            tax_rate: sgstRate,
-                            tax_amount: item.taxableValue * Number(sgstRate) / 100
-                        }
-                    ]
+                    taxes: isIGST
+                        ? [
+                            {
+                                tax_name: 'IGST',
+                                tax_rate: Number(cgstRate) + Number(sgstRate),
+                                tax_amount: item.taxableValue * (Number(cgstRate) + Number(sgstRate)) / 100,
+                            },
+                          ]
+                        : [
+                            {
+                                tax_name: 'CGST',
+                                tax_rate: Number(cgstRate),
+                                tax_amount: item.taxableValue * Number(cgstRate) / 100
+                            },
+                            {
+                                tax_name: 'SGST',
+                                tax_rate: Number(sgstRate),
+                                tax_amount: item.taxableValue * Number(sgstRate) / 100
+                            }
+                          ]
                 }))
             };
             console.log("invoicePayload", invoicePayload);
 
-            const response = await fetch('/api/invoices', {
-                method: 'POST',
+            const isEdit = Boolean(editId);
+            const url = isEdit ? `/api/invoices/${editId}` : '/api/invoices';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -126,13 +153,15 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
             });
 
             if (!response.ok) {
-                throw new Error('Failed to submit invoice');
+                const contentType = response.headers.get('content-type') || '';
+                const msg = contentType.includes('application/json') ? (await response.json()).error : await response.text();
+                throw new Error(msg || 'Failed to submit invoice');
             }
 
             const result = await response.json();
 
             setIsSubmitting(false);
-            alert('Invoice submitted successfully! Invoice ID: ' + result.id);
+            alert(`${isEdit ? 'Invoice updated' : 'Invoice submitted'} successfully! Invoice ID: ${result.id}`);
 
             // Optionally redirect to invoices list or reset form
             // window.location.href = '/dashboard/all-invoice';
@@ -156,7 +185,8 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     const getTransactionTypeIcon = (type: string) => {
         switch (type) {
             case 'retail': return <Receipt className="w-5 h-5" />;
-            case 'inter-city': return <Truck className="w-5 h-5" />;
+            case 'inter_state': return <Truck className="w-5 h-5" />;
+            case 'outer_state': return <Truck className="w-5 h-5" />;
             case 'purchase': return <Package className="w-5 h-5" />;
             default: return <FileText className="w-5 h-5" />;
         }
@@ -165,7 +195,8 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     const getTransactionTypeLabel = (type: string) => {
         switch (type) {
             case 'retail': return 'Retail Sales';
-            case 'inter-city': return 'Inter-city Sales';
+            case 'inter_state': return 'Inter-state Sales';
+            case 'outer_state': return 'Outer-state Sales';
             case 'purchase': return 'Purchase';
             default: return type;
         }
@@ -245,14 +276,23 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                             <span className="text-muted-foreground">Taxable Value:</span>
                                             <span className="font-semibold text-foreground">{formatCurrency(taxableValue)}</span>
                                         </div>
-                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
-                                            <span className="text-muted-foreground">CGST ({cgstRate}%):</span>
-                                            <span className="font-semibold text-foreground">{formatCurrency(cgstAmount)}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
-                                            <span className="text-muted-foreground">SGST ({sgstRate}%):</span>
-                                            <span className="font-semibold text-foreground">{formatCurrency(sgstAmount)}</span>
-                                        </div>
+                                        {isIGST ? (
+                                            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                                <span className="text-muted-foreground">IGST ({igstRate}%):</span>
+                                                <span className="font-semibold text-foreground">{formatCurrency(igstAmount)}</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                                    <span className="text-muted-foreground">CGST ({cgstRate}%):</span>
+                                                    <span className="font-semibold text-foreground">{formatCurrency(cgstAmount)}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-[16px]">
+                                                    <span className="text-muted-foreground">SGST ({sgstRate}%):</span>
+                                                    <span className="font-semibold text-foreground">{formatCurrency(sgstAmount)}</span>
+                                                </div>
+                                            </>
+                                        )}
                                         <div className="border-t border-border my-3"></div>
                                         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-[16px] border border-green-200">
                                             <span className="text-lg font-bold text-foreground">Total Invoice Value:</span>
