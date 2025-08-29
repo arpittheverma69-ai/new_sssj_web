@@ -25,12 +25,13 @@ model BusinessProfile {
   state_id Int? // FK to States.id
   state    States? @relation(fields: [state_id], references: [id])
 
-  pan_number     String?  @db.VarChar(10)
-  bank_name      String?  @db.VarChar(100)
-  account_number String?  @db.VarChar(20)
-  branch_ifsc    String?  @db.VarChar(20)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @default(now()) @updatedAt
+  pan_number     String?   @db.VarChar(10)
+  bank_name      String?   @db.VarChar(100)
+  account_number String?   @db.VarChar(20)
+  branch_ifsc    String?   @db.VarChar(20)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @default(now()) @updatedAt
+  deletedAt      DateTime? // Soft delete field
 }
 
 model States {
@@ -58,6 +59,7 @@ model Customer {
   email      String?   @db.VarChar(100)
   created_at DateTime  @default(now())
   updated_at DateTime  @default(now()) @updatedAt
+  deletedAt  DateTime? // Soft delete field
   invoices   Invoice[]
 }
 
@@ -78,6 +80,7 @@ model Invoice {
   flagged             Boolean    @default(false)
   created_at          DateTime   @default(now())
   updated_at          DateTime   @default(now()) @updatedAt
+  deletedAt           DateTime?  // Soft delete field
   customer            Customer?  @relation(fields: [buyer_id], references: [id])
   line_items          LineItem[]
 }
@@ -93,18 +96,20 @@ model LineItem {
   taxable_value Decimal       @db.Decimal(12, 2)
   roundoff      Decimal       @default(0.00) @db.Decimal(12, 2)
   created_at    DateTime      @default(now())
+  deletedAt     DateTime?     // Soft delete field
   invoice       Invoice       @relation(fields: [invoice_id], references: [id])
   taxes         LineItemTax[]
 }
 
 model LineItemTax {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   line_item_id Int
-  tax_name     String   @db.VarChar(20) // 'CGST', 'SGST', 'IGST'
-  tax_rate     Decimal  @db.Decimal(5, 2)
-  tax_amount   Decimal  @db.Decimal(12, 2)
-  created_at   DateTime @default(now())
-  line_item    LineItem @relation(fields: [line_item_id], references: [id])
+  tax_name     String    @db.VarChar(20) // 'CGST', 'SGST', 'IGST'
+  tax_rate     Decimal   @db.Decimal(5, 2)
+  tax_amount   Decimal   @db.Decimal(12, 2)
+  created_at   DateTime  @default(now())
+  deletedAt    DateTime? // Soft delete field
+  line_item    LineItem  @relation(fields: [line_item_id], references: [id])
 }
 
 model InvoiceSetting {
@@ -125,11 +130,12 @@ model InvoiceSetting {
 }
 
 model TaxRate {
-  id          Int      @id @default(autoincrement())
-  hsn_code    String   @db.VarChar(100)
-  description String   @db.VarChar(255)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @default(now()) @updatedAt
+  id          Int       @id @default(autoincrement())
+  hsn_code    String    @db.VarChar(100)
+  description String    @db.VarChar(255)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now()) @updatedAt
+  deletedAt   DateTime? // Soft delete field
 }
 
 enum TransactionType {
@@ -145,14 +151,15 @@ enum InputMode {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique @db.VarChar(100)
-  password   String   @db.VarChar(255)
-  name       String   @db.VarChar(100)
-  role       UserRole @default(admin)
-  is_active  Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  id         Int       @id @default(autoincrement())
+  email      String    @unique @db.VarChar(100)
+  password   String    @db.VarChar(255)
+  name       String    @db.VarChar(100)
+  role       UserRole  @default(admin)
+  is_active  Boolean   @default(true)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now()) @updatedAt
+  deletedAt  DateTime? // Soft delete field
 }
 
 enum UserRole {
