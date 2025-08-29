@@ -1,163 +1,117 @@
 "use client"
 import React, { useState } from 'react'
 import { Plus, Search, Download, Eye, Edit, Flag, DollarSign, FileText, Package } from 'lucide-react'
-
-// Mock invoice data - replace with actual data from your database
-const mockInvoices = [
-    {
-        id: 'INV-001',
-        customerName: 'John Doe',
-        customerEmail: 'john.doe@email.com',
-        customerPhone: '+91 98765 43210',
-        customerAddress: '123 Main Street, New Delhi, Delhi 110001',
-        invoiceDate: '2024-01-15',
-        dueDate: '2024-02-15',
-        amount: 25000,
-        taxAmount: 4500,
-        totalAmount: 29500,
-        status: 'paid',
-        paymentMethod: 'Online Transfer',
-        items: 5,
-        category: 'jewellery',
-        isFlagged: false,
-        notes: 'Gold necklace and earrings set'
-    },
-    {
-        id: 'INV-002',
-        customerName: 'Jane Smith',
-        customerEmail: 'jane.smith@email.com',
-        customerPhone: '+91 87654 32109',
-        address: '456 Park Avenue, Mumbai, Maharashtra 400001',
-        invoiceDate: '2024-01-10',
-        dueDate: '2024-02-10',
-        amount: 18000,
-        taxAmount: 3240,
-        totalAmount: 21240,
-        status: 'pending',
-        paymentMethod: 'Pending',
-        items: 3,
-        category: 'silver',
-        isFlagged: true,
-        notes: 'Silver bangles and rings'
-    },
-    {
-        id: 'INV-003',
-        customerName: 'Rajesh Kumar',
-        customerEmail: 'rajesh.kumar@email.com',
-        customerPhone: '+91 76543 21098',
-        address: '789 Lake Road, Bangalore, Karnataka 560001',
-        invoiceDate: '2024-01-12',
-        dueDate: '2024-02-12',
-        amount: 45000,
-        taxAmount: 8100,
-        totalAmount: 53100,
-        status: 'overdue',
-        paymentMethod: 'Pending',
-        items: 8,
-        category: 'diamond',
-        isFlagged: false,
-        notes: 'Diamond necklace and bracelet set'
-    },
-    {
-        id: 'INV-004',
-        customerName: 'Priya Sharma',
-        customerEmail: 'priya.sharma@email.com',
-        customerPhone: '+91 65432 10987',
-        address: '321 Garden Street, Chennai, Tamil Nadu 600001',
-        invoiceDate: '2024-01-08',
-        dueDate: '2024-02-08',
-        amount: 32000,
-        taxAmount: 5760,
-        totalAmount: 37760,
-        status: 'paid',
-        paymentMethod: 'Cash',
-        items: 6,
-        category: 'traditional',
-        isFlagged: false,
-        notes: 'Traditional gold ornaments'
-    },
-    {
-        id: 'INV-005',
-        customerName: 'Amit Patel',
-        customerEmail: 'amit.patel@email.com',
-        customerPhone: '+91 54321 09876',
-        address: '654 River View, Ahmedabad, Gujarat 380001',
-        invoiceDate: '2024-01-14',
-        dueDate: '2024-02-14',
-        amount: 28000,
-        taxAmount: 5040,
-        totalAmount: 33040,
-        status: 'pending',
-        paymentMethod: 'Pending',
-        items: 4,
-        category: 'platinum',
-        isFlagged: true,
-        notes: 'Platinum wedding ring set'
-    },
-    {
-        id: 'INV-006',
-        customerName: 'Sneha Reddy',
-        customerEmail: 'sneha.reddy@email.com',
-        customerPhone: '+91 43210 98765',
-        address: '987 Hill Street, Hyderabad, Telangana 500001',
-        invoiceDate: '2024-01-05',
-        dueDate: '2024-02-05',
-        amount: 15000,
-        taxAmount: 2700,
-        totalAmount: 17700,
-        status: 'paid',
-        paymentMethod: 'Credit Card',
-        items: 2,
-        category: 'jewellery',
-        isFlagged: false,
-        notes: 'Gold chain and pendant'
-    }
-];
-
-// Invoice status and category configurations
-const invoiceCategories = ['all', 'jewellery', 'silver', 'diamond', 'traditional', 'platinum', 'gold'];
+import { FaRegPenToSquare, FaTrashCan, FaEye, FaFlag } from "react-icons/fa6";
+import { IconButton, Tooltip } from "@mui/material";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { Invoice } from '@/types/invoiceTypes';
+import { showToast } from '@/utils/toast';
+import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
+const invoiceCategories = ['all', 'retail', 'inter_state', 'outer_state'];
 
 const AllInvoices = () => {
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
-    const [selectedDateRange, setSelectedDateRange] = useState('all');
     const [sortBy, setSortBy] = useState<'date' | 'amount' | 'customer'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [flaggedOnly, setFlaggedOnly] = useState(false);
+    const [loading, setLoading] = React.useState(true);
+    const [invoices, setInvoices] = React.useState<Invoice[]>([]);
+    const [selectedInvoice, setSelectedInvoice] = React.useState<Invoice | null>(null);
+    const [viewModalOpen, setViewModalOpen] = React.useState(false);
+    const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
+
+    // Fetch invoices on component mount
+    React.useEffect(() => {
+        fetchInvoices();
+    }, []);
+
+    const fetchInvoices = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch('/api/invoices');
+            const data = await response.json();
+            setInvoices(data.invoices || []);
+        } catch (error) {
+            showToast.error('Failed to fetch invoices');
+            console.error('Error fetching invoices:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleView = (invoice: Invoice) => {
+        setSelectedInvoice(invoice);
+        setViewModalOpen(true);
+    };
+    const handleEdit = (invoice: Invoice) => {
+        // Navigate to the edit page under dashboard
+        router.push(`/dashboard/create-invoice?edit=${invoice.id}`);
+    };
+
+    const handleDelete = (invoice: Invoice) => {
+        setSelectedInvoice(invoice);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!selectedInvoice) return;
+
+        try {
+            const response = await fetch(`/api/invoices/${selectedInvoice.id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                toast.success('Invoice deleted successfully');
+                fetchInvoices();
+                setDeleteModalOpen(false);
+                setSelectedInvoice(null);
+            } else {
+                toast.error('Failed to delete invoice');
+            }
+        } catch (error) {
+            toast.error('Error deleting invoice');
+            console.error('Error:', error);
+        }
+    };
 
     // Filter and search invoices
-    const filteredInvoices = mockInvoices
+    const filteredInvoices = invoices
         .filter(invoice => {
-            const matchesSearch = invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                invoice.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
-            
-            const matchesCategory = selectedCategory === 'all' || invoice.category === selectedCategory;
-            const matchesFlagged = !flaggedOnly || invoice.isFlagged;
-            
+            const matchesSearch = invoice.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+                invoice.buyer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (invoice.buyer_gstin || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+            const matchesCategory = selectedCategory === 'all' || invoice.transaction_type === selectedCategory;
+            const matchesFlagged = !flaggedOnly || invoice.flagged;
+
             return matchesSearch && matchesCategory && matchesFlagged;
         })
         .sort((a, b) => {
             let aValue: any, bValue: any;
-            
+
             switch (sortBy) {
                 case 'date':
-                    aValue = new Date(a.invoiceDate).getTime();
-                    bValue = new Date(b.invoiceDate).getTime();
+                    aValue = new Date(a.invoice_date).getTime();
+                    bValue = new Date(b.invoice_date).getTime();
                     break;
                 case 'amount':
-                    aValue = a.totalAmount;
-                    bValue = b.totalAmount;
+                    aValue = a.total_invoice_value;
+                    bValue = b.total_invoice_value;
                     break;
                 case 'customer':
-                    aValue = a.customerName.toLowerCase();
-                    bValue = b.customerName.toLowerCase();
+                    aValue = a.buyer_name.toLowerCase();
+                    bValue = b.buyer_name.toLowerCase();
                     break;
                 default:
-                    aValue = a.invoiceDate;
-                    bValue = b.invoiceDate;
+                    aValue = a.invoice_date;
+                    bValue = b.invoice_date;
             }
-            
+
             if (sortOrder === 'asc') {
                 return aValue > bValue ? 1 : -1;
             } else {
@@ -166,9 +120,9 @@ const AllInvoices = () => {
         });
 
     // Calculate statistics
-    const totalInvoices = mockInvoices.length;
-    const totalRevenue = mockInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-    const flaggedInvoices = mockInvoices.filter(inv => inv.isFlagged).length;
+    const totalInvoices = invoices.length;
+    const totalRevenue = invoices.reduce((sum, inv) => sum + inv.total_invoice_value, 0);
+    const flaggedInvoices = invoices.filter(inv => inv.flagged).length;
 
     // Format currency in Indian Rupees
     const formatCurrency = (amount: number) => {
@@ -181,9 +135,21 @@ const AllInvoices = () => {
     };
 
     // Toggle flag status
-    const toggleFlag = (invoiceId: string) => {
-        // In a real app, this would update the database
-        console.log(`Toggling flag for invoice: ${invoiceId}`);
+    const toggleFlag = async (invoice: Invoice) => {
+        try {
+            const response = await fetch(`/api/invoices/${invoice.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ flagged: !invoice.flagged }),
+            });
+
+            if (response.ok) {
+                fetchInvoices();
+                toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`);
+            }
+        } catch (error) {
+            toast.error('Failed to update flag');
+        }
     };
 
     return (
@@ -196,13 +162,14 @@ const AllInvoices = () => {
                 </div>
 
                 <div className="flex justify-center md:justify-end">
-                    <button 
-                        id="createInvoiceBtn" 
+                    <button
+                        id="createInvoiceBtn"
+                        onClick={() => router.push('/dashboard/create-invoice')}
                         className="w-full md:w-auto bg-primary text-primary-foreground px-4 md:px-6 py-3 rounded-[20px] hover:bg-primary/90 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
                     >
                         <Plus className="w-4 h-4 md:w-5 md:h-5" />
                         <span className="text-sm md:text-base">Create New Invoice</span>
-                </button>
+                    </button>
                 </div>
             </header>
 
@@ -219,7 +186,7 @@ const AllInvoices = () => {
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="bg-card p-3 md:p-4 rounded-[16px] md:rounded-[20px] border border-border hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-2 md:gap-3">
                         <div className="w-8 h-8 md:w-10 md:h-10 bg-purple-500/10 rounded-[12px] md:rounded-[16px] flex items-center justify-center">
@@ -231,7 +198,7 @@ const AllInvoices = () => {
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="bg-card p-3 md:p-4 rounded-[16px] md:rounded-[20px] border border-border hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-2 md:gap-3">
                         <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500/10 rounded-[12px] md:rounded-[16px] flex items-center justify-center">
@@ -243,14 +210,14 @@ const AllInvoices = () => {
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="bg-card p-3 md:p-4 rounded-[16px] md:rounded-[20px] border border-border hover:shadow-lg transition-all duration-200">
                     <div className="flex items-center gap-2 md:gap-3">
                         <div className="w-8 h-8 md:w-10 md:h-10 bg-green-500/10 rounded-[12px] md:rounded-[16px] flex items-center justify-center">
                             <Package className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
                         </div>
                         <div>
-                            <div className="text-base md:text-lg font-bold text-foreground">{mockInvoices.reduce((sum, inv) => sum + inv.items, 0)}</div>
+                            <div className="text-base md:text-lg font-bold text-foreground">{invoices.reduce((sum, inv) => sum + inv.line_items.length, 0)}</div>
                             <div className="text-xs text-muted-foreground">Total Items</div>
                         </div>
                     </div>
@@ -307,11 +274,10 @@ const AllInvoices = () => {
                         {/* Flagged Only Toggle */}
                         <button
                             onClick={() => setFlaggedOnly(!flaggedOnly)}
-                            className={`w-full sm:w-auto px-3 md:px-4 py-2 md:py-2 rounded-[12px] md:rounded-[16px] font-medium transition-all duration-200 text-sm md:text-base ${
-                                flaggedOnly
-                                    ? 'bg-purple-500 text-white'
-                                    : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                            }`}
+                            className={`w-full sm:w-auto px-3 md:px-4 py-2 md:py-2 rounded-[12px] md:rounded-[16px] font-medium transition-all duration-200 text-sm md:text-base ${flaggedOnly
+                                ? 'bg-purple-500 text-white'
+                                : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                                }`}
                         >
                             <Flag className={`w-4 h-4 inline mr-2 ${flaggedOnly ? 'text-white' : ''}`} />
                             Flagged Only
@@ -323,13 +289,20 @@ const AllInvoices = () => {
             {/* Results Count */}
             <div className="flex items-center justify-between mb-4 md:mb-6">
                 <div className="text-xs md:text-sm text-muted-foreground">
-                    Showing {filteredInvoices.length} of {totalInvoices} invoices
+                    {loading ? 'Loading...' : `Showing ${filteredInvoices.length} of ${totalInvoices} invoices`}
                 </div>
             </div>
 
             {/* Mobile Invoice Cards */}
             <div className="block md:hidden">
-                {filteredInvoices.length === 0 ? (
+                {loading ? (
+                    <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                        <div className="text-muted-foreground font-medium mb-2">Loading invoices...</div>
+                    </div>
+                ) : filteredInvoices.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                             <FileText className="w-8 h-8 text-muted-foreground" />
@@ -345,59 +318,69 @@ const AllInvoices = () => {
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-center gap-3">
                                         <button
-                                            onClick={() => toggleFlag(invoice.id)}
-                                            className={`p-2 rounded-full transition-all duration-200 hover:scale-110 ${
-                                                invoice.isFlagged
-                                                    ? 'text-red-500 hover:text-red-600'
-                                                    : 'text-muted-foreground hover:text-red-500'
-                                            }`}
+                                            onClick={() => toggleFlag(invoice)}
+                                            className={`p-2 rounded-full transition-all duration-200 hover:scale-110 ${invoice.flagged
+                                                ? 'text-red-500 hover:text-red-600'
+                                                : 'text-muted-foreground hover:text-red-500'
+                                                }`}
                                         >
-                                            <Flag className={`w-4 h-4 ${invoice.isFlagged ? 'fill-current' : ''}`} />
+                                            <Flag className={`w-4 h-4 ${invoice.flagged ? 'fill-current' : ''}`} />
                                         </button>
                                         <div>
-                                            <div className="font-semibold text-foreground text-sm">{invoice.id}</div>
-                                            <div className="text-xs text-muted-foreground">{invoice.category}</div>
+                                            <div className="font-semibold text-foreground text-sm">INV-{invoice.id}</div>
+                                            <div className="text-xs text-muted-foreground">{invoice.transaction_type}</div>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="font-semibold text-foreground text-sm">{formatCurrency(invoice.totalAmount)}</div>
-                                        <div className="text-xs text-muted-foreground">Tax: {formatCurrency(invoice.taxAmount)}</div>
+                                        <div className="font-semibold text-foreground text-sm">{formatCurrency(invoice.total_invoice_value)}</div>
+                                        <div className="text-xs text-muted-foreground">Total Value</div>
                                     </div>
                                 </div>
 
                                 {/* Customer Info */}
                                 <div className="mb-3">
-                                    <div className="font-medium text-foreground text-sm">{invoice.customerName}</div>
-                                    <div className="text-xs text-muted-foreground">{invoice.customerEmail}</div>
+                                    <div className="font-medium text-foreground text-sm">{invoice.buyer_name}</div>
+                                    <div className="text-xs text-muted-foreground">{invoice.buyer_gstin || 'No GSTIN'}</div>
                                 </div>
 
                                 {/* Details Row */}
                                 <div className="grid grid-cols-3 gap-3 mb-3 text-xs">
                                     <div>
                                         <div className="text-muted-foreground">Date</div>
-                                        <div className="text-foreground">{new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}</div>
+                                        <div className="text-foreground">{new Date(invoice.invoice_date).toLocaleDateString('en-IN')}</div>
                                     </div>
                                     <div>
-                                        <div className="text-muted-foreground">Due</div>
-                                        <div className="text-foreground">{new Date(invoice.dueDate).toLocaleDateString('en-IN')}</div>
+                                        <div className="text-muted-foreground">Type</div>
+                                        <div className="text-foreground">{invoice.transaction_type}</div>
                                     </div>
                                     <div>
                                         <div className="text-muted-foreground">Items</div>
-                                        <div className="text-foreground">{invoice.items}</div>
+                                        <div className="text-foreground">{invoice.line_items.length}</div>
                                     </div>
                                 </div>
 
                                 {/* Actions */}
                                 <div className="flex items-center justify-end gap-2">
-                                    <button className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200" title="View">
-                                        <Eye className="w-4 h-4 text-muted-foreground" />
-                                    </button>
-                                    <button className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200" title="Edit">
-                                        <Edit className="w-4 h-4 text-muted-foreground" />
-                                    </button>
-                                    <button className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200" title="Download">
-                                        <Download className="w-4 h-4 text-muted-foreground" />
-                                    </button>
+                                    <Tooltip title="View">
+                                        <IconButton size="small" onClick={() => handleView(invoice)}>
+                                            <FaEye className="text-blue-500" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Edit">
+                                        <IconButton size="small" onClick={() => handleEdit(invoice)}>
+                                            <FaRegPenToSquare className="text-green-500" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title={invoice.flagged ? "Unflag" : "Flag"}>
+                                        <IconButton size="small" onClick={() => toggleFlag(invoice)}>
+                                            <FaFlag className={invoice.flagged ? "text-red-500" : "text-gray-400"} />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Delete">
+                                        <IconButton size="small" onClick={() => handleDelete(invoice)}>
+                                            <FaTrashCan className="text-red-500" />
+                                        </IconButton>
+                                    </Tooltip>
                                 </div>
                             </div>
                         ))}
@@ -414,7 +397,7 @@ const AllInvoices = () => {
                         <div className="col-span-2">Invoice</div>
                         <div className="col-span-2">Customer</div>
                         <div className="col-span-1">Date</div>
-                        <div className="col-span-1">Due</div>
+                        <div className="col-span-1">Type</div>
                         <div className="col-span-1">Items</div>
                         <div className="col-span-2">Amount</div>
                         <div className="col-span-2">Actions</div>
@@ -423,7 +406,14 @@ const AllInvoices = () => {
 
                 {/* Table Body */}
                 <div className="divide-y divide-border">
-                    {filteredInvoices.length === 0 ? (
+                    {loading ? (
+                        <div className="text-center py-16">
+                            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                            </div>
+                            <div className="text-muted-foreground font-medium mb-2">Loading invoices...</div>
+                        </div>
+                    ) : filteredInvoices.length === 0 ? (
                         <div className="text-center py-16">
                             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                                 <FileText className="w-8 h-8 text-muted-foreground" />
@@ -439,67 +429,77 @@ const AllInvoices = () => {
                                         {/* Flag Column */}
                                         <div className="col-span-1">
                                             <button
-                                                onClick={() => toggleFlag(invoice.id)}
-                                                className={`p-2 rounded-full transition-all duration-200 hover:scale-110 ${
-                                                    invoice.isFlagged
-                                                        ? 'text-red-500 hover:text-red-600'
-                                                        : 'text-muted-foreground hover:text-red-500'
-                                                }`}
+                                                onClick={() => toggleFlag(invoice)}
+                                                className={`p-2 rounded-full transition-all duration-200 hover:scale-110 ${invoice.flagged
+                                                    ? 'text-red-500 hover:text-red-600'
+                                                    : 'text-muted-foreground hover:text-red-500'
+                                                    }`}
                                             >
-                                                <Flag className={`w-4 h-4 ${invoice.isFlagged ? 'fill-current' : ''}`} />
+                                                <Flag className={`w-4 h-4 ${invoice.flagged ? 'fill-current' : ''}`} />
                                             </button>
                                         </div>
 
                                         {/* Invoice ID */}
                                         <div className="col-span-2">
-                                            <div className="font-semibold text-foreground">{invoice.id}</div>
-                                            <div className="text-xs text-muted-foreground">{invoice.category}</div>
+                                            <div className="font-semibold text-foreground">INV-{invoice.id}</div>
+                                            <div className="text-xs text-muted-foreground">{invoice.transaction_type}</div>
                                         </div>
 
                                         {/* Customer */}
                                         <div className="col-span-2">
-                                            <div className="font-medium text-foreground">{invoice.customerName}</div>
-                                            <div className="text-xs text-muted-foreground">{invoice.customerEmail}</div>
+                                            <div className="font-medium text-foreground">{invoice.buyer_name}</div>
+                                            <div className="text-xs text-muted-foreground">{invoice.buyer_gstin || 'No GSTIN'}</div>
                                         </div>
 
                                         {/* Invoice Date */}
                                         <div className="col-span-1">
                                             <div className="text-sm text-foreground">
-                                                {new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}
+                                                {new Date(invoice.invoice_date).toLocaleDateString('en-IN')}
                                             </div>
                                         </div>
 
-                                        {/* Due Date */}
+                                        {/* Transaction Type */}
                                         <div className="col-span-1">
                                             <div className="text-sm text-foreground">
-                                                {new Date(invoice.dueDate).toLocaleDateString('en-IN')}
+                                                {invoice.transaction_type}
                                             </div>
                                         </div>
 
                                         {/* Items */}
                                         <div className="col-span-1">
-                                            <div className="text-sm text-foreground">{invoice.items}</div>
+                                            <div className="text-sm text-foreground">{invoice.line_items.length}</div>
                                         </div>
 
                                         {/* Amount */}
                                         <div className="col-span-2">
-                                            <div className="font-semibold text-foreground">{formatCurrency(invoice.totalAmount)}</div>
+                                            <div className="font-semibold text-foreground">{formatCurrency(invoice.total_invoice_value)}</div>
                                             <div className="text-xs text-muted-foreground">
-                                                Tax: {formatCurrency(invoice.taxAmount)}
+                                                Total Invoice Value
                                             </div>
                                         </div>
 
                                         {/* Actions */}
                                         <div className="col-span-2 flex items-center justify-center gap-2">
-                                            <button className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200" title="View">
-                                                <Eye className="w-4 h-4 text-muted-foreground" />
-                                            </button>
-                                            <button className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200" title="Edit">
-                                                <Edit className="w-4 h-4 text-muted-foreground" />
-                                            </button>
-                                            <button className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200" title="Download">
-                                                <Download className="w-4 h-4 text-muted-foreground" />
-                                            </button>
+                                            <Tooltip title="View">
+                                                <IconButton size="small" onClick={() => handleView(invoice)}>
+                                                    <FaEye className="text-blue-500" />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Edit">
+                                                <IconButton size="small" onClick={() => handleEdit(invoice)}>
+                                                    <FaRegPenToSquare className="text-green-500" />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title={invoice.flagged ? "Unflag" : "Flag"}>
+                                                <IconButton size="small" onClick={() => toggleFlag(invoice)}>
+                                                    <FaFlag className={invoice.flagged ? "text-red-500" : "text-gray-400"} />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Delete">
+                                                <IconButton size="small" onClick={() => handleDelete(invoice)}>
+                                                    <FaTrashCan className="text-red-500" />
+                                                </IconButton>
+                                            </Tooltip>
                                         </div>
                                     </div>
                                 </div>
@@ -508,6 +508,113 @@ const AllInvoices = () => {
                     )}
                 </div>
             </div>
+            {/* View Modal */}
+            <Modal
+                isOpen={viewModalOpen}
+                onClose={() => setViewModalOpen(false)}
+                title="Invoice Details"
+                size="lg"
+            >
+                {selectedInvoice && (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Invoice Number</label>
+                                <p className="mt-1 text-sm text-gray-900">{selectedInvoice.invoice_number}</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Date</label>
+                                <p className="mt-1 text-sm text-gray-900">
+                                    {new Date(selectedInvoice.invoice_date).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Customer</label>
+                                <p className="mt-1 text-sm text-gray-900">{selectedInvoice.buyer_name}</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Total Amount</label>
+                                <p className="mt-1 text-sm text-gray-900">₹{selectedInvoice.total_invoice_value ? Number(selectedInvoice.total_invoice_value).toFixed(2) : '0.00'}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Line Items</label>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Description
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Qty
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Rate
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Amount
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {selectedInvoice.line_items.map((item, index) => (
+                                            <tr key={index}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {item.description}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {item.quantity} {item.unit}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₹{Number(item.rate).toFixed(2)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₹{Number(item.taxable_value).toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-3">
+                            <Button variant="outline" onClick={() => setViewModalOpen(false)}>
+                                Close
+                            </Button>
+                            {/* <Button onClick={() => handleDownload(selectedInvoice)}>
+                                            Download PDF
+                                        </Button> */}
+                        </div>
+                    </div>
+                )}
+            </Modal>
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                title="Confirm Delete"
+                size="sm"
+            >
+                {selectedInvoice && (
+                    <div className="space-y-4">
+                        <p className="text-sm text-gray-600">
+                            Are you sure you want to delete invoice <strong>{selectedInvoice.invoice_number}</strong>?
+                            This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button variant="danger" onClick={confirmDelete}>
+                                Delete
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </main>
     )
 }

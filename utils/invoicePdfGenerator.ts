@@ -8,12 +8,16 @@ interface InvoicePdfData {
 
 export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
     // Calculate totals
-    const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
+    const taxableValue = lineItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+    const totalRoundoff = lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0);
+    const taxableAfterRoundoff = Math.max(0, taxableValue - totalRoundoff);
+    
     const cgstRate = 1.5;
     const sgstRate = 1.5;
-    const cgstAmount = taxableValue * cgstRate / 100;
-    const sgstAmount = taxableValue * sgstRate / 100;
-    const totalInvoice = taxableValue + cgstAmount + sgstAmount;
+    const cgstAmount = taxableAfterRoundoff * cgstRate / 100;
+    const sgstAmount = taxableAfterRoundoff * sgstRate / 100;
+    const totalTax = cgstAmount + sgstAmount;
+    const totalInvoice = taxableAfterRoundoff + totalTax;
 
     // Copy types for the 3 pages
     const copyTypes = [
@@ -180,7 +184,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black text-right"></td>
-                        <td class="w-[98.27px] text-right">(-)0.09</td>
+                        <td class="w-[98.27px] text-right">${totalRoundoff ? `(-)${totalRoundoff.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '0.00'}</td>
                     </tr>
                 </tbody>
                 <tfoot>

@@ -1,7 +1,7 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LineItemsTable from '../create-invoice/LineItemsTable';
-import { LineItem } from '@/types/invoiceTypes';
+import { LineItem, TaxRateRow } from '@/types/invoiceTypes';
 import { Plus, ArrowLeft, ArrowRight, Calculator, Package, Info, AlertCircle } from 'lucide-react';
 
 interface LineItemsPageProps {
@@ -21,23 +21,100 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     nextStep,
     prevStep,
 }) => {
+    const [hsnSacOptions, setHsnSacOptions] = useState<TaxRateRow[]>([]);
+    const [loadingHsnSac, setLoadingHsnSac] = useState(true);
     const [formData, setFormData] = useState({
-        hsnSac: '7113 - Jewellery',
-        description: 'SILVER ORNAMENTS',
-        quantity: '0.000',
-        unit: 'KGS',
+        hsnSac: '',
+        description: '',
+        quantity: '1', // Default to 1 instead of 0.000
+        unit: 'PCS', // Changed default unit to PCS (pieces) since we're dealing with integers
         rate: '0.00',
+        roundoff: '0.00',
+        targetAmount: '0.00', // For reverse calculation
+        directAmount: '0.00', // For direct amount entry
     });
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [cgstRate, setCgstRate] = useState('1.5');
     const [sgstRate, setSgstRate] = useState('1.5');
 
-    const handleAddItem = () => {
-        const quantity = parseFloat(formData.quantity) || 0;
-        const rate = parseFloat(formData.rate) || 0;
+    // Fetch HSN/SAC codes from database
+    useEffect(() => {
+        const fetchHsnSacCodes = async () => {
+            try {
+                setLoadingHsnSac(true);
+                const response = await fetch('/api/setting/taxrates');
+                if (response.ok) {
+                    const data = await response.json();
+                    setHsnSacOptions(data);
+                    // Set default values if data exists
+                    if (data.length > 0 && !formData.hsnSac) {
+                        setFormData(prev => ({
+                            ...prev,
+                            hsnSac: `${data[0].hsn_code} - ${data[0].description}`,
+                            description: data[0].description
+                        }));
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching HSN/SAC codes:', error);
+            } finally {
+                setLoadingHsnSac(false);
+            }
+        };
 
-        if (quantity <= 0 || rate <= 0) {
-            alert('Please enter valid quantity and rate values.');
+        fetchHsnSacCodes();
+    }, []);
+
+    const validateForm = () => {
+        const errors: Record<string, string> = {};
+        
+        if (!formData.hsnSac || formData.hsnSac === '') {
+            errors.hsnSac = 'HSN/SAC Code is required';
+        }
+        
+        if (!formData.description.trim()) {
+            errors.description = 'Description is required';
+        }
+        
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleAddItem = () => {
+        if (!validateForm()) {
             return;
+        }
+
+        // Ensure quantity is a whole number
+        let quantity = Math.max(1, Math.floor(parseFloat(formData.quantity) || 1));
+        let rate = parseFloat(formData.rate) || 0;
+        let directAmount = parseFloat(formData.directAmount) || 0;
+        let targetAmount = parseFloat(formData.targetAmount) || 0;
+        let roundoff = parseFloat(formData.roundoff) || 0;
+
+        // Handle different input modes
+        if (invoiceData.mode === 'reverse') {
+            // Reverse Calculation: Calculate quantity from target amount and rate
+            if (targetAmount <= 0 || rate <= 0) {
+                alert('Please enter valid target amount and rate values for reverse calculation.');
+                return;
+            }
+            quantity = targetAmount / rate;
+        } else if (invoiceData.mode === 'direct') {
+            // Direct Amount Entry: Use direct amount as taxable value
+            if (directAmount <= 0) {
+                alert('Please enter a valid direct amount.');
+                return;
+            }
+            // For direct mode, we'll use quantity=1 and rate=directAmount
+            quantity = 1;
+            rate = directAmount;
+        } else {
+            // Component Entry: Normal validation
+            if (quantity <= 0 || rate <= 0) {
+                alert('Please enter valid quantity and rate values.');
+                return;
+            }
         }
 
         addLineItem({
@@ -46,21 +123,26 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
             quantity,
             unit: formData.unit,
             rate,
+            roundoff,
         });
 
         // Reset form fields
         setFormData(prev => ({
             ...prev,
-            quantity: '0.000',
-            rate: '0.00',
+            quantity: '1', // Reset to 1 instead of 0.000
+            rate: invoiceData.mode === 'direct' ? directAmount.toFixed(2) : '0.00',
+            roundoff: '0.00',
+            targetAmount: '0.00',
+            directAmount: '0.00',
         }));
+        setFormErrors({});
     };
 
     const handleUseExample = () => {
         setFormData(prev => ({
             ...prev,
-            quantity: '10.468',
-            rate: '56000.08',
+            quantity: '10', // Changed to integer
+            rate: '56000', // Changed to whole number
         }));
     };
 
@@ -75,13 +157,25 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     const isIGST = String(invoiceData?.type || '').toLowerCase() === 'inter_state' || String(invoiceData?.type || '').toLowerCase() === 'outer_state';
     const calculateTotals = () => {
         const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
-        const cgstAmt = isIGST ? 0 : taxableValue * (parseFloat(cgstRate) / 100);
-        const sgstAmt = isIGST ? 0 : taxableValue * (parseFloat(sgstRate) / 100);
-        const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
-        const igstAmt = isIGST ? taxableValue * (igstRate / 100) : 0;
-        const total = taxableValue + cgstAmt + sgstAmt + igstAmt;
+        const totalRoundoff = lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0);
+        const adjustedTaxableValue = taxableValue - totalRoundoff;
         
-        return { taxableValue, cgstAmount: cgstAmt, sgstAmount: sgstAmt, igstAmount: igstAmt, igstRate, total };
+        const cgstAmt = isIGST ? 0 : adjustedTaxableValue * (parseFloat(cgstRate) / 100);
+        const sgstAmt = isIGST ? 0 : adjustedTaxableValue * (parseFloat(sgstRate) / 100);
+        const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
+        const igstAmt = isIGST ? adjustedTaxableValue * (igstRate / 100) : 0;
+        const total = adjustedTaxableValue + cgstAmt + sgstAmt + igstAmt;
+        
+        return { 
+            taxableValue, 
+            totalRoundoff, 
+            adjustedTaxableValue, 
+            cgstAmount: cgstAmt, 
+            sgstAmount: sgstAmt, 
+            igstAmount: igstAmt, 
+            igstRate, 
+            total 
+        };
     };
 
     const totals = calculateTotals();
@@ -113,57 +207,108 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-foreground">Add Line Items</h2>
-                                    <p className="text-muted-foreground">Component Entry Mode</p>
+                                    <p className="text-muted-foreground">
+                                        {invoiceData.mode === 'component' && 'Component Entry Mode'}
+                                        {invoiceData.mode === 'direct' && 'Direct Amount Entry Mode'}
+                                        {invoiceData.mode === 'reverse' && 'Reverse Calculation Mode'}
+                                    </p>
                                 </div>
                             </div>
                         </div>
                         
                         <div className="p-6 space-y-6">
                             {/* Form Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
                                 {/* HSN/SAC Code */}
                         <div className="xl:col-span-1">
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                HSN/SAC Code
+                                HSN/SAC Code <span className="text-destructive">*</span>
                             </label>
                             <select
                                 value={formData.hsnSac}
-                                onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
-                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                onChange={(e) => {
+                                    const selectedValue = e.target.value;
+                                    const selectedOption = hsnSacOptions.find(option => 
+                                        `${option.hsn_code} - ${option.description}` === selectedValue
+                                    );
+                                    setFormData({ 
+                                        ...formData, 
+                                        hsnSac: selectedValue,
+                                        description: selectedOption ? selectedOption.description : formData.description
+                                    });
+                                    if (formErrors.hsnSac) {
+                                        setFormErrors({ ...formErrors, hsnSac: '' });
+                                    }
+                                }}
+                                        className={`w-full px-4 py-3 border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 ${
+                                            formErrors.hsnSac ? 'border-destructive' : 'border-border'
+                                        }`}
+                                disabled={loadingHsnSac}
                             >
-                                <option>7113 - Jewellery</option>
-                                <option>7114 - Precious Stones</option>
-                                        <option>7115 - Imitation Jewellery</option>
-                                        <option>7116 - Gold Jewellery</option>
+                                {loadingHsnSac ? (
+                                    <option>Loading HSN/SAC codes...</option>
+                                ) : hsnSacOptions.length === 0 ? (
+                                    <option>No HSN/SAC codes available</option>
+                                ) : (
+                                    <>
+                                        <option value="">Select HSN/SAC Code</option>
+                                        {hsnSacOptions.map((option) => (
+                                            <option key={option.id} value={`${option.hsn_code} - ${option.description}`}>
+                                                {option.hsn_code} - {option.description}
+                                            </option>
+                                        ))}
+                                    </>
+                                )}
                             </select>
+                                    {formErrors.hsnSac && (
+                                        <div className="text-destructive text-xs mt-1 flex items-center gap-1">
+                                            <span>⚠</span> {formErrors.hsnSac}
+                                        </div>
+                                    )}
                         </div>
 
                                 {/* Description */}
                         <div className="md:col-span-2 xl:col-span-1">
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                Description
+                                Description <span className="text-destructive">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                onChange={(e) => {
+                                    setFormData({ ...formData, description: e.target.value });
+                                    if (formErrors.description) {
+                                        setFormErrors({ ...formErrors, description: '' });
+                                    }
+                                }}
+                                        className={`w-full px-4 py-3 border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 ${
+                                            formErrors.description ? 'border-destructive' : 'border-border'
+                                        }`}
                                         placeholder="Product description"
                             />
+                                    {formErrors.description && (
+                                        <div className="text-destructive text-xs mt-1 flex items-center gap-1">
+                                            <span>⚠</span> {formErrors.description}
+                                        </div>
+                                    )}
                         </div>
 
-                                {/* Quantity */}
+                                {/* Quantity - Show different fields based on input mode */}
                         <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                Quantity
+                                {invoiceData.mode === 'reverse' ? 'Calculated Quantity' : 'Quantity'}
                             </label>
                             <input
                                 type="text"
                                 value={formData.quantity}
                                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                disabled={invoiceData.mode === 'reverse'}
+                                        className={`w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 ${invoiceData.mode === 'reverse' ? 'bg-muted cursor-not-allowed' : ''}`}
                                         placeholder="0.000"
                             />
+                            {invoiceData.mode === 'reverse' && (
+                                <p className="text-xs text-muted-foreground mt-1">Auto-calculated from target amount ÷ rate</p>
+                            )}
                         </div>
 
                                 {/* Unit */}
@@ -186,17 +331,110 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 {/* Rate */}
                         <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                        Rate per {formData.unit}
+                                        {invoiceData.mode === 'direct' ? 'Direct Amount' : `Rate per ${formData.unit}`}
+                            </label>
+                            {invoiceData.mode === 'direct' ? (
+                                <input
+                                    type="text"
+                                    value={formData.directAmount}
+                                    onChange={(e) => setFormData({ ...formData, directAmount: e.target.value })}
+                                    className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                    placeholder="Enter total amount directly"
+                                />
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={formData.rate}
+                                    onChange={(e) => {
+                                        const rate = e.target.value;
+                                        if (invoiceData.mode === 'reverse') {
+                                            // Auto-calculate quantity when rate changes in reverse mode
+                                            const targetAmount = parseFloat(formData.targetAmount) || 0;
+                                            const calculatedQuantity = parseFloat(rate) > 0 && targetAmount > 0 
+                                                ? (targetAmount / parseFloat(rate)).toFixed(3) 
+                                                : '0.000';
+                                            setFormData({ 
+                                                ...formData, 
+                                                rate,
+                                                quantity: calculatedQuantity
+                                            });
+                                        } else {
+                                            setFormData({ ...formData, rate });
+                                        }
+                                    }}
+                                    className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                    placeholder="0.00"
+                                />
+                            )}
+                        </div>
+
+                                {/* RoundOff */}
+                        <div>
+                                    <label className="block text-sm font-semibold text-foreground mb-2">
+                                RoundOff (₹)
                             </label>
                             <input
                                 type="text"
-                                value={formData.rate}
-                                onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+                                value={formData.roundoff}
+                                onChange={(e) => setFormData({ ...formData, roundoff: e.target.value })}
                                         className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
                                         placeholder="0.00"
                             />
+                                    <p className="text-xs text-muted-foreground mt-1">Amount to subtract from taxable value</p>
                         </div>
                             </div>
+
+                            {/* Target Amount Field - Only for Reverse Calculation */}
+                            {invoiceData.mode === 'reverse' && (
+                                <div className="bg-gradient-to-r from-orange-500/10 to-orange-500/5 p-4 rounded-[20px] border border-orange-500/20">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-foreground mb-2">
+                                                Target Amount (₹)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.targetAmount}
+                                                onChange={(e) => {
+                                                    const targetAmount = e.target.value;
+                                                    const rate = parseFloat(formData.rate) || 0;
+                                                    const calculatedQuantity = rate > 0 ? (parseFloat(targetAmount) / rate).toFixed(3) : '0.000';
+                                                    setFormData({ 
+                                                        ...formData, 
+                                                        targetAmount,
+                                                        quantity: calculatedQuantity
+                                                    });
+                                                }}
+                                                className="w-full px-4 py-3 border border-orange-500/30 rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-orange-500/50"
+                                                placeholder="Enter desired total amount"
+                                            />
+                                        </div>
+                                        <div className="flex items-end">
+                                            <div className="text-sm text-muted-foreground">
+                                                <div className="font-medium text-orange-600 mb-1">Reverse Calculation</div>
+                                                <div>Enter target amount and rate to auto-calculate quantity</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Direct Amount Info - Only for Direct Mode */}
+                            {invoiceData.mode === 'direct' && (
+                                <div className="bg-gradient-to-r from-yellow-500/10 to-yellow-500/5 p-4 rounded-[20px] border border-yellow-500/20">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-yellow-500 rounded-[16px] flex items-center justify-center text-white text-lg">
+                                            💰
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-foreground mb-1">Direct Amount Entry</div>
+                                            <div className="text-sm text-muted-foreground">
+                                                Enter the total taxable amount directly. Quantity will be set to 1.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Add Item Button */}
                             <div className="flex justify-end">
@@ -360,6 +598,20 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                     <span className="text-muted-foreground">Taxable Value:</span>
                                     <span className="font-semibold text-foreground">
                                         ₹{totals.taxableValue.toFixed(2)}
+                                    </span>
+                                </div>
+                                {totals.totalRoundoff > 0 && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">RoundOff:</span>
+                                        <span className="font-semibold text-red-600">
+                                            -₹{totals.totalRoundoff.toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Adjusted Taxable Value:</span>
+                                    <span className="font-semibold text-foreground">
+                                        ₹{totals.adjustedTaxableValue.toFixed(2)}
                                     </span>
                                 </div>
                                 {isIGST ? (

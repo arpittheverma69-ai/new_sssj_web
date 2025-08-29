@@ -19,21 +19,13 @@ export async function PUT(
         const requestBody = await request.json();
         console.log("Updating tax rate ID:", id, "with data:", requestBody);
 
-        // 3. If setting as default, unset other defaults
-        if (requestBody.is_default) {
-            await prisma.taxRate.updateMany({
-                where: {
-                    is_default: true,
-                    id: { not: id },
-                },
-                data: { is_default: false },
-            });
-        }
-
-        // 4. Update the specific tax rate
+        // 3. Update the specific tax rate
         const taxRate = await prisma.taxRate.update({
             where: { id },
-            data: requestBody, // Directly use requestBody
+            data: {
+                hsn_code: requestBody.hsn_code,
+                description: requestBody.description,
+            },
         });
 
         return NextResponse.json(taxRate);

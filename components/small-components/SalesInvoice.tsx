@@ -1,11 +1,67 @@
-import React from 'react'
+"use client"
+import React, { useState, useEffect } from 'react'
+import { Invoice } from '@/types/invoiceTypes'
+import { toast } from 'react-toastify'
 
 const SalesInvoice = () => {
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({
+        totalSales: 0,
+        taxCollected: 0,
+        invoicesGenerated: 0,
+        avgInvoiceValue: 0
+    });
+
+    // Fetch invoices and calculate stats
+    useEffect(() => {
+        const fetchInvoicesAndCalculateStats = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/invoices');
+                const data = await response.json();
+                const invoiceList = data.invoices || [];
+                setInvoices(invoiceList);
+
+                // Calculate statistics
+                const totalSales = invoiceList.reduce((sum: number, inv: Invoice) => sum + inv.total_invoice_value, 0);
+                const invoicesGenerated = invoiceList.length;
+                const avgInvoiceValue = invoicesGenerated > 0 ? totalSales / invoicesGenerated : 0;
+                // Assuming 18% tax rate for calculation
+                const taxCollected = totalSales * 0.18;
+
+                setStats({
+                    totalSales,
+                    taxCollected,
+                    invoicesGenerated,
+                    avgInvoiceValue
+                });
+            } catch (error) {
+                toast.error('Failed to fetch invoice statistics');
+                console.error('Error fetching invoices:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInvoicesAndCalculateStats();
+    }, []);
+
+    // Format currency
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(amount);
+    };
+
     // Stat Cards Data
     const statCards = [
         {
             title: 'Total Sales',
-            value: '₹0',
+            value: loading ? '...' : formatCurrency(stats.totalSales),
             change: '12.5%',
             isPositive: true,
             icon: (
@@ -20,7 +76,7 @@ const SalesInvoice = () => {
         },
         {
             title: 'Tax Collected',
-            value: '₹0',
+            value: loading ? '...' : formatCurrency(stats.taxCollected),
             change: '8.3%',
             isPositive: true,
             icon: <span className="font-bold text-lg md:text-xl">%</span>,
@@ -30,7 +86,7 @@ const SalesInvoice = () => {
         },
         {
             title: 'Invoices Generated',
-            value: '0',
+            value: loading ? '...' : stats.invoicesGenerated.toString(),
             change: '5.2%',
             isPositive: true,
             icon: (
@@ -44,7 +100,7 @@ const SalesInvoice = () => {
         },
         {
             title: 'Avg. Invoice Value',
-            value: '₹0',
+            value: loading ? '...' : formatCurrency(stats.avgInvoiceValue),
             change: '2.1%',
             isPositive: false,
             icon: (
@@ -74,13 +130,13 @@ const SalesInvoice = () => {
                         </div>
                         <div className="flex-1">
                             <p className="text-muted-foreground text-sm font-medium mb-1">{card.title}</p>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-2xl md:text-3xl font-bold text-foreground">{card.value}</span>
-                                <span className={`text-sm ${card.isPositive ? 'text-green-500' : 'text-red-500'} font-semibold flex items-center gap-1`}>
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d={card.isPositive ? "M12 7a1 1 0 01-1 1H9v1h2a1 1 0 110 2H9v1h2a1 1 0 110 2H9v1a1 1 0 11-2 0v-1H5a1 1 0 110-2h2v-1H5a1 1 0 110-2h2V8H5a1 1 0 010-2h2V5a1 1 0 112 0v1h2a1 1 0 011 1z" : "M12 13a1 1 0 100-2H9v-1h2a1 1 0 100-2H9V7a1 1 0 112 0v1h2a1 1 0 110 2h-2v1h2a1 1 0 110 2h-2v1a1 1 0 11-2 0v-1H9a1 1 0 110-2h2v-1H9z"} clipRule="evenodd" />
+                            <div className="flex flex-col gap-1 min-w-0">
+                                <span className="text-lg md:text-xl font-bold text-foreground truncate">{card.value}</span>
+                                <span className={`text-xs ${card.isPositive ? 'text-green-500' : 'text-red-500'} font-semibold flex items-center gap-1`}>
+                                    <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d={card.isPositive ? "M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" : "M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z"} clipRule="evenodd" />
                                     </svg> 
-                                    {card.change}
+                                    <span className="truncate">{card.change}</span>
                                 </span>
                             </div>
                         </div>

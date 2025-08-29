@@ -47,13 +47,17 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
+    const taxableValue = lineItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+    const totalRoundoff = lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0);
+    const taxableAfterRoundoff = Math.max(0, taxableValue - totalRoundoff);
+    
     const isIGST = String(invoiceData?.type || '').toLowerCase() === 'inter_state' || String(invoiceData?.type || '').toLowerCase() === 'outer_state';
     const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
-    const cgstAmount = isIGST ? 0 : taxableValue * (parseFloat(cgstRate) / 100);
-    const sgstAmount = isIGST ? 0 : taxableValue * (parseFloat(sgstRate) / 100);
-    const igstAmount = isIGST ? taxableValue * (igstRate / 100) : 0;
-    const totalInvoice = taxableValue + cgstAmount + sgstAmount + igstAmount;
+    const cgstAmount = isIGST ? 0 : taxableAfterRoundoff * (parseFloat(cgstRate) / 100);
+    const sgstAmount = isIGST ? 0 : taxableAfterRoundoff * (parseFloat(sgstRate) / 100);
+    const igstAmount = isIGST ? taxableAfterRoundoff * (igstRate / 100) : 0;
+    const totalTax = cgstAmount + sgstAmount + igstAmount;
+    const totalInvoice = taxableAfterRoundoff + totalTax;
 
     const handleCopyChange = (copy: keyof typeof selectedCopies) => {
         setSelectedCopies(prev => ({
@@ -65,12 +69,26 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     const handleGeneratePDF = async () => {
         setIsGenerating(true);
         try {
+            // Map selected copies to PDF generator format
+            const selectedCopyTypes: string[] = [];
+            if (selectedCopies.originalCopy) selectedCopyTypes.push('ORIGINAL FOR RECIPIENT');
+            if (selectedCopies.duplicateCopy) selectedCopyTypes.push('DUPLICATE FOR TRANSPORTER');
+            if (selectedCopies.triplicateCopy) selectedCopyTypes.push('TRIPLICATE FOR SUPPLIER');
+
+            // If no copies are selected, show an alert
+            if (selectedCopyTypes.length === 0) {
+                alert('Please select at least one invoice copy to generate.');
+                setIsGenerating(false);
+                return;
+            }
+
             const { downloadInvoicePDF } = await import('@/utils/invoicePdfGenerator');
             const pdfData = {
                 invoiceData,
                 lineItems,
                 cgstRate: parseFloat(cgstRate),
-                sgstRate: parseFloat(sgstRate)
+                sgstRate: parseFloat(sgstRate),
+                copies: selectedCopyTypes
             };
             await downloadInvoicePDF(pdfData);
         } catch (error) {

@@ -22,6 +22,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [customers, setCustomers] = useState<Customer[]>();
     const [defaultCustomer, setDefaultCustomer] = useState(false);
+    const [isLoadingInvoiceNumber, setIsLoadingInvoiceNumber] = useState(false);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -56,6 +57,42 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
         }
         fetchCustomer();
     }, [])
+
+    // Use a ref to track fetched invoice numbers to prevent duplicate fetches
+    const fetchedInvoiceNumbers = React.useRef<Record<string, string>>({});
+
+    // Fetch invoice number when transaction type changes
+    useEffect(() => {
+        const fetchInvoiceNumber = async () => {
+            if (!invoiceData.type) return;
+            
+            // Skip if we already have an invoice number for this type
+            if (fetchedInvoiceNumbers.current[invoiceData.type]) {
+                updateInvoiceData({ invoice_number: fetchedInvoiceNumbers.current[invoiceData.type] });
+                return;
+            }
+            
+            setIsLoadingInvoiceNumber(true);
+            try {
+                const response = await fetch(`/api/invoices/next-number?type=${invoiceData.type}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch invoice number');
+                }
+                const data = await response.json();
+                // Store the fetched invoice number in the ref
+                fetchedInvoiceNumbers.current[invoiceData.type] = data.invoice_number;
+                updateInvoiceData({ invoice_number: data.invoice_number });
+            } catch (error) {
+                console.error('Error fetching invoice number:', error);
+            } finally {
+                setIsLoadingInvoiceNumber(false);
+            }
+        };
+
+        fetchInvoiceNumber();
+        // Remove updateInvoiceData from dependencies to prevent infinite loops
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [invoiceData.type])
 
     const selectCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
         if (e.target.value === "") {
@@ -235,10 +272,16 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                             value={invoiceData.invoice_number}
                                             onChange={(e) => updateInvoiceData({ invoice_number: e.target.value })}
                                             className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${errors.invoice_number ? 'border-destructive' : 'hover:border-primary/50'
-                                                }`}
-                                            placeholder="JVJ/021"
+                                                } ${isLoadingInvoiceNumber ? 'opacity-50' : ''}`}
+                                            placeholder={isLoadingInvoiceNumber ? "Generating..." : "JVJ/021"}
                                             required
+                                            disabled={isLoadingInvoiceNumber}
                                         />
+                                        {isLoadingInvoiceNumber && (
+                                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                            </div>
+                                        )}
                                     </div>
                                     {errors.invoice_number && (
                                         <div className="text-destructive text-xs mt-2 flex items-center gap-1">

@@ -6,6 +6,7 @@ export interface LineItem {
     unit: string;
     rate: number;
     taxableValue: number;
+    roundoff: number;
 }
 
 export interface InvoiceData {
@@ -24,14 +25,33 @@ export interface InvoiceData {
     cgst_rate?: number;
     sgst_rate?: number;
 }
+export interface Invoice {
+    id: number;
+    invoice_number: string;
+    invoice_date: string;
+    buyer_name: string;
+    transaction_type: string;
+    total_invoice_value: number;
+    buyer_address: string;
+    buyer_gstin?: string;
+    line_items: Array<{
+        description: string;
+        quantity: number;
+        unit: string;
+        rate: number;
+        taxable_value: number;
+        taxes: Array<{
+            tax_name: string;
+            tax_rate: number;
+            tax_amount: number;
+        }>;
+    }>;
+    flagged?: boolean;
+}
 export interface TaxRateRow {
     id: number;
     hsn_code: string;
     description: string;
-    cgst_rate: string;
-    sgst_rate: string;
-    igst_rate: string;
-    is_default: boolean;
 };
 
 export interface State {

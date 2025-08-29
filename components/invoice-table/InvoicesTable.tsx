@@ -1,37 +1,14 @@
 "use client";
-import { FaRegPenToSquare, FaTrashCan, FaEye, FaDownload, FaFlag } from "react-icons/fa6";
+import { FaRegPenToSquare, FaTrashCan, FaEye, FaFlag } from "react-icons/fa6";
 import * as React from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { TextField, Box, Chip, IconButton, Tooltip } from "@mui/material";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { downloadInvoicePDF } from "@/utils/pdfGenerator";
+// import { downloadInvoicePDF } from "@/utils/pdfGenerator";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-
-interface Invoice {
-    id: number;
-    invoice_number: string;
-    invoice_date: string;
-    buyer_name: string;
-    transaction_type: string;
-    total_invoice_value: number;
-    buyer_address: string;
-    buyer_gstin?: string;
-    line_items: Array<{
-        description: string;
-        quantity: number;
-        unit: string;
-        rate: number;
-        taxable_value: number;
-        taxes: Array<{
-            tax_name: string;
-            tax_rate: number;
-            tax_amount: number;
-        }>;
-    }>;
-    flagged?: boolean;
-}
+import { Invoice } from "@/types/invoiceTypes";
 
 export default function InvoiceTable() {
     const router = useRouter();
@@ -86,12 +63,12 @@ export default function InvoiceTable() {
 
     const confirmDelete = async () => {
         if (!selectedInvoice) return;
-        
+
         try {
             const response = await fetch(`/api/invoices/${selectedInvoice.id}`, {
                 method: 'DELETE',
             });
-            
+
             if (response.ok) {
                 toast.success('Invoice deleted successfully');
                 fetchInvoices();
@@ -106,15 +83,15 @@ export default function InvoiceTable() {
         }
     };
 
-    const handleDownload = (invoice: Invoice) => {
-        try {
-            downloadInvoicePDF(invoice);
-            toast.success('PDF downloaded successfully');
-        } catch (error) {
-            toast.error('Failed to download PDF');
-            console.error('Error:', error);
-        }
-    };
+    // const handleDownload = (invoice: Invoice) => {
+    //     try {
+    //         downloadInvoicePDF(invoice);
+    //         toast.success('PDF downloaded successfully');
+    //     } catch (error) {
+    //         toast.error('Failed to download PDF');
+    //         console.error('Error:', error);
+    //     }
+    // };
 
     const toggleFlag = async (invoice: Invoice) => {
         try {
@@ -123,7 +100,7 @@ export default function InvoiceTable() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ flagged: !invoice.flagged }),
             });
-            
+
             if (response.ok) {
                 fetchInvoices();
                 toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`);
@@ -134,9 +111,9 @@ export default function InvoiceTable() {
     };
 
     const columns: GridColDef[] = [
-        { 
-            field: "invoice_number", 
-            headerName: "Invoice No.", 
+        {
+            field: "invoice_number",
+            headerName: "Invoice No.",
             flex: 1,
             renderCell: (params) => (
                 <div className="flex items-center gap-2">
@@ -147,28 +124,28 @@ export default function InvoiceTable() {
                 </div>
             )
         },
-        { 
-            field: "invoice_date", 
-            headerName: "Date", 
+        {
+            field: "invoice_date",
+            headerName: "Date",
             flex: 1,
             valueFormatter: (params: any) => new Date(params.value).toLocaleDateString()
         },
         { field: "buyer_name", headerName: "Customer", flex: 1 },
-        { 
-            field: "transaction_type", 
-            headerName: "Type", 
+        {
+            field: "transaction_type",
+            headerName: "Type",
             flex: 1,
             renderCell: (params) => (
-                <Chip 
-                    label={params.value} 
-                    size="small" 
+                <Chip
+                    label={params.value}
+                    size="small"
                     color={params.value === 'retail' ? 'primary' : 'default'}
                 />
             )
         },
-        { 
-            field: "total_invoice_value", 
-            headerName: "Amount", 
+        {
+            field: "total_invoice_value",
+            headerName: "Amount",
             flex: 1,
             valueFormatter: (params: any) => `₹${Number(params.value).toFixed(2)}`
         },
@@ -189,11 +166,11 @@ export default function InvoiceTable() {
                             <FaRegPenToSquare className="text-green-500" />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Download PDF">
+                    {/* <Tooltip title="Download PDF">
                         <IconButton size="small" onClick={() => handleDownload(params.row)}>
                             <FaDownload className="text-purple-500" />
                         </IconButton>
-                    </Tooltip>
+                    </Tooltip> */}
                     <Tooltip title={params.row.flagged ? "Unflag" : "Flag"}>
                         <IconButton size="small" onClick={() => toggleFlag(params.row)}>
                             <FaFlag className={params.row.flagged ? "text-red-500" : "text-gray-400"} />
@@ -232,7 +209,7 @@ export default function InvoiceTable() {
                     <span className="text-muted-foreground text-sm">Loading...</span>
                 </div>
                 <Box mb={3}>
-                    <TextField label="Search Invoices" variant="outlined" fullWidth size="small" disabled />
+                    <TextField label="Search Invoices" variant="outlined" value="" fullWidth size="small" disabled />
                 </Box>
                 <div style={{ height: 400, width: '100%' }} />
             </div>
@@ -329,10 +306,10 @@ export default function InvoiceTable() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Total Amount</label>
-                                <p className="mt-1 text-sm text-gray-900">₹{selectedInvoice.total_invoice_value.toFixed(2)}</p>
+                                <p className="mt-1 text-sm text-gray-900">₹{selectedInvoice.total_invoice_value ? Number(selectedInvoice.total_invoice_value).toFixed(2) : '0.00'}</p>
                             </div>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Line Items</label>
                             <div className="overflow-x-auto">
@@ -363,10 +340,10 @@ export default function InvoiceTable() {
                                                     {item.quantity} {item.unit}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    ₹{item.rate.toFixed(2)}
+                                                    ₹{Number(item.rate).toFixed(2)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    ₹{item.taxable_value.toFixed(2)}
+                                                    ₹{Number(item.taxable_value).toFixed(2)}
                                                 </td>
                                             </tr>
                                         ))}
@@ -374,14 +351,14 @@ export default function InvoiceTable() {
                                 </table>
                             </div>
                         </div>
-                        
+
                         <div className="flex justify-end space-x-3">
                             <Button variant="outline" onClick={() => setViewModalOpen(false)}>
                                 Close
                             </Button>
-                            <Button onClick={() => handleDownload(selectedInvoice)}>
+                            {/* <Button onClick={() => handleDownload(selectedInvoice)}>
                                 Download PDF
-                            </Button>
+                            </Button> */}
                         </div>
                     </div>
                 )}
@@ -397,7 +374,7 @@ export default function InvoiceTable() {
                 {selectedInvoice && (
                     <div className="space-y-4">
                         <p className="text-sm text-gray-600">
-                            Are you sure you want to delete invoice <strong>{selectedInvoice.invoice_number}</strong>? 
+                            Are you sure you want to delete invoice <strong>{selectedInvoice.invoice_number}</strong>?
                             This action cannot be undone.
                         </p>
                         <div className="flex justify-end space-x-3">

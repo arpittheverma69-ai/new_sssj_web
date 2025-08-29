@@ -54,6 +54,7 @@ const CreateInvoice: React.FC = () => {
                     unit: item.unit || '',
                     rate: Number(item.rate) || 0,
                     taxableValue: Number(item.taxable_value) || 0,
+                    roundoff: Number(item.roundoff) || 0,
                 }));
                 invoiceForm.setLineItems(mappedItems);
 

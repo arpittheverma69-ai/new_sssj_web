@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
     try {
         const taxRates = await prisma.taxRate.findMany({
-            orderBy: { is_default: 'desc' },
+            orderBy: { created_at: 'desc' },
         });
         return NextResponse.json(taxRates);
     } catch (error) {
@@ -21,22 +21,10 @@ export async function POST(request: Request) {
     try {
         const data = await request.json();
 
-        // If this is set as default, unset any other defaults first
-        if (data.is_default) {
-            await prisma.taxRate.updateMany({
-                where: { is_default: true },
-                data: { is_default: false },
-            });
-        }
-
         const taxRate = await prisma.taxRate.create({
             data: {
                 hsn_code: data.hsn_code,
                 description: data.description,
-                cgst_rate: data.cgst_rate,
-                sgst_rate: data.sgst_rate,
-                igst_rate: data.igst_rate,
-                is_default: data.is_default,
             },
         });
 

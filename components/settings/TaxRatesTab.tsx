@@ -13,10 +13,6 @@ const DataTable = dynamic(() => import("../invoice-table/DataTable"), {
 interface TaxRateForm {
     hsnCode: string;
     description: string;
-    cgstRate: string;
-    sgstRate: string;
-    igstRate: string;
-    isDefault: boolean;
 }
 
 const TaxRatesTab = () => {
@@ -28,10 +24,6 @@ const TaxRatesTab = () => {
     const [newTaxRate, setNewTaxRate] = useState<TaxRateForm>({
         hsnCode: '',
         description: '',
-        cgstRate: '1.5%',
-        sgstRate: '1.5%',
-        igstRate: '3%',
-        isDefault: false,
     });
 
     const fetchTaxRates = async () => {
@@ -50,10 +42,6 @@ const TaxRatesTab = () => {
                 id: rate.id,
                 hsn_code: rate.hsn_code,
                 description: rate.description,
-                cgst_rate: `${rate.cgst_rate}%`,
-                sgst_rate: `${rate.sgst_rate}%`,
-                igst_rate: `${rate.igst_rate}%`,
-                is_default: rate.is_default,
             }));
 
             setTableData(formattedData);
@@ -75,23 +63,18 @@ const TaxRatesTab = () => {
             setNewTaxRate({
                 hsnCode: taxRate.hsn_code,
                 description: taxRate.description,
-                cgstRate: taxRate.cgst_rate,
-                sgstRate: taxRate.sgst_rate,
-                igstRate: taxRate.igst_rate,
-                isDefault: taxRate.is_default,
             });
             setCurrentId(Number(id));
             setEditMode(true);
         }
     };
 
-    const handleNewTaxRateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        const checked = (e.target as HTMLInputElement).checked;
+    const handleNewTaxRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
 
         setNewTaxRate(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value,
+            [name]: value,
         }));
     };
 
@@ -99,10 +82,6 @@ const TaxRatesTab = () => {
         setNewTaxRate({
             hsnCode: '',
             description: '',
-            cgstRate: '1.5%',
-            sgstRate: '1.5%',
-            igstRate: '3%',
-            isDefault: false,
         });
         setEditMode(false);
         setCurrentId(null);
@@ -117,10 +96,6 @@ const TaxRatesTab = () => {
                     const taxRateData = {
                         hsn_code: newTaxRate.hsnCode,
                         description: newTaxRate.description,
-                        cgst_rate: parseFloat(newTaxRate.cgstRate.replace('%', '')),
-                        sgst_rate: parseFloat(newTaxRate.sgstRate.replace('%', '')),
-                        igst_rate: parseFloat(newTaxRate.igstRate.replace('%', '')),
-                        is_default: newTaxRate.isDefault,
                     };
 
                     const url = editMode && currentId
@@ -206,85 +181,31 @@ const TaxRatesTab = () => {
                     {editMode ? 'Edit Tax Rate' : 'Add New Tax Rate'}
                 </h2>
                 <form className="space-y-3 md:space-y-4" onSubmit={handleSubmit}>
-                    <small>HSN Code</small>
-                    <input
-                        type="text"
-                        name="hsnCode"
-                        value={newTaxRate.hsnCode}
-                        onChange={handleNewTaxRateChange}
-                        placeholder="HSN Code"
-                        className="w-full px-3 py-2 border rounded text-sm md:text-base"
-                        required
-                        pattern="\d{4,8}"
-                        title="HSN Code must be 4-8 digits"
-                    />
-                    <small>Description</small>
-                    <input
-                        type="text"
-                        name="description"
-                        value={newTaxRate.description}
-                        onChange={handleNewTaxRateChange}
-                        placeholder="Description"
-                        className="w-full px-3 py-2 border rounded text-sm md:text-base"
-                        required
-                    />
-                    <small>CGST Rate (%)</small>
-                    <select
-                        name="cgstRate"
-                        value={newTaxRate.cgstRate}
-                        onChange={handleNewTaxRateChange}
-                        className="w-full px-3 py-2 border rounded text-sm md:text-base"
-                        required
-                    >
-                        <option value="1.5%">1.5%</option>
-                        <option value="3%">3%</option>
-                        <option value="5%">5%</option>
-                        <option value="12%">12%</option>
-                        <option value="18%">18%</option>
-                        <option value="28%">28%</option>
-                    </select>
-                    <small>SGST Rate (%)</small>
-                    <select
-                        name="sgstRate"
-                        value={newTaxRate.sgstRate}
-                        onChange={handleNewTaxRateChange}
-                        className="w-full px-3 py-2 border rounded text-sm md:text-base"
-                        required
-                    >
-                        <option value="1.5%">1.5%</option>
-                        <option value="3%">3%</option>
-                        <option value="5%">5%</option>
-                        <option value="12%">12%</option>
-                        <option value="18%">18%</option>
-                        <option value="28%">28%</option>
-                    </select>
-                    <small>IGST Rate (%)</small>
-                    <select
-                        name="igstRate"
-                        value={newTaxRate.igstRate}
-                        onChange={handleNewTaxRateChange}
-                        className="w-full px-3 py-2 border rounded text-sm md:text-base"
-                        required
-                    >
-                        <option value="3%">3%</option>
-                        <option value="6%">6%</option>
-                        <option value="10%">10%</option>
-                        <option value="12%">12%</option>
-                        <option value="18%">18%</option>
-                        <option value="28%">28%</option>
-                    </select>
-                    <div className="flex items-center">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">HSN/SAC Code</label>
                         <input
-                            type="checkbox"
-                            name="isDefault"
-                            checked={newTaxRate.isDefault}
+                            type="text"
+                            name="hsnCode"
+                            value={newTaxRate.hsnCode}
                             onChange={handleNewTaxRateChange}
-                            className="mr-2"
-                            id="defaultCheckbox"
+                            placeholder="Enter HSN/SAC Code"
+                            className="w-full px-3 py-2 border rounded text-sm md:text-base"
+                            required
+                            pattern="\d{4,8}"
+                            title="HSN/SAC Code must be 4-8 digits"
                         />
-                        <label htmlFor="defaultCheckbox" className="text-sm">
-                            Set as default
-                        </label>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Description</label>
+                        <input
+                            type="text"
+                            name="description"
+                            value={newTaxRate.description}
+                            onChange={handleNewTaxRateChange}
+                            placeholder="Enter product/service description"
+                            className="w-full px-3 py-2 border rounded text-sm md:text-base"
+                            required
+                        />
                     </div>
 
                     <div className="flex space-x-3">

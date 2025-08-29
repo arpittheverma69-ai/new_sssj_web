@@ -28,26 +28,14 @@ export default function DataTable({
             tableData.filter(
                 (row) =>
                     row.hsn_code?.toLowerCase().includes(search.toLowerCase()) ||
-                    row.description?.toLowerCase().includes(search.toLowerCase()) ||
-                    row.cgst_rate?.toLowerCase().includes(search.toLowerCase()) ||
-                    row.sgst_rate?.toLowerCase().includes(search.toLowerCase()) ||
-                    row.igst_rate?.toLowerCase().includes(search.toLowerCase())
+                    row.description?.toLowerCase().includes(search.toLowerCase())
             )
         );
     }, [search, tableData]);
 
     const columns: GridColDef[] = [
-        { field: "hsn_code", headerName: "HSN Code", flex: 1 },
-        { field: "description", headerName: "Description", flex: 1 },
-        { field: "cgst_rate", headerName: "CGST Rate", flex: 1 },
-        { field: "sgst_rate", headerName: "SGST Rate", flex: 1 },
-        { field: "igst_rate", headerName: "IGST Rate", flex: 1 },
-        {
-            field: "is_default",
-            headerName: "Default",
-            flex: 1,
-            renderCell: (params) => (params.value ? "Yes" : "No"),
-        },
+        { field: "hsn_code", headerName: "HSN/SAC Code", flex: 1 },
+        { field: "description", headerName: "Description", flex: 2 },
         {
             field: "actions",
             headerName: "Actions",

@@ -59,12 +59,32 @@ export const useInvoiceForm = () => {
             ...item,
             id: Date.now(),
             taxableValue,
+            roundoff: item.roundoff || 0,
         };
         setLineItems([...lineItems, newItem]);
     };
 
     const removeLineItem = (id: number) => {
         setLineItems(lineItems.filter(item => item.id !== id));
+    };
+
+    // Update a single line item (e.g., roundoff, quantity, rate, etc.)
+    const updateLineItem = (id: number, patch: Partial<LineItem>) => {
+        setLineItems(prev => prev.map(item => {
+            if (item.id !== id) return item;
+            const next: LineItem = { ...item, ...patch } as LineItem;
+            // Recalculate taxableValue only if quantity or rate changed
+            if (patch.hasOwnProperty('quantity') || patch.hasOwnProperty('rate')) {
+                const q = patch.quantity !== undefined ? patch.quantity : item.quantity;
+                const r = patch.rate !== undefined ? patch.rate : item.rate;
+                next.taxableValue = q * r;
+            }
+            // Ensure roundoff is a number
+            if (patch.hasOwnProperty('roundoff')) {
+                next.roundoff = Number(patch.roundoff) || 0;
+            }
+            return next;
+        }));
     };
 
     const updateInvoiceData = (data: Partial<InvoiceData>) => {
@@ -103,6 +123,7 @@ export const useInvoiceForm = () => {
         states,
         addLineItem,
         removeLineItem,
+        updateLineItem,
         updateInvoiceData,
         setInvoiceData,
         nextStep,

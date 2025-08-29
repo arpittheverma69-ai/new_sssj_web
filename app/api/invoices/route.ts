@@ -133,7 +133,8 @@ export async function POST(request: NextRequest) {
         buyer_gstin: data.buyer_gstin,
         buyer_state_code: buyerStateCode,
         tax_type: taxType,
-        total_invoice_value: data.total_invoice_value,
+        total_invoice_value: parseFloat(data.total_invoice_value) || 0,
+        roundoff: parseFloat(data.roundoff) || 0,
         flagged: false,
         line_items: {
           create: data.line_items.map((item: any) => ({

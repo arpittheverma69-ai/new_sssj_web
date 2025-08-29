@@ -1,6 +1,6 @@
 import { LineItem } from '@/types/invoiceTypes';
 import React from 'react';
-import { Trash2, Package, Hash, FileText, Scale, DollarSign, Calculator } from 'lucide-react';
+import { Trash2, Package, Hash, FileText, Scale, DollarSign, Calculator, Minus } from 'lucide-react';
 
 interface LineItemsTableProps {
     lineItems: LineItem[];
@@ -57,6 +57,12 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                                     Taxable Value
                                 </div>
                             </th>
+                            <th scope="col" className="px-6 py-4 text-left">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <Minus className="w-4 h-4 text-muted-foreground" />
+                                    RoundOff
+                                </div>
+                            </th>
                             <th scope="col" className="px-6 py-4 text-center">
                                 <span className="text-sm font-semibold text-foreground">Actions</span>
                             </th>
@@ -65,7 +71,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                     <tbody className="divide-y divide-border">
                         {lineItems.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="text-center py-16 px-6">
+                                <td colSpan={7} className="text-center py-16 px-6">
                                     <div className="flex flex-col items-center gap-3">
                                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                                             <Package className="w-8 h-8 text-muted-foreground" />
@@ -139,6 +145,19 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                                             </div>
                                         </div>
                                     </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 bg-red-500/10 rounded-[12px] flex items-center justify-center">
+                                                <Minus className="w-4 h-4 text-red-600" />
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-foreground">
+                                                    {item.roundoff > 0 ? `-${formatCurrency(item.roundoff)}` : formatCurrency(0)}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">RoundOff</div>
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4 text-center">
                                         <button
                                             onClick={() => onRemoveItem(item.id)}
@@ -167,6 +186,11 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                             <div className="text-xl font-bold text-primary">
                                 {formatCurrency(lineItems.reduce((sum, item) => sum + item.taxableValue, 0))}
                             </div>
+                            {lineItems.some(item => item.roundoff > 0) && (
+                                <div className="text-sm text-red-600 mt-1">
+                                    Total RoundOff: -{formatCurrency(lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
