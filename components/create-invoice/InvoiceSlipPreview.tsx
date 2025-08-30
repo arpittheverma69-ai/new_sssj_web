@@ -19,7 +19,7 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
     const cgstAmount = taxableValue * (cgstRate / 100);
     const sgstAmount = taxableValue * (sgstRate / 100);
     const totalInvoice = taxableValue + cgstAmount + sgstAmount;
-    const totalQuantity = lineItems.reduce((sum, item) => sum + item.quantity, 0);
+    const totalQuantity = lineItems.reduce((sum, item) => sum + Math.floor(item.quantity), 0);
     const unit = lineItems.length > 0 ? lineItems[0].unit : 'KGS';
 
     // Format date as DD-MMM-YY
@@ -38,8 +38,8 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
         <div className="mt-8 border-t pt-6">
             <h3 className="text-lg font-medium mb-4">Invoice Slip Preview</h3>
 
-            <div id="invoice-slip-container" className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-[80vh]">
-                <div id="invoice-content" className="bg-white text-[10px] mx-auto min-w-[672px] max-w-[672px] transform-gpu"
+            <div id="invoice-slip-container" className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800 overflow-auto max-h-[80vh]">
+                <div id="invoice-content" className="bg-white dark:bg-gray-900 text-[10px] text-black dark:text-white mx-auto min-w-[672px] max-w-[672px] transform-gpu"
                     style={{
                         transform: 'scale(0.9)',
                         transformOrigin: 'top center',
@@ -150,7 +150,7 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
                                     </td>
                                     <td className="text-center">{item.hsn_sac_code}</td>
                                     <td className="text-center font-bold">
-                                        {item.quantity.toFixed(3)} {item.unit}
+                                        {Math.floor(item.quantity)} {item.unit}
                                     </td>
                                     <td className="text-right font-bold">
                                         {item.rate.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}

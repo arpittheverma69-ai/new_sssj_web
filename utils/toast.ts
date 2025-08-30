@@ -13,23 +13,23 @@ export const showToast = {
     success: (message: string, options?: ToastOptions) => {
         toast.success(message, { ...defaultOptions, ...options });
     },
-    
+
     error: (message: string, options?: ToastOptions) => {
         toast.error(message, { ...defaultOptions, ...options });
     },
-    
+
     info: (message: string, options?: ToastOptions) => {
         toast.info(message, { ...defaultOptions, ...options });
     },
-    
+
     warning: (message: string, options?: ToastOptions) => {
         toast.warn(message, { ...defaultOptions, ...options });
     },
-    
+
     loading: (message: string, options?: ToastOptions) => {
         return toast.loading(message, { ...defaultOptions, ...options });
     },
-    
+
     // Update a loading toast to success/error
     update: (toastId: any, type: 'success' | 'error' | 'info' | 'warning', message: string, options?: ToastOptions) => {
         toast.update(toastId, {
@@ -40,7 +40,7 @@ export const showToast = {
             ...options
         });
     },
-    
+
     dismiss: (toastId?: any) => {
         toast.dismiss(toastId);
     }
@@ -58,19 +58,19 @@ export const apiToast = {
         }
     ): Promise<T> {
         const toastId = showToast.loading(messages.loading);
-        
+
         try {
             const result = await apiCall();
             showToast.update(toastId, 'success', messages.success);
             return result;
         } catch (error) {
-            const errorMessage = messages.error || 
+            const errorMessage = messages.error ||
                 (error instanceof Error ? error.message : 'An error occurred');
             showToast.update(toastId, 'error', errorMessage);
             throw error;
         }
     },
-    
+
     // For simple success/error without loading
     handleResponse: (
         success: boolean,

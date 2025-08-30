@@ -69,13 +69,13 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
     useEffect(() => {
         const fetchInvoiceNumber = async () => {
             if (!invoiceData.type) return;
-            
+
             // Skip if we already have an invoice number for this type
             if (fetchedInvoiceNumbers.current[invoiceData.type]) {
                 updateInvoiceData({ invoice_number: fetchedInvoiceNumbers.current[invoiceData.type] });
                 return;
             }
-            
+
             setIsLoadingInvoiceNumber(true);
             try {
                 const response = await fetch(`/api/invoices/next-number?type=${invoiceData.type}`);
@@ -188,11 +188,11 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                                 : 'border-border hover:border-blue-300 bg-card'
                                                 }`}>
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 ${type.color} rounded-[16px] flex items-center justify-center text-white text-lg`}>
+                                                    <div className={`w-8 h-8 ${type.color} rounded-[16px] flex items-center justify-center text-lg`}>
                                                         {type.icon}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="font-semibold text-foreground">{type.label}</div>
+                                                        <div className="font-semibold text-blue-500 ">{type.label}</div>
                                                         <div className="text-xs text-muted-foreground">{type.description}</div>
                                                     </div>
                                                 </div>
@@ -231,7 +231,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                                         {mode.icon}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="font-semibold text-foreground">{mode.label}</div>
+                                                        <div className="font-semibold text-blue-500 ">{mode.label}</div>
                                                         <div className="text-xs text-muted-foreground">{mode.description}</div>
                                                     </div>
                                                 </div>
@@ -421,12 +421,12 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                         disabled={defaultCustomer}
                                         onChange={(e) => {
                                             const selectedState = states.find(
-                                                (state) => state.state_code === e.target.value
+                                                (state) => state.statecode === e.target.value
                                             );
                                             if (selectedState) {
                                                 updateInvoiceData({
-                                                    buyer_state: selectedState.state_name,
-                                                    buyer_state_code: selectedState.state_code,
+                                                    buyer_state: selectedState.state,
+                                                    buyer_state_code: selectedState.statecode,
                                                 });
                                             }
                                         }}
@@ -434,8 +434,8 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                     >
                                         <option value="">Select State</option>
                                         {states.map((state) => (
-                                            <option key={state.id} value={state.state_code}>
-                                                {state.state_name} ({state.state_code})
+                                            <option key={state.id} value={state.statecode}>
+                                                {state.state} ({state.statecode})
                                             </option>
                                         ))}
                                     </select>

@@ -9,6 +9,7 @@ interface LineItemsPageProps {
     lineItems: LineItem[];
     addLineItem: (item: Omit<LineItem, 'id' | 'taxableValue'>) => void;
     removeLineItem: (id: number) => void;
+    updateLineItem: (id: number, updates: Partial<LineItem>) => void;
     invoiceData: any;
     nextStep: () => void;
     prevStep: () => void;
@@ -18,6 +19,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     lineItems,
     addLineItem,
     removeLineItem,
+    updateLineItem,
     invoiceData,
     nextStep,
     prevStep,
@@ -27,12 +29,11 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     const [formData, setFormData] = useState({
         hsnSac: '',
         description: '',
-        quantity: '1', // Default to 1 instead of 0.000
-        unit: 'PCS', // Changed default unit to PCS (pieces) since we're dealing with integers
+        quantity: '1',
+        unit: 'PCS',
         rate: '0.00',
-        roundoff: '0.00',
-        targetAmount: '0.00', // For reverse calculation
-        directAmount: '0.00', // For direct amount entry
+        targetAmount: '0.00',
+        directAmount: '0.00',
     });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [cgstRate, setCgstRate] = useState('1.5');
@@ -68,15 +69,15 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
 
     const validateForm = () => {
         const errors: Record<string, string> = {};
-        
+
         if (!formData.hsnSac || formData.hsnSac === '') {
             errors.hsnSac = 'HSN/SAC Code is required';
         }
-        
+
         if (!formData.description.trim()) {
             errors.description = 'Description is required';
         }
-        
+
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -91,7 +92,6 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         let rate = parseFloat(formData.rate) || 0;
         let directAmount = parseFloat(formData.directAmount) || 0;
         let targetAmount = parseFloat(formData.targetAmount) || 0;
-        let roundoff = parseFloat(formData.roundoff) || 0;
 
         // Handle different input modes
         if (invoiceData.mode === 'reverse') {
@@ -124,7 +124,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
             quantity,
             unit: formData.unit,
             rate,
-            roundoff,
+            roundoff: 0, // Default roundoff to 0 since it will be editable per-item
         });
 
         // Reset form fields
@@ -132,7 +132,6 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
             ...prev,
             quantity: '1', // Reset to 1 instead of 0.000
             rate: invoiceData.mode === 'direct' ? directAmount.toFixed(2) : '0.00',
-            roundoff: '0.00',
             targetAmount: '0.00',
             directAmount: '0.00',
         }));
@@ -157,25 +156,26 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
 
     const isIGST = String(invoiceData?.type || '').toLowerCase() === 'inter_state' || String(invoiceData?.type || '').toLowerCase() === 'outer_state';
     const calculateTotals = () => {
+        // taxableValue already has roundoff subtracted per item in the hook
         const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
         const totalRoundoff = lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0);
-        const adjustedTaxableValue = taxableValue - totalRoundoff;
-        
-        const cgstAmt = isIGST ? 0 : adjustedTaxableValue * (parseFloat(cgstRate) / 100);
-        const sgstAmt = isIGST ? 0 : adjustedTaxableValue * (parseFloat(sgstRate) / 100);
+
+        // Use taxableValue directly since roundoff is already applied per item
+        const cgstAmt = isIGST ? 0 : taxableValue * (parseFloat(cgstRate) / 100);
+        const sgstAmt = isIGST ? 0 : taxableValue * (parseFloat(sgstRate) / 100);
         const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
-        const igstAmt = isIGST ? adjustedTaxableValue * (igstRate / 100) : 0;
-        const total = adjustedTaxableValue + cgstAmt + sgstAmt + igstAmt;
-        
-        return { 
-            taxableValue, 
-            totalRoundoff, 
-            adjustedTaxableValue, 
-            cgstAmount: cgstAmt, 
-            sgstAmount: sgstAmt, 
-            igstAmount: igstAmt, 
-            igstRate, 
-            total 
+        const igstAmt = isIGST ? taxableValue * (igstRate / 100) : 0;
+        const total = taxableValue + cgstAmt + sgstAmt + igstAmt;
+
+        return {
+            taxableValue,
+            totalRoundoff,
+            adjustedTaxableValue: taxableValue, // Same as taxableValue since roundoff already applied
+            cgstAmount: cgstAmt,
+            sgstAmount: sgstAmt,
+            igstAmount: igstAmt,
+            igstRate,
+            total
         };
     };
 
@@ -216,173 +216,157 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="p-6 space-y-6">
                             {/* Form Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
                                 {/* HSN/SAC Code */}
-                        <div className="xl:col-span-1">
+                                <div className="xl:col-span-1">
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                HSN/SAC Code <span className="text-destructive">*</span>
-                            </label>
-                            <select
-                                value={formData.hsnSac}
-                                onChange={(e) => {
-                                    const selectedValue = e.target.value;
-                                    const selectedOption = hsnSacOptions.find(option => 
-                                        `${option.hsn_code} - ${option.description}` === selectedValue
-                                    );
-                                    setFormData({ 
-                                        ...formData, 
-                                        hsnSac: selectedValue,
-                                        description: selectedOption ? selectedOption.description : formData.description
-                                    });
-                                    if (formErrors.hsnSac) {
-                                        setFormErrors({ ...formErrors, hsnSac: '' });
-                                    }
-                                }}
-                                        className={`w-full px-4 py-3 border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 ${
-                                            formErrors.hsnSac ? 'border-destructive' : 'border-border'
-                                        }`}
-                                disabled={loadingHsnSac}
-                            >
-                                {loadingHsnSac ? (
-                                    <option>Loading HSN/SAC codes...</option>
-                                ) : hsnSacOptions.length === 0 ? (
-                                    <option>No HSN/SAC codes available</option>
-                                ) : (
-                                    <>
-                                        <option value="">Select HSN/SAC Code</option>
-                                        {hsnSacOptions.map((option) => (
-                                            <option key={option.id} value={`${option.hsn_code} - ${option.description}`}>
-                                                {option.hsn_code} - {option.description}
-                                            </option>
-                                        ))}
-                                    </>
-                                )}
-                            </select>
+                                        HSN/SAC Code <span className="text-destructive">*</span>
+                                    </label>
+                                    <select
+                                        value={formData.hsnSac}
+                                        onChange={(e) => {
+                                            const selectedValue = e.target.value;
+                                            const selectedOption = hsnSacOptions.find(option =>
+                                                `${option.hsn_code} - ${option.description}` === selectedValue
+                                            );
+                                            setFormData({
+                                                ...formData,
+                                                hsnSac: selectedValue,
+                                                description: selectedOption ? selectedOption.description : formData.description
+                                            });
+                                            if (formErrors.hsnSac) {
+                                                setFormErrors({ ...formErrors, hsnSac: '' });
+                                            }
+                                        }}
+                                        className={`w-full px-4 py-3 border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 ${formErrors.hsnSac ? 'border-destructive' : 'border-border'
+                                            }`}
+                                        disabled={loadingHsnSac}
+                                    >
+                                        {loadingHsnSac ? (
+                                            <option>Loading HSN/SAC codes...</option>
+                                        ) : hsnSacOptions.length === 0 ? (
+                                            <option>No HSN/SAC codes available</option>
+                                        ) : (
+                                            <>
+                                                <option value="">Select HSN/SAC Code</option>
+                                                {hsnSacOptions.map((option) => (
+                                                    <option key={option.id} value={`${option.hsn_code} - ${option.description}`}>
+                                                        {option.hsn_code} - {option.description}
+                                                    </option>
+                                                ))}
+                                            </>
+                                        )}
+                                    </select>
                                     {formErrors.hsnSac && (
                                         <div className="text-destructive text-xs mt-1 flex items-center gap-1">
                                             <span>⚠</span> {formErrors.hsnSac}
                                         </div>
                                     )}
-                        </div>
+                                </div>
 
                                 {/* Description */}
-                        <div className="md:col-span-2 xl:col-span-1">
+                                <div className="md:col-span-2 xl:col-span-1">
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                Description <span className="text-destructive">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.description}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, description: e.target.value });
-                                    if (formErrors.description) {
-                                        setFormErrors({ ...formErrors, description: '' });
-                                    }
-                                }}
-                                        className={`w-full px-4 py-3 border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 ${
-                                            formErrors.description ? 'border-destructive' : 'border-border'
-                                        }`}
+                                        Description <span className="text-destructive">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.description}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, description: e.target.value });
+                                            if (formErrors.description) {
+                                                setFormErrors({ ...formErrors, description: '' });
+                                            }
+                                        }}
+                                        className={`w-full px-4 py-3 border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 ${formErrors.description ? 'border-destructive' : 'border-border'
+                                            }`}
                                         placeholder="Product description"
-                            />
+                                    />
                                     {formErrors.description && (
                                         <div className="text-destructive text-xs mt-1 flex items-center gap-1">
                                             <span>⚠</span> {formErrors.description}
                                         </div>
                                     )}
-                        </div>
+                                </div>
 
                                 {/* Quantity - Show different fields based on input mode */}
-                        <div>
+                                <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                {invoiceData.mode === 'reverse' ? 'Calculated Quantity' : 'Quantity'}
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.quantity}
-                                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                                disabled={invoiceData.mode === 'reverse'}
+                                        {invoiceData.mode === 'reverse' ? 'Calculated Quantity' : 'Quantity'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.quantity}
+                                        onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                                        disabled={invoiceData.mode === 'reverse'}
                                         className={`w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 ${invoiceData.mode === 'reverse' ? 'bg-muted cursor-not-allowed' : ''}`}
                                         placeholder="0.000"
-                            />
-                            {invoiceData.mode === 'reverse' && (
-                                <p className="text-xs text-muted-foreground mt-1">Auto-calculated from target amount ÷ rate</p>
-                            )}
-                        </div>
+                                    />
+                                    {invoiceData.mode === 'reverse' && (
+                                        <p className="text-xs text-muted-foreground mt-1">Auto-calculated from target amount ÷ rate</p>
+                                    )}
+                                </div>
 
                                 {/* Unit */}
-                        <div>
+                                <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                Unit
-                            </label>
-                            <select
-                                value={formData.unit}
-                                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                                        Unit
+                                    </label>
+                                    <select
+                                        value={formData.unit}
+                                        onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                                         className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
-                            >
-                                <option>KGS</option>
-                                <option>GMS</option>
-                                <option>PCS</option>
+                                    >
+                                        <option>KGS</option>
+                                        <option>GMS</option>
+                                        <option>PCS</option>
                                         <option>NOS</option>
-                            </select>
-                        </div>
+                                    </select>
+                                </div>
 
                                 {/* Rate */}
-                        <div>
+                                <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">
                                         {invoiceData.mode === 'direct' ? 'Direct Amount' : `Rate per ${formData.unit}`}
-                            </label>
-                            {invoiceData.mode === 'direct' ? (
-                                <input
-                                    type="text"
-                                    value={formData.directAmount}
-                                    onChange={(e) => setFormData({ ...formData, directAmount: e.target.value })}
-                                    className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
-                                    placeholder="Enter total amount directly"
-                                />
-                            ) : (
-                                <input
-                                    type="text"
-                                    value={formData.rate}
-                                    onChange={(e) => {
-                                        const rate = e.target.value;
-                                        if (invoiceData.mode === 'reverse') {
-                                            // Auto-calculate quantity when rate changes in reverse mode
-                                            const targetAmount = parseFloat(formData.targetAmount) || 0;
-                                            const calculatedQuantity = parseFloat(rate) > 0 && targetAmount > 0 
-                                                ? (targetAmount / parseFloat(rate)).toFixed(3) 
-                                                : '0.000';
-                                            setFormData({ 
-                                                ...formData, 
-                                                rate,
-                                                quantity: calculatedQuantity
-                                            });
-                                        } else {
-                                            setFormData({ ...formData, rate });
-                                        }
-                                    }}
-                                    className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
-                                    placeholder="0.00"
-                                />
-                            )}
-                        </div>
+                                    </label>
+                                    {invoiceData.mode === 'direct' ? (
+                                        <input
+                                            type="text"
+                                            value={formData.directAmount}
+                                            onChange={(e) => setFormData({ ...formData, directAmount: e.target.value })}
+                                            className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                            placeholder="Enter total amount directly"
+                                        />
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            value={formData.rate}
+                                            onChange={(e) => {
+                                                const rate = e.target.value;
+                                                if (invoiceData.mode === 'reverse') {
+                                                    // Auto-calculate quantity when rate changes in reverse mode
+                                                    const targetAmount = parseFloat(formData.targetAmount) || 0;
+                                                    const calculatedQuantity = parseFloat(rate) > 0 && targetAmount > 0
+                                                        ? (targetAmount / parseFloat(rate)).toFixed(3)
+                                                        : '0.000';
+                                                    setFormData({
+                                                        ...formData,
+                                                        rate,
+                                                        quantity: calculatedQuantity
+                                                    });
+                                                } else {
+                                                    setFormData({ ...formData, rate });
+                                                }
+                                            }}
+                                            className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                            placeholder="0.00"
+                                        />
+                                    )}
+                                </div>
 
-                                {/* RoundOff */}
-                        <div>
-                                    <label className="block text-sm font-semibold text-foreground mb-2">
-                                RoundOff (₹)
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.roundoff}
-                                onChange={(e) => setFormData({ ...formData, roundoff: e.target.value })}
-                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
-                                        placeholder="0.00"
-                            />
-                                    <p className="text-xs text-muted-foreground mt-1">Amount to subtract from taxable value</p>
-                        </div>
                             </div>
 
                             {/* Target Amount Field - Only for Reverse Calculation */}
@@ -400,8 +384,8 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                                     const targetAmount = e.target.value;
                                                     const rate = parseFloat(formData.rate) || 0;
                                                     const calculatedQuantity = rate > 0 ? (parseFloat(targetAmount) / rate).toFixed(3) : '0.000';
-                                                    setFormData({ 
-                                                        ...formData, 
+                                                    setFormData({
+                                                        ...formData,
                                                         targetAmount,
                                                         quantity: calculatedQuantity
                                                     });
@@ -439,13 +423,13 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
 
                             {/* Add Item Button */}
                             <div className="flex justify-end">
-                            <button
-                                onClick={handleAddItem}
+                                <button
+                                    onClick={handleAddItem}
                                     className="bg-green-500 text-white px-8 py-4 rounded-[20px] hover:bg-green-600 transition-all duration-200 flex items-center gap-3 shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/30 hover:-translate-y-0.5 font-semibold text-lg"
                                 >
                                     <Plus className="w-5 h-5" />
-                                Add Item
-                            </button>
+                                    Add Item
+                                </button>
                             </div>
 
                             {/* Example Section */}
@@ -488,7 +472,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div className="p-6">
                             {lineItems.length === 0 ? (
                                 <div className="text-center py-12">
@@ -499,7 +483,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                     <div className="text-sm text-muted-foreground">Start by adding your first product or service above</div>
                                 </div>
                             ) : (
-                                <LineItemsTable lineItems={lineItems} onRemoveItem={removeLineItem} />
+                                <LineItemsTable lineItems={lineItems} onRemoveItem={removeLineItem} onUpdateItem={updateLineItem} />
                             )}
                         </div>
                     </div>
@@ -513,25 +497,24 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                             <ArrowLeft className="w-4 h-4" />
                             Back to Invoice Details
                         </button>
-                        
+
                         <button
                             onClick={handleContinue}
                             disabled={lineItems.length === 0}
-                            className={`w-full sm:w-auto px-8 py-3 rounded-[20px] transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-lg ${
-                                lineItems.length === 0
-                                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                                    : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5'
-                            }`}
+                            className={`w-full sm:w-auto px-8 py-3 rounded-[20px] transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-lg ${lineItems.length === 0
+                                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5'
+                                }`}
                         >
                             Continue to Review
                             <ArrowRight className="w-4 h-4" />
                         </button>
+                    </div>
                 </div>
-            </div>
 
                 {/* Right Sidebar */}
                 <div className="space-y-6">
-                {/* Tax Configuration */}
+                    {/* Tax Configuration */}
                     <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
                         <div className="bg-gradient-to-r from-orange-500/10 to-orange-500/5 p-4 border-b border-border">
                             <div className="flex items-center gap-3">
@@ -581,9 +564,9 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 </select>
                             </div>
                         </div>
-                </div>
+                    </div>
 
-                {/* Invoice Summary */}
+                    {/* Invoice Summary */}
                     <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
                         <div className="bg-gradient-to-r from-blue-500/10 to-blue-500/5 p-4 border-b border-border">
                             <div className="flex items-center gap-3">
@@ -639,13 +622,13 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                     </>
                                 )}
                             </div>
-                            
+
                             <div className="border-t border-border pt-4">
                                 <div className="flex justify-between items-center">
                                     <span className="font-bold text-lg text-foreground">Total Invoice Value:</span>
                                     <span className="text-2xl font-bold text-primary">
                                         ₹{totals.total.toFixed(2)}
-                            </span>
+                                    </span>
                                 </div>
                             </div>
 

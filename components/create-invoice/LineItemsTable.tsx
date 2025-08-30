@@ -5,9 +5,10 @@ import { Trash2, Package, Hash, FileText, Scale, DollarSign, Calculator, Minus }
 interface LineItemsTableProps {
     lineItems: LineItem[];
     onRemoveItem: (id: number) => void;
+    onUpdateItem?: (id: number, updates: Partial<LineItem>) => void;
 }
 
-const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem }) => {
+const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem, onUpdateItem }) => {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
@@ -18,7 +19,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
     };
 
     const formatQuantity = (quantity: number, unit: string) => {
-        return `${quantity.toFixed(3)} ${unit}`;
+        return `${Math.floor(quantity)} ${unit}`;
     };
 
     return (
@@ -149,11 +150,26 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                                             <div className="w-8 h-8 bg-red-500/10 rounded-[12px] flex items-center justify-center">
                                                 <Minus className="w-4 h-4 text-red-600" />
                                             </div>
-                                            <div>
-                                                <div className="font-semibold text-foreground">
-                                                    {item.roundoff > 0 ? `-${formatCurrency(item.roundoff)}` : formatCurrency(0)}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground">RoundOff</div>
+                                            <div className="flex-1">
+                                                {onUpdateItem ? (
+                                                    <input
+                                                        type="number"
+                                                        step="1"
+                                                        min="0"
+                                                        value={item.roundoff || ''}
+                                                        onChange={(e) => {
+                                                            const value = Number(e.target.value) || 0;
+                                                            onUpdateItem(item.id, { roundoff: value });
+                                                        }}
+                                                        className="w-20 px-2 py-1 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                                                        placeholder="0"
+                                                    />
+                                                ) : (
+                                                    <div className="font-semibold text-foreground">
+                                                        {item.roundoff > 0 ? `-${formatCurrency(item.roundoff)}` : formatCurrency(0)}
+                                                    </div>
+                                                )}
+                                                <div className="text-xs text-muted-foreground mt-1">RoundOff</div>
                                             </div>
                                         </div>
                                     </td>

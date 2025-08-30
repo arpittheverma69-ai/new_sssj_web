@@ -5,9 +5,15 @@ export async function GET() {
     try {
         const states = await prisma.states.findMany({
             orderBy: { state_name: 'asc' }
-        })
+        });
 
-        return NextResponse.json(states)
+        const formattedStates = states.map(s => ({
+            state: s.state_name,
+            statecode: s.state_code,
+            id: s.id
+        }));
+
+        return NextResponse.json(formattedStates);
     } catch (error) {
         console.error('Error fetching states:', error)
         return NextResponse.json(

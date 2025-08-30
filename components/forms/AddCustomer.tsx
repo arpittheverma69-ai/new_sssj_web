@@ -307,7 +307,7 @@ export default function AddCustomer({ setOpen, open, customerToEdit, onCustomerS
                                             <option value="">Select State</option>
                                             {states.map((state) => (
                                                 <option key={state.id} value={state.id}>
-                                                    {state.state_name}
+                                                    {state.state}
                                                 </option>
                                             ))}
                                         </select>
