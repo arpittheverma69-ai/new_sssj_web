@@ -319,7 +319,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                         <div className="border-t border-border my-3"></div>
                                         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-[16px] border border-green-200 dark:border-green-800">
                                             <span className="text-lg font-bold text-foreground">Total Invoice Value:</span>
-                                            <span className="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(totalInvoice)}</span>
+                                            <span className="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(Math.round(totalInvoice))}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -354,7 +354,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                                 <td className="p-3 font-mono text-sm">{item.hsn_sac_code}</td>
                                                 <td className="p-3 font-medium">{item.description}</td>
                                                 <td className="p-3 text-right">
-                                                    <span className="font-semibold">{Math.floor(item.quantity)}</span>
+                                                    <span className="font-semibold">{item.quantity.toFixed(3)}</span>
                                                     <span className="text-muted-foreground ml-1">{item.unit}</span>
                                                 </td>
                                                 <td className="p-3 text-right font-semibold">{formatCurrency(item.rate)}</td>
@@ -498,7 +498,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 <DollarSign className="w-4 h-4 text-muted-foreground" />
                                 <div>
                                     <div className="text-sm font-medium text-foreground">Total Value</div>
-                                    <div className="text-xs text-muted-foreground">{formatCurrency(totalInvoice)}</div>
+                                    <div className="text-xs text-muted-foreground">{formatCurrency(Math.round(totalInvoice))}</div>
                                 </div>
                             </div>
                         </div>

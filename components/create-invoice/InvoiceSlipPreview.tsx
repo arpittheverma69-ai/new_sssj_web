@@ -1,6 +1,6 @@
 import { LineItem } from '@/types/invoiceTypes';
 import { numberToWords } from '@/utils/numberToWords';
-import React from 'react'
+import React from 'react';
 
 interface InvoiceSlipPreviewProps {
     invoiceData: any;
@@ -15,312 +15,201 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
     cgstRate,
     sgstRate,
 }) => {
-    const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
-    const cgstAmount = taxableValue * (cgstRate / 100);
-    const sgstAmount = taxableValue * (sgstRate / 100);
+    // ✅ Helper for currency formatting
+    const formatCurrency = (amount: number) =>
+        Number(amount || 0).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+
+    // ✅ Ensure all numeric values are properly casted
+    const taxableValue = lineItems.reduce((sum, item) => sum + Number(item.taxableValue || 0), 0);
+    const cgstAmount = taxableValue * (Number(cgstRate) / 100);
+    const sgstAmount = taxableValue * (Number(sgstRate) / 100);
     const totalInvoice = taxableValue + cgstAmount + sgstAmount;
-    const totalQuantity = lineItems.reduce((sum, item) => sum + Math.floor(item.quantity), 0);
+    const totalQuantity = lineItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const unit = lineItems.length > 0 ? lineItems[0].unit : 'KGS';
 
     // Format date as DD-MMM-YY
     const invoiceDate = new Date(invoiceData.invoice_date);
-    const formattedDate = invoiceDate.toLocaleDateString('en-US', {
-        day: '2-digit',
-        month: 'short',
-        year: '2-digit',
-    }).replace(',', '');
+    const formattedDate = invoiceDate
+        .toLocaleDateString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            year: '2-digit',
+        })
+        .replace(',', '');
 
-    // Extract city from address (simple approach)
-    const addressParts = invoiceData.buyer_address.split(',');
-    const city = addressParts.length > 1 ? addressParts[addressParts.length - 2].trim() : 'N/A';
+    // Extract city from address (safer fallback)
+    const addressParts = invoiceData.buyer_address?.split(',') || [];
+    const city =
+        addressParts.length > 1
+            ? addressParts[addressParts.length - 2]?.trim()
+            : invoiceData.buyer_city || 'N/A';
 
     return (
         <div className="mt-8 border-t pt-6">
-            <h3 className="text-lg font-medium mb-4">Invoice Slip Preview</h3>
+            <h3 className="text-lg font-medium mb-4 text-foreground">Invoice Preview</h3>
 
-            <div id="invoice-slip-container" className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800 overflow-auto max-h-[80vh]">
-                <div id="invoice-content" className="bg-white dark:bg-gray-900 text-[10px] text-black dark:text-white mx-auto min-w-[672px] max-w-[672px] transform-gpu"
-                    style={{
-                        transform: 'scale(0.9)',
-                        transformOrigin: 'top center',
-                        width: '672.5px'
-                    }}>
+            <div
+                id="invoice-slip-container"
+                className="border rounded-lg p-6 bg-gray-50 dark:bg-gray-800 overflow-auto"
+            >
+                <div
+                    id="invoice-content"
+                    className="bg-white dark:bg-gray-900 text-black dark:text-white mx-auto p-8 shadow-lg rounded-lg"
+                    style={{ maxWidth: '210mm', minHeight: '297mm' }}
+                >
                     {/* Header Section */}
-                    <div className="flex justify-between items-center">
-                        <div className="w-[40%]"></div>
-                        <div className="flex justify-between items-center w-[60%]">
-                            <div className="text-center font-bold text-[16px] tracking-wide">Tax Invoice</div>
-                            <i id="invoice-title" className="text-right text-xs">(ORIGINAL FOR RECIPIENT)</i>
+                    <div className="border-b-2 border-black pb-4 mb-6">
+                        <div className="text-center mb-4">
+                            <h1 className="text-2xl font-bold text-blue-800 dark:text-blue-400">
+                                JEWELLERS INVOICE
+                            </h1>
+                            <p className="text-lg font-semibold">TAX INVOICE</p>
+                            <p className="text-sm italic">(ORIGINAL FOR RECIPIENT)</p>
                         </div>
-                    </div>
 
-                    {/* Main Info Block */}
-                    <div className="grid grid-cols-2 border border-black h-[220px]">
-                        {/* Left Column: Seller and Buyer Info */}
-                        <div className="py-1 border-r border-black text-xs px-0.5">
-                            <div className="font-bold">J.V. JEWELLERS</div>
-                            <div>SHOP NO. -2, KRISHNA HIEGHT, JAY SINGH PURA</div>
-                            <div>MATHURA</div>
-                            <div className="">GSTIN/UIN: 09ADCPV2673H1Z7</div>
-                            <div>State Name : Uttar Pradesh, Code : 09</div>
-                            <hr className="my-0.5 border-t border-black" />
-                            <div className="font-bold">Buyer (Bill to)</div>
-                            <div className="font-bold mt-1">{invoiceData.buyer_name}</div>
-                            <div className="font-bold">{city.toUpperCase()}</div>
-                            <div className="mt-1">GSTIN/UIN: {invoiceData.buyer_gstin || 'N/A'}</div>
+                        <div className="grid grid-cols-2 gap-8">
                             <div>
-                                State Name: {invoiceData.buyer_state === 'UP' ? 'Uttar Pradesh, Code : 09' : 'Maharashtra, Code : 27'}
+                                <h3 className="font-bold text-sm mb-2">SELLER DETAILS:</h3>
+                                <div className="text-sm space-y-1">
+                                    <p className="font-semibold">Your Jewellery Store</p>
+                                    <p>123 Main Street, Jewellery Market</p>
+                                    <p>City, State - 123456</p>
+                                    <p>GSTIN: 12ABCDE3456F7GH</p>
+                                    <p>Phone: +91 98765 43210</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="font-bold text-sm mb-2">BUYER DETAILS:</h3>
+                                <div className="text-sm space-y-1">
+                                    <p className="font-semibold">{invoiceData.buyer_name}</p>
+                                    <p>{invoiceData.buyer_address}</p>
+                                    <p>GSTIN: {invoiceData.buyer_gstin || 'N/A'}</p>
+                                    <p>State: {invoiceData.buyer_state}</p>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Right Column: Invoice Metadata Table */}
-                        <div>
-                            <table className="text-xs">
-                                <tbody>
-                                    <tr className="divide-x divide-black">
-                                        <td className="w-1/2 border-0 border-b border-black">
-                                            <p>Invoice No.</p>
-                                            <strong className="text-sm font-bold">{invoiceData.invoice_number}</strong>
-                                        </td>
-                                        <td className="w-1/2 border-0 border-b border-r-0 border-black">
-                                            <p>Dated</p>
-                                            <strong className="text-sm font-bold">{formattedDate}</strong>
-                                        </td>
-                                    </tr>
-                                    <tr className="divide-x divide-black text-[11px]">
-                                        <td className="border-b border-black">
-                                            <p>Delivery Note</p>
-                                            <div className="h-4"></div>
-                                        </td>
-                                        <td className="border-b border-r-0 border-black">
-                                            <p>Mode/Terms of Payment</p>
-                                            <div className="h-4"></div>
-                                        </td>
-                                    </tr>
-                                    <tr className="divide-x divide-black text-[11px]">
-                                        <td className="border-b border-black">
-                                            <p>Buyer's Order No.</p>
-                                            <div className="h-4"></div>
-                                        </td>
-                                        <td className="border-b border-r-0 border-black">
-                                            <p>Dated</p>
-                                            <div className="h-4"></div>
-                                        </td>
-                                    </tr>
-                                    <tr className="divide-x divide-black text-[11px]">
-                                        <td colSpan={2} className="border-b-0 border-r-0">
-                                            <p>Terms of Delivery</p>
-                                            <div className="h-4"></div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
+                            <div>
+                                <span className="font-semibold text-sm">Invoice No: </span>
+                                <span className="text-sm">{invoiceData.invoice_number}</span>
+                            </div>
+                            <div>
+                                <span className="font-semibold text-sm">Date: </span>
+                                <span className="text-sm">{formattedDate}</span>
+                            </div>
+                            <div>
+                                <span className="font-semibold text-sm">E-Way Bill: </span>
+                                <span className="text-sm">{invoiceData.eway_bill || 'N/A'}</span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Items Table */}
-                    <table className="border border-black border-t-0">
-                        <thead>
-                            <tr className="divide-x divide-black text-center font-bold">
-                                <td className="w-[5%]">Sl No.</td>
-                                <td className="w-[35%]">Description of Goods</td>
-                                <td className="w-[10%]">HSN/SAC</td>
-                                <td className="w-[11%]">Quantity</td>
-                                <td className="w-[11%]">Rate</td>
-                                <td className="w-[8%]">per</td>
-                                <td className="w-[15%]">Amount</td>
-                            </tr>
-                        </thead>
-                        <tbody id="slip-line-items" className="h-[420px]">
-                            {lineItems.map((item, index) => (
-                                <tr key={item.id} className="divide-x divide-black">
-                                    <td className="text-center">{index + 1}</td>
-                                    <td className="">
-                                        <div className="flex flex-col justify-between h-full">
-                                            <p className="font-bold mt-1">{item.description}</p>
-                                            <div>
-                                                <div className="text-right mt-1 space-y-px pt-4">
-                                                    <p>CGST</p>
-                                                    <p>SGST</p>
-                                                    <p className="font-bold">ROUNDED OFF</p>
-                                                </div>
-                                                <p className="mt-[-15px]">Less :</p>
-                                            </div>
-                                        </div>
+                    {/* Line Items Table */}
+                    <div className="mb-6">
+                        <table className="w-full border-collapse border border-black text-sm">
+                            <thead>
+                                <tr className="bg-gray-100 dark:bg-gray-800">
+                                    <th className="border border-black p-2 text-left font-bold">S.No</th>
+                                    <th className="border border-black p-2 text-left font-bold">Description</th>
+                                    <th className="border border-black p-2 text-center font-bold">HSN/SAC</th>
+                                    <th className="border border-black p-2 text-center font-bold">Qty</th>
+                                    <th className="border border-black p-2 text-center font-bold">Unit</th>
+                                    <th className="border border-black p-2 text-right font-bold">Rate (₹)</th>
+                                    <th className="border border-black p-2 text-right font-bold">Amount (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {lineItems.map((item, index) => (
+                                    <tr key={item.id}>
+                                        <td className="border border-black p-2 text-center">{index + 1}</td>
+                                        <td className="border border-black p-2">{item.description}</td>
+                                        <td className="border border-black p-2 text-center">{item.hsn_sac_code}</td>
+                                        <td className="border border-black p-2 text-center font-bold">
+                                            {Number(item.quantity).toFixed(item.unit === 'PCS' ? 0 : 3)}
+                                        </td>
+                                        <td className="border border-black p-2 text-center">{item.unit}</td>
+                                        <td className="border border-black p-2 text-right">
+                                            {formatCurrency(Number(item.rate))}
+                                        </td>
+                                        <td className="border border-black p-2 text-right font-bold">
+                                            {formatCurrency(Number(item.taxableValue))}
+                                        </td>
+                                    </tr>
+                                ))}
+
+                                {/* Summary Rows */}
+                                <tr>
+                                    <td colSpan={6} className="border border-black p-2 text-right font-bold">
+                                        Sub Total:
                                     </td>
-                                    <td className="text-center">{item.hsn_sac_code}</td>
-                                    <td className="text-center font-bold">
-                                        {Math.floor(item.quantity)} {item.unit}
-                                    </td>
-                                    <td className="text-right font-bold">
-                                        {item.rate.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                    </td>
-                                    <td className="text-center font-bold">{item.unit}</td>
-                                    <td className="text-right">
-                                        <div className="flex flex-col justify-between h-full font-bold">
-                                            <p className="mt-1">
-                                                {item.taxableValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                            </p>
-                                            <div className="space-y-px">
-                                                <p>
-                                                    {(item.taxableValue * (cgstRate / 100))
-                                                        .toFixed(2)
-                                                        .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                                </p>
-                                                <p>
-                                                    {(item.taxableValue * (sgstRate / 100))
-                                                        .toFixed(2)
-                                                        .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                                </p>
-                                                <p>
-                                                    (-)
-                                                    {(totalInvoice - Math.round(totalInvoice))
-                                                        .toFixed(2)
-                                                        .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                                </p>
-                                            </div>
-                                        </div>
+                                    <td className="border border-black p-2 text-right font-bold">
+                                        ₹{formatCurrency(taxableValue)}
                                     </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr className="divide-x divide-black font-bold">
-                                <td colSpan={3} className="text-center">
-                                    Total
-                                </td>
-                                <td className="text-center">
-                                    {totalQuantity.toFixed(3)} {unit}
-                                </td>
-                                <td colSpan={2}></td>
-                                <td className="text-right">
-                                    <div className="flex justify-between items-center">
-                                        <span>₹ {Math.round(totalInvoice).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td colSpan={7} className="font-bold p-2">
-                                    <div className="flex justify-between">
-                                        <span>
-                                            Amount Chargeable (in 787878787778words)<br />
-                                            <span className="font-[700] text-[13px]">
-                                                Indian Rupees {numberToWords(Math.round(totalInvoice))} Only
-                                            </span>
-                                        </span>
-                                        <span className="font-normal text-[10px] ml-4">E. & O.E</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-
-                    {/* Tax Summary Table */}
-                    <table className="no-top-border border border-black border-t-0">
-                        <thead>
-                            <tr className="divide-x divide-black text-center font-bold">
-                                <td rowSpan={2} className="align-middle w-[280px]">
-                                    HSN/SAC
-                                </td>
-                                <td rowSpan={2} className="align-middle">
-                                    Taxable Value
-                                </td>
-                                <td colSpan={2}>CGST</td>
-                                <td colSpan={2}>SGST/UTGST</td>
-                                <td rowSpan={2} className="align-middle">
-                                    Total Tax Amount
-                                </td>
-                            </tr>
-                            <tr className="divide-x divide-black text-center font-bold">
-                                <td>Rate</td>
-                                <td>Amount</td>
-                                <td>Rate</td>
-                                <td>Amount</td>
-                            </tr>
-                        </thead>
-                        <tbody id="slip-tax-summary">
-                            {lineItems.map((item) => (
-                                <tr key={item.id} className="divide-x divide-black">
-                                    <td className="text-center">{item.hsn_sac_code}</td>
-                                    <td className="text-right">
-                                        {item.taxableValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                <tr>
+                                    <td colSpan={6} className="border border-black p-2 text-right">
+                                        CGST ({cgstRate}%):
                                     </td>
-                                    <td className="text-center">{cgstRate}%</td>
-                                    <td className="text-right">
-                                        {(item.taxableValue * (cgstRate / 100))
-                                            .toFixed(2)
-                                            .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                    </td>
-                                    <td className="text-center">{sgstRate}%</td>
-                                    <td className="text-right">
-                                        {(item.taxableValue * (sgstRate / 100))
-                                            .toFixed(2)
-                                            .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                    </td>
-                                    <td className="text-right">
-                                        {(item.taxableValue * ((cgstRate + sgstRate) / 100))
-                                            .toFixed(2)
-                                            .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                    <td className="border border-black p-2 text-right">
+                                        ₹{formatCurrency(cgstAmount)}
                                     </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr className="divide-x divide-black font-[800]">
-                                <td className="text-center">Total</td>
-                                <td className="text-right">
-                                    {taxableValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                </td>
-                                <td className="text-right" colSpan={2}>
-                                    {cgstAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                </td>
-                                <td className="text-right" colSpan={2}>
-                                    {sgstAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                </td>
-                                <td className="text-right">
-                                    {(cgstAmount + sgstAmount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                                <tr>
+                                    <td colSpan={6} className="border border-black p-2 text-right">
+                                        SGST ({sgstRate}%):
+                                    </td>
+                                    <td className="border border-black p-2 text-right">
+                                        ₹{formatCurrency(sgstAmount)}
+                                    </td>
+                                </tr>
+                                <tr className="bg-yellow-100 dark:bg-yellow-900">
+                                    <td
+                                        colSpan={6}
+                                        className="border border-black p-2 text-right font-bold text-lg"
+                                    >
+                                        TOTAL AMOUNT:
+                                    </td>
+                                    <td className="border border-black p-2 text-right font-bold text-lg">
+                                        ₹{Math.round(totalInvoice)}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-                    <div className="border border-y-0 border-black p-2">
-                        <p className="text-[12px]">
-                            Tax Amount (in words) :{' '}
-                            <span className="font-[700] text-[13px]">
-                                Indian Rupees {numberToWords(cgstAmount + sgstAmount)} Only
-                            </span>
+                    {/* Amount in Words */}
+                    <div className="mb-6 p-4 border border-black">
+                        <p className="font-bold text-sm mb-2">Amount in Words:</p>
+                        <p className="text-sm italic">
+                            {numberToWords(Math.round(totalInvoice))} Rupees Only
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 border border-t-0 border-black text-[12px] h-[155px]">
-                        <div className="p-2">
-                            <p>Company's VAT TIN               : <b>09627100742</b></p>
-                            <p>Buyer's VAT TIN                     : <b>09871300591</b></p>
-                            <p>Company's PAN                     : <b>ADCPV2673H</b></p>
-                            <br />
-                            <p className="font-bold underline">Declaration</p>
-                            <p>
-                                We declare that this invoice shows the actual price of the goods described and that all
-                                particulars are true and correct.
-                            </p>
+                    {/* Terms and Signature */}
+                    <div className="grid grid-cols-2 gap-8">
+                        <div>
+                            <h4 className="font-bold text-sm mb-2">Terms & Conditions:</h4>
+                            <ul className="text-xs space-y-1">
+                                <li>• Goods once sold will not be taken back</li>
+                                <li>• All disputes subject to local jurisdiction</li>
+                                <li>• Payment due within 30 days</li>
+                                <li>• Interest @ 18% p.a. on delayed payments</li>
+                            </ul>
                         </div>
-                        <div className="flex flex-col justify-between">
-                            <div>
-                                <p>Company's Bank Details</p>
-                                <p>Bank Name             : ICICI BANK C/A NO. 027405001417 (JVM)</p>
-                                <p>A/c No.                    : </p>
-                                <p>Branch & IFS Code : </p>
-                            </div>
-                            <div className="text-end border-t py-0.5 px-2 border-l border-black">
-                                <p className="font-bold pb-7">for J.V. JEWELLERS</p>
-                                <p className="">Authorised Signatory</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="text-center mt-4 text-xs font-semibold">
-                        This is a Computer Generated Invoice
+                        <div className="text-right">
+                            <div className="mb-16">
+                                <p className="font-bold text-sm">For Your Jewellery Store</p>
+                            </div>
+                            <div className="border-t border-black pt-2">
+                                <p className="text-sm">Authorized Signatory</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -18,8 +18,8 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
         }).format(amount);
     };
 
-    const formatQuantity = (quantity: number, unit: string) => {
-        return `${Math.floor(quantity)} ${unit}`;
+    const formatQuantityForDisplay = (quantity: number, unit: string) => {
+        return `${quantity.toFixed(3)} ${unit}`;
     };
 
     return (
@@ -113,7 +113,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                                             </div>
                                             <div>
                                                 <div className="font-semibold text-foreground">
-                                                    {formatQuantity(item.quantity, item.unit)}
+                                                    {formatQuantityForDisplay(item.quantity, item.unit)}
                                                 </div>
                                                 <div className="text-xs text-muted-foreground">Quantity</div>
                                             </div>

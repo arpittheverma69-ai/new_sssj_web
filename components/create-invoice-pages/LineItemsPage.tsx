@@ -29,7 +29,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     const [formData, setFormData] = useState({
         hsnSac: '',
         description: '',
-        quantity: '1',
+        quantity: '1.000',
         unit: 'PCS',
         rate: '0.00',
         targetAmount: '0.00',
@@ -88,7 +88,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         }
 
         // Ensure quantity is a whole number
-        let quantity = Math.max(1, Math.floor(parseFloat(formData.quantity) || 1));
+        let quantity = (parseFloat(formData.quantity) || 1);
         let rate = parseFloat(formData.rate) || 0;
         let directAmount = parseFloat(formData.directAmount) || 0;
         let targetAmount = parseFloat(formData.targetAmount) || 0;
@@ -298,12 +298,13 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         {invoiceData.mode === 'reverse' ? 'Calculated Quantity' : 'Quantity'}
                                     </label>
                                     <input
-                                        type="text"
+                                        type="number"
+                                        step="0.001"
                                         value={formData.quantity}
                                         onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                                         disabled={invoiceData.mode === 'reverse'}
                                         className={`w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 ${invoiceData.mode === 'reverse' ? 'bg-muted cursor-not-allowed' : ''}`}
-                                        placeholder="0.000"
+                                        placeholder="1.000"
                                     />
                                     {invoiceData.mode === 'reverse' && (
                                         <p className="text-xs text-muted-foreground mt-1">Auto-calculated from target amount ÷ rate</p>
@@ -334,7 +335,8 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                     </label>
                                     {invoiceData.mode === 'direct' ? (
                                         <input
-                                            type="text"
+                                            type="number"
+                                            step="0.01"
                                             value={formData.directAmount}
                                             onChange={(e) => setFormData({ ...formData, directAmount: e.target.value })}
                                             className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
@@ -342,7 +344,8 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         />
                                     ) : (
                                         <input
-                                            type="text"
+                                            type="number"
+                                            step="0.01"
                                             value={formData.rate}
                                             onChange={(e) => {
                                                 const rate = e.target.value;
@@ -378,7 +381,8 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                                 Target Amount (₹)
                                             </label>
                                             <input
-                                                type="text"
+                                                type="number"
+                                                step="0.01"
                                                 value={formData.targetAmount}
                                                 onChange={(e) => {
                                                     const targetAmount = e.target.value;
