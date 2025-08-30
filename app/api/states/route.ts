@@ -7,13 +7,7 @@ export async function GET() {
             orderBy: { state_name: 'asc' }
         })
 
-        // Transform to frontend shape
-        const response = states.map(s => ({
-            state: s.state_name,
-            statecode: s.state_code
-        }))
-
-        return NextResponse.json(response)
+        return NextResponse.json(states)
     } catch (error) {
         console.error('Error fetching states:', error)
         return NextResponse.json(

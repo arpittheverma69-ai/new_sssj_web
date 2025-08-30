@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
+import { showToast } from '@/utils/toast';
 import LineItemsTable from '../create-invoice/LineItemsTable';
 import { LineItem, TaxRateRow } from '@/types/invoiceTypes';
 import { Plus, ArrowLeft, ArrowRight, Calculator, Package, Info, AlertCircle } from 'lucide-react';
@@ -56,7 +57,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                     }
                 }
             } catch (error) {
-                console.error('Error fetching HSN/SAC codes:', error);
+                showToast.error(error instanceof Error ? error.message : 'Error fetching HSN/SAC codes');
             } finally {
                 setLoadingHsnSac(false);
             }
@@ -96,14 +97,14 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         if (invoiceData.mode === 'reverse') {
             // Reverse Calculation: Calculate quantity from target amount and rate
             if (targetAmount <= 0 || rate <= 0) {
-                alert('Please enter valid target amount and rate values for reverse calculation.');
+                showToast.warning('Please enter valid target amount and rate values for reverse calculation.');
                 return;
             }
             quantity = targetAmount / rate;
         } else if (invoiceData.mode === 'direct') {
             // Direct Amount Entry: Use direct amount as taxable value
             if (directAmount <= 0) {
-                alert('Please enter a valid direct amount.');
+                showToast.warning('Please enter a valid direct amount.');
                 return;
             }
             // For direct mode, we'll use quantity=1 and rate=directAmount
@@ -112,7 +113,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         } else {
             // Component Entry: Normal validation
             if (quantity <= 0 || rate <= 0) {
-                alert('Please enter valid quantity and rate values.');
+                showToast.warning('Please enter valid quantity and rate values.');
                 return;
             }
         }
@@ -148,7 +149,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
 
     const handleContinue = () => {
         if (lineItems.length === 0) {
-            alert('Please add at least one line item before continuing.');
+            showToast.warning('Please add at least one line item before continuing.');
             return;
         }
         nextStep();
@@ -603,8 +604,8 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 {totals.totalRoundoff > 0 && (
                                     <div className="flex justify-between text-sm">
                                         <span className="text-muted-foreground">RoundOff:</span>
-                                        <span className="font-semibold text-red-600">
-                                            -₹{totals.totalRoundoff.toFixed(2)}
+                                        <span className="font-semibold text-foreground">
+                                            ₹{totals.totalRoundoff.toFixed(2)}
                                         </span>
                                     </div>
                                 )}

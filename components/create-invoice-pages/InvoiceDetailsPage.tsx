@@ -1,6 +1,7 @@
 "use client"
 import { InvoiceData, State, transactionTypes } from '@/types/invoiceTypes';
 import React, { useEffect, useState } from 'react';
+import { showToast } from '@/utils/toast';
 import { Calendar, Hash, User, MapPin, Building2, CreditCard, Calculator, ArrowRight } from 'lucide-react';
 import { Customer } from '@/types/shop-profile';
 
@@ -21,6 +22,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
 }) => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [customers, setCustomers] = useState<Customer[]>();
+    const [isFetchingCustomers, setIsFetchingCustomers] = useState(false);
     const [defaultCustomer, setDefaultCustomer] = useState(false);
     const [isLoadingInvoiceNumber, setIsLoadingInvoiceNumber] = useState(false);
 
@@ -43,16 +45,18 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
 
     useEffect(() => {
         const fetchCustomer = async () => {
+            setIsFetchingCustomers(true);
             try {
                 const customerdata = await fetch('/api/customer/');
                 if (!customerdata.ok) {
-                    throw new Error('Failed to fetch customer');
+                    throw new Error('Failed to fetch customers');
                 }
                 const data = await customerdata.json();
-                console.log("Customer data", data);
                 setCustomers(data);
             } catch (error) {
-                throw new Error('Unknown error in fetching customers');
+                showToast.error(error instanceof Error ? error.message : 'Unknown error in fetching customers');
+            } finally {
+                setIsFetchingCustomers(false);
             }
         }
         fetchCustomer();
@@ -83,7 +87,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                 fetchedInvoiceNumbers.current[invoiceData.type] = data.invoice_number;
                 updateInvoiceData({ invoice_number: data.invoice_number });
             } catch (error) {
-                console.error('Error fetching invoice number:', error);
+                showToast.error(error instanceof Error ? error.message : 'Failed to fetch invoice number');
             } finally {
                 setIsLoadingInvoiceNumber(false);
             }
@@ -331,9 +335,10 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                 <select
                                     value={invoiceData.customer_id}
                                     onChange={(e) => selectCustomer(e)}
-                                    className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                    disabled={isFetchingCustomers}
+                                    className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 disabled:opacity-50"
                                 >
-                                    <option value="">Select a customer from your database</option>
+                                    <option value="">{isFetchingCustomers ? 'Loading customers...' : 'Select a customer from your database'}</option>
                                     {customers?.map((customer, index) => (
                                         <option key={index} value={customer.id}>{`${customer.name}, (${customer.phone})`}</option>
                                     ))}

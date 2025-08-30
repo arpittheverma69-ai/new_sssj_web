@@ -5,7 +5,7 @@ import { TextField, Box, Chip, IconButton, Tooltip } from "@mui/material";
 import { FaRegPenToSquare, FaTrashCan, FaEye, FaFlag } from "react-icons/fa6";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { Input } from "@/components/ui/Input";
+import AddCustomer from "../forms/AddCustomer";
 import { toast } from "react-toastify";
 
 interface Customer {
@@ -16,25 +16,17 @@ interface Customer {
   address: string;
   city: string;
   gstin?: string;
+  pan_no?: string;
+  pincode?: string;
   state?: {
+    id: number;
     state_name: string;
   };
+  state_id?: number;
   _count?: {
     invoices: number;
   };
   flagged?: boolean;
-}
-
-interface CustomerFormData {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  gstin: string;
-  pan_number: string;
-  pincode: string;
-  state_id: number;
 }
 
 export default function CustomerTable() {
@@ -47,17 +39,6 @@ export default function CustomerTable() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [filteredRows, setFilteredRows] = useState<Customer[]>([]);
-  const [formData, setFormData] = useState<CustomerFormData>({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    gstin: '',
-    pan_number: '',
-    pincode: '',
-    state_id: 1
-  });
 
   useEffect(() => {
     fetchCustomers();
@@ -66,7 +47,7 @@ export default function CustomerTable() {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/customers');
+      const response = await fetch('/api/customer');
       const data = await response.json();
       setCustomers(data.customers || []);
     } catch (error) {
@@ -84,17 +65,6 @@ export default function CustomerTable() {
 
   const handleEdit = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setFormData({
-      name: customer.name,
-      email: customer.email || '',
-      phone: customer.phone,
-      address: customer.address,
-      city: customer.city,
-      gstin: customer.gstin || '',
-      pan_number: '',
-      pincode: '',
-      state_id: 1
-    });
     setEditModalOpen(true);
   };
 
@@ -104,17 +74,7 @@ export default function CustomerTable() {
   };
 
   const handleAdd = () => {
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      city: '',
-      gstin: '',
-      pan_number: '',
-      pincode: '',
-      state_id: 1
-    });
+    setSelectedCustomer(null);
     setAddModalOpen(true);
   };
 
@@ -122,7 +82,7 @@ export default function CustomerTable() {
     if (!selectedCustomer) return;
     
     try {
-      const response = await fetch(`/api/customers/${selectedCustomer.id}`, {
+      const response = await fetch(`/api/customer/${selectedCustomer.id}`, {
         method: 'DELETE',
       });
       
@@ -140,39 +100,10 @@ export default function CustomerTable() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const url = selectedCustomer 
-        ? `/api/customers/${selectedCustomer.id}` 
-        : '/api/customers';
-      const method = selectedCustomer ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      
-      if (response.ok) {
-        toast.success(`Customer ${selectedCustomer ? 'updated' : 'created'} successfully`);
-        fetchCustomers();
-        setEditModalOpen(false);
-        setAddModalOpen(false);
-        setSelectedCustomer(null);
-      } else {
-        toast.error(`Failed to ${selectedCustomer ? 'update' : 'create'} customer`);
-      }
-    } catch (error) {
-      toast.error('Error saving customer');
-      console.error('Error:', error);
-    }
-  };
 
   const toggleFlag = async (customer: Customer) => {
     try {
-      const response = await fetch(`/api/customers/${customer.id}`, {
+      const response = await fetch(`/api/customer/${customer.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...customer, flagged: !customer.flagged }),
@@ -374,76 +305,24 @@ export default function CustomerTable() {
       </Modal>
 
       {/* Add/Edit Modal */}
-      <Modal
-        isOpen={addModalOpen || editModalOpen}
-        onClose={() => {
-          setAddModalOpen(false);
-          setEditModalOpen(false);
-        }}
-        title={selectedCustomer ? "Edit Customer" : "Add Customer"}
-        size="lg"
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-            <Input
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-            <Input
-              label="Phone"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              required
-            />
-            <Input
-              label="City"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              required
-            />
-            <Input
-              label="GSTIN"
-              value={formData.gstin}
-              onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
-            />
-            <Input
-              label="Pincode"
-              value={formData.pincode}
-              onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-            />
-          </div>
-          <Input
-            label="Address"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            required
-          />
-          
-          <div className="flex justify-end space-x-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setAddModalOpen(false);
-                setEditModalOpen(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit">
-              {selectedCustomer ? 'Update' : 'Create'} Customer
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      {(addModalOpen || editModalOpen) && (
+        <AddCustomer
+          open={addModalOpen || editModalOpen}
+          setOpen={(isOpen) => {
+            if (!isOpen) {
+              setAddModalOpen(false);
+              setEditModalOpen(false);
+              setSelectedCustomer(null);
+            }
+          }}
+          customerToEdit={selectedCustomer}
+          onCustomerSaved={() => {
+            fetchCustomers();
+            setAddModalOpen(false);
+            setEditModalOpen(false);
+          }}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       <Modal

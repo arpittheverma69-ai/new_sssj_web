@@ -1,14 +1,15 @@
-import { Customer } from "@/types/shop-profile";
-import { Edit, Eye, MoreVertical } from "lucide-react";
+import { Customer } from "@/types/invoiceTypes";
+import { Edit, Eye, MoreVertical, Trash2 } from "lucide-react";
 
 interface CustomerListItemProps {
     customer: Customer;
     onView?: (customer: Customer) => void;
     onEdit?: (customer: Customer) => void;
+    onDelete?: (customer: Customer) => void;
 }
 
 // Customer List Item Component
-export const CustomerListItem = ({ customer, onView, onEdit }: CustomerListItemProps) => (
+export const CustomerListItem = ({ customer, onView, onEdit, onDelete }: CustomerListItemProps) => (
     <div className="bg-card rounded-[20px] border border-border hover:border-primary/50 transition-all duration-200 hover:shadow-lg hover:shadow-primary/10">
         <div className="p-4">
             <div className="flex items-center gap-4">
@@ -43,8 +44,12 @@ export const CustomerListItem = ({ customer, onView, onEdit }: CustomerListItemP
                     >
                         <Edit className="w-4 h-4" />
                     </button>
-                    <button className="p-2 hover:bg-muted rounded-[12px] transition-colors duration-200">
-                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                    <button 
+                        onClick={() => onDelete?.(customer)}
+                        className="p-2 hover:bg-destructive/10 rounded-[12px] transition-colors duration-200 text-destructive"
+                        title="Delete Customer"
+                    >
+                        <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
             </div>

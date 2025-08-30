@@ -2,14 +2,18 @@
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { showToast, apiToast } from "@/utils/toast";
-import { ApiState, State } from "@/types/invoiceTypes";
+import { State } from "@/types/invoiceTypes";
+
+import { Customer } from "@/types/invoiceTypes";
 
 interface AddCustomerProps {
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     open: boolean;
+    customerToEdit?: Customer | null;
+    onCustomerSaved: () => void;
 }
 
-export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
+export default function AddCustomer({ setOpen, open, customerToEdit, onCustomerSaved }: AddCustomerProps) {
     const [states, setStates] = useState<State[]>([]);
     const [formData, setFormData] = useState({
         name: "",
@@ -19,9 +23,37 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
         city: "",
         pincode: "",
         phone: "",
-        pan_no: "",
+        pan_number: "",
         email: "",
     });
+
+    useEffect(() => {
+        if (customerToEdit) {
+            setFormData({
+                name: customerToEdit.name || "",
+                gstin: customerToEdit.gstin || "",
+                state_id: customerToEdit.state_id?.toString() || "",
+                address: customerToEdit.address || "",
+                city: customerToEdit.city || "",
+                pincode: customerToEdit.pincode || "",
+                phone: customerToEdit.phone || "",
+                pan_number: customerToEdit.pan_number || "",
+                email: customerToEdit.email || "",
+            });
+        } else {
+            setFormData({
+                name: "",
+                gstin: "",
+                state_id: "",
+                address: "",
+                city: "",
+                pincode: "",
+                phone: "",
+                pan_number: "",
+                email: "",
+            });
+        }
+    }, [customerToEdit]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -33,17 +65,8 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
                 if (!statesResponse.ok) {
                     throw new Error('Failed to fetch states');
                 }
-                const apiStates: ApiState[] = await statesResponse.json();
-
-                // Transform API response to match component expectations
-                const transformedStates: State[] = apiStates.map((apiState, index) => ({
-                    id: index + 1, // Generate a temporary ID
-                    state_name: apiState.state,
-                    state_code: apiState.statecode,
-                    state_numeric_code: index + 1 // Generate a temporary numeric code
-                }));
-
-                setStates(transformedStates);
+                const statesData: State[] = await statesResponse.json();
+                setStates(statesData);
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : 'Unknown error';
                 setError(errorMessage);
@@ -65,7 +88,7 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Validate required fields
         if (!formData.name || !formData.address || !formData.city || !formData.phone) {
             setError('Name, address, city, and phone are required fields');
@@ -82,8 +105,11 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
                         state_id: formData.state_id ? parseInt(formData.state_id) : null
                     };
 
-                    const response = await fetch('/api/customer', {
-                        method: 'POST',
+                    const url = customerToEdit ? `/api/customer/${customerToEdit.id}` : '/api/customer';
+                    const method = customerToEdit ? 'PUT' : 'POST';
+
+                    const response = await fetch(url, {
+                        method,
                         headers: {
                             'Content-Type': 'application/json',
                         },
@@ -96,8 +122,9 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
                     }
 
                     const result = await response.json();
-                    
-                    // Close modal and reset form on success
+
+                    // Close modal, reset form, and refresh customer list on success
+                    onCustomerSaved();
                     setOpen(false);
                     setFormData({
                         name: "",
@@ -108,16 +135,16 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
                         pincode: "",
                         phone: "",
                         email: "",
-                        pan_no: ""
+                        pan_number: ""
                     });
                     setError(null);
-                    
+
                     return result;
                 },
                 {
-                    loading: 'Adding customer...',
-                    success: 'Customer added successfully!',
-                    error: 'Failed to add customer'
+                    loading: customerToEdit ? 'Updating customer...' : 'Adding customer...',
+                    success: customerToEdit ? 'Customer updated successfully!' : 'Customer added successfully!',
+                    error: customerToEdit ? 'Failed to update customer' : 'Failed to add customer'
                 }
             );
         } catch (err) {
@@ -139,7 +166,7 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
                         <div className="w-full h-screen overflow-y-scroll">
                             {/* Header */}
                             <div className="p-6 border-b border-border flex justify-between items-center">
-                                <h2 className="text-xl font-semibold text-foreground">Add New Customer</h2>
+                                <h2 className="text-xl font-semibold text-foreground">{customerToEdit ? 'Edit Customer' : 'Add New Customer'}</h2>
                                 <button
                                     onClick={() => setOpen(false)}
                                     className="p-2 rounded-[16px] hover:bg-muted transition-colors duration-200 text-muted-foreground hover:text-foreground"
@@ -179,8 +206,8 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
                                         </label>
                                         <input
                                             type="text"
-                                            name="pan_no"
-                                            value={formData.pan_no}
+                                            name="pan_number"
+                                            value={formData.pan_number}
                                             onChange={handleChange}
                                             required
                                             className="w-full border border-border rounded-[20px] px-4 py-3 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
@@ -314,7 +341,7 @@ export default function AddCustomer({ setOpen, open }: AddCustomerProps) {
                                         type="submit"
                                         className="px-6 py-3 bg-primary text-primary-foreground rounded-[20px] hover:bg-primary/90 transition-all duration-200 font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
                                     >
-                                        Save Customer
+                                        {customerToEdit ? 'Update Customer' : 'Save Customer'}
                                     </button>
                                 </div>
                             </form>

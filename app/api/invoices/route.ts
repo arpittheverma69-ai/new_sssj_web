@@ -10,14 +10,16 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? {
-        OR: [
-          { invoice_number: { contains: search, mode: "insensitive" as any } },
-          { buyer_name: { contains: search, mode: "insensitive" as any } },
-        ],
-      }
-      : {};
+    const where: any = {
+      deletedAt: null, // Exclude soft-deleted records
+    };
+
+    if (search) {
+      where.OR = [
+        { invoice_number: { contains: search, mode: "insensitive" } },
+        { buyer_name: { contains: search, mode: "insensitive" } },
+      ];
+    }
 
     const [invoices, total] = await Promise.all([
       prisma.invoice.findMany({
@@ -144,6 +146,7 @@ export async function POST(request: NextRequest) {
             unit: item.unit,
             rate: item.rate,
             taxable_value: item.taxable_value,
+            roundoff: item.roundoff || 0,
             taxes: {
               create: item.taxes.map((tax: any) => ({
                 tax_name: tax.tax_name,

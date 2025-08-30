@@ -101,10 +101,10 @@ const SalesChart = ({ data, options, chartType = 'Bar' }: { data: ChartData; opt
 // Quick Actions Component
 const QuickActions = () => {
     const actions = [
-        { icon: Plus, label: 'Create Invoice', description: 'Generate new invoice', color: 'bg-blue-500', href: '/create-invoice' },
-        { icon: Users, label: 'Add Customer', description: 'Register new customer', color: 'bg-green-500', href: '/customers' },
-        { icon: FileText, label: 'View Reports', description: 'Analytics & insights', color: 'bg-purple-500', href: '/reports' },
-        { icon: Package, label: 'Manage Items', description: 'Product catalog', color: 'bg-orange-500', href: '/setting' },
+        { icon: Plus, label: 'Create Invoice', description: 'Generate new invoice', color: 'bg-blue-500', href: '/dashboard/create-invoice' },
+        { icon: Users, label: 'Add Customer', description: 'Register new customer', color: 'bg-green-500', href: '/dashboard/customers' },
+        { icon: FileText, label: 'View Reports', description: 'Analytics & insights', color: 'bg-purple-500', href: '/dashboard/reports' },
+        { icon: Package, label: 'Manage Items', description: 'Product catalog', color: 'bg-orange-500', href: '/dashboard/setting' },
     ];
 
     return (
@@ -153,15 +153,15 @@ const PerformanceMetrics = () => {
                 const response = await fetch('/api/invoices');
                 const data = await response.json();
                 const invoices = data.invoices || [];
-                
+
                 if (invoices.length > 0) {
                     // Calculate conversion rate (assuming 70% of customers who inquire actually purchase)
                     const conversionRate = ((invoices.length / (invoices.length * 1.4)) * 100).toFixed(1);
-                    
+
                     // Calculate average order value
                     const totalValue = invoices.reduce((sum: number, inv: any) => sum + (inv.total_amount || inv.total_invoice_value || 0), 0);
                     const avgOrderValue = Math.round(totalValue / invoices.length);
-                    
+
                     // Calculate customer retention (unique customers with multiple orders)
                     const customerOrders = invoices.reduce((acc: any, inv: any) => {
                         acc[inv.buyer_name] = (acc[inv.buyer_name] || 0) + 1;
@@ -170,7 +170,7 @@ const PerformanceMetrics = () => {
                     const repeatCustomers = Object.values(customerOrders).filter((count: any) => count > 1).length;
                     const totalCustomers = Object.keys(customerOrders).length;
                     const retentionRate = totalCustomers > 0 ? ((repeatCustomers / totalCustomers) * 100).toFixed(1) : '0.0';
-                    
+
                     setMetrics([
                         { label: 'Conversion Rate', value: `${conversionRate}%`, trend: '+2.1%', icon: TrendingUp, color: 'text-green-500' },
                         { label: 'Avg. Order Value', value: `₹${avgOrderValue.toLocaleString()}`, trend: '+8.3%', icon: DollarSign, color: 'text-blue-500' },
@@ -183,7 +183,7 @@ const PerformanceMetrics = () => {
                 setLoading(false);
             }
         };
-        
+
         fetchMetrics();
     }, []);
 
@@ -474,7 +474,7 @@ export default function Dashboard() {
                     const monthlyData = invoices.reduce((acc: any, invoice: any) => {
                         const date = new Date(invoice.created_at || invoice.invoice_date);
                         const monthKey = date.toLocaleString('default', { month: 'short' });
-                        
+
                         if (!acc[monthKey]) {
                             acc[monthKey] = {
                                 retailSales: 0,
@@ -483,15 +483,15 @@ export default function Dashboard() {
                                 totalSales: 0
                             };
                         }
-                        
+
                         const amount = invoice.total_amount || invoice.total_invoice_value || 0;
                         acc[monthKey].totalSales += amount;
-                        
+
                         // Categorize based on buyer location, invoice type, or amount ranges
                         const buyerState = invoice.buyer_state?.toLowerCase() || '';
                         const sellerState = invoice.seller_state?.toLowerCase() || 'local';
                         const invoiceType = invoice.invoice_type?.toLowerCase() || '';
-                        
+
                         // If we have state data, use it for categorization
                         if (buyerState && buyerState !== sellerState) {
                             const neighboringStates = ['maharashtra', 'gujarat', 'rajasthan', 'madhya pradesh', 'haryana', 'punjab'];
@@ -512,12 +512,12 @@ export default function Dashboard() {
                                 acc[monthKey].outerstateSales += amount;
                             }
                         }
-                        
+
                         return acc;
                     }, {});
 
                     const months = Object.keys(monthlyData).slice(-6); // Last 6 months
-                    
+
                     // Create datasets showing all three categories together
                     const datasets = [
                         {
@@ -545,11 +545,11 @@ export default function Dashboard() {
                             fill: false,
                         }
                     ];
-                    
+
                     // Filter datasets based on selected category if needed
                     let filteredDatasets = datasets;
                     if (selectedSalesCategory !== 'All Categories') {
-                        filteredDatasets = datasets.filter(dataset => 
+                        filteredDatasets = datasets.filter(dataset =>
                             dataset.label === selectedSalesCategory
                         );
                     }
@@ -621,7 +621,7 @@ export default function Dashboard() {
     const getDoughnutChartData = (): ChartData => {
         const currentData = salesChartData.datasets[0]?.data || [];
         const total = currentData.reduce((sum: number, val: number) => sum + val, 0);
-        
+
         return {
             labels: [selectedSalesCategory, 'Other Categories'],
             datasets: [
@@ -758,8 +758,7 @@ export default function Dashboard() {
                             {(['All Categories', 'Retail Sales', 'Inter-state Sales', 'Outer-state Sales'] as SalesCategory[]).map((category) => (
                                 <button
                                     key={category}
-                                    className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 rounded-[12px] sm:rounded-[16px] transition-all duration-200 ${
-                                        selectedSalesCategory === category
+                                    className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 rounded-[12px] sm:rounded-[16px] transition-all duration-200 ${selectedSalesCategory === category
                                             ? 'bg-background text-foreground shadow-md shadow-black/10'
                                             : 'text-muted-foreground hover:text-foreground'
                                         }`}

@@ -66,6 +66,27 @@ export interface ApiState {
     statecode: string;
 }
 
+export interface Customer {
+    id: number;
+    name: string;
+    email?: string | null;
+    phone: string;
+    address: string;
+    city: string;
+    pincode?: string | null;
+    gstin?: string | null;
+    pan_number?: string | null;
+    state_id?: number | null;
+    state?: {
+        id: number;
+        state_name: string;
+    };
+    flagged?: boolean;
+    _count?: {
+        invoices: number;
+    };
+}
+
 export const transactionTypes = [
     { value: 'retail', taxType: "CGST + SGST", label: 'Retail Sales', description: 'Intra-state sales with CGST + SGST', icon: '🏪', color: 'bg-blue-500' },
     { value: 'inter_state', taxType: "IGST", label: 'Inter-state Sales', description: 'Inter-state sales with IGST', icon: '🏙️', color: 'bg-cyan-500' },

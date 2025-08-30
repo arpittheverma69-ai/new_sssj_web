@@ -33,10 +33,14 @@ const AllInvoices = () => {
         try {
             setLoading(true);
             const response = await fetch('/api/invoices');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch invoices');
+            }
             const data = await response.json();
             setInvoices(data.invoices || []);
-        } catch (error) {
-            showToast.error('Failed to fetch invoices');
+        } catch (error: any) {
+            toast.error(error.message);
             console.error('Error fetching invoices:', error);
         } finally {
             setLoading(false);

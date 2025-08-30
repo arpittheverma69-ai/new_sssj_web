@@ -83,11 +83,10 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                             </tr>
                         ) : (
                             lineItems.map((item, index) => (
-                                <tr 
-                                    key={item.id} 
-                                    className={`hover:bg-muted/30 transition-colors duration-200 ${
-                                        index % 2 === 0 ? 'bg-background' : 'bg-muted/5'
-                                    }`}
+                                <tr
+                                    key={item.id}
+                                    className={`hover:bg-muted/30 transition-colors duration-200 ${index % 2 === 0 ? 'bg-background' : 'bg-muted/5'
+                                        }`}
                                 >
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">

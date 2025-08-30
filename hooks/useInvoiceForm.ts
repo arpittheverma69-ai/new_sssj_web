@@ -54,12 +54,13 @@ export const useInvoiceForm = () => {
     });
 
     const addLineItem = (item: Omit<LineItem, 'id' | 'taxableValue'>) => {
-        const taxableValue = item.quantity * item.rate;
+        const roundoff = item.roundoff || 0;
+        const taxableValue = item.quantity * item.rate - roundoff;
         const newItem: LineItem = {
             ...item,
             id: Date.now(),
             taxableValue,
-            roundoff: item.roundoff || 0,
+            roundoff,
         };
         setLineItems([...lineItems, newItem]);
     };
@@ -72,18 +73,22 @@ export const useInvoiceForm = () => {
     const updateLineItem = (id: number, patch: Partial<LineItem>) => {
         setLineItems(prev => prev.map(item => {
             if (item.id !== id) return item;
-            const next: LineItem = { ...item, ...patch } as LineItem;
-            // Recalculate taxableValue only if quantity or rate changed
-            if (patch.hasOwnProperty('quantity') || patch.hasOwnProperty('rate')) {
-                const q = patch.quantity !== undefined ? patch.quantity : item.quantity;
-                const r = patch.rate !== undefined ? patch.rate : item.rate;
-                next.taxableValue = q * r;
+
+            const updatedItem = { ...item, ...patch };
+
+            // Recalculate taxableValue if relevant fields change
+            if (
+                patch.hasOwnProperty('quantity') ||
+                patch.hasOwnProperty('rate') ||
+                patch.hasOwnProperty('roundoff')
+            ) {
+                const quantity = updatedItem.quantity;
+                const rate = updatedItem.rate;
+                const roundoff = Number(updatedItem.roundoff) || 0;
+                updatedItem.taxableValue = quantity * rate - roundoff;
             }
-            // Ensure roundoff is a number
-            if (patch.hasOwnProperty('roundoff')) {
-                next.roundoff = Number(patch.roundoff) || 0;
-            }
-            return next;
+
+            return updatedItem as LineItem;
         }));
     };
 
@@ -95,11 +100,13 @@ export const useInvoiceForm = () => {
     };
     const selectedCustomer = (data: Partial<Customer>) => {
         // try to find matching state from states[] by state name OR code
-        const matchedState = states.find(
-            (s) =>
-                s.state_name.toLowerCase() === (data?.state?.state_name ?? "").toLowerCase() ||
-                s.state_code.toLowerCase() === (data?.state?.state_code ?? "").toLowerCase()
-        );
+        const matchedState = data?.state
+            ? states.find(
+                (s) =>
+                    (s.state_name?.toLowerCase() === data.state?.state_name?.toLowerCase()) ||
+                    (s.state_code?.toLowerCase() === data.state?.state_code?.toLowerCase())
+            )
+            : undefined;
 
         setInvoiceData((prev) => ({
             ...prev,

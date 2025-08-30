@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import AddCustomer from './forms/AddCustomer'
 import { Plus, Search, Users, Star, MoreVertical } from 'lucide-react'
-import { Customer } from '@/types/shop-profile';
+import { Customer } from '@/types/invoiceTypes';
 import { CustomerCard } from './small-components/CustomerCard';
 import { CustomerListItem } from './small-components/CustomerListItem';
 import { Modal } from './ui/Modal';
@@ -10,89 +10,6 @@ import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { toast } from 'react-toastify';
 
-// Mock customer data - replace with actual data from your database
-const mockCustomers = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'john.doe@email.com',
-        phone: '+91 98765 43210',
-        address: '123 Main Street, New Delhi, Delhi 110001',
-        gstin: '07ABCDE1234F1Z5',
-        state: 'Delhi',
-        stateCode: '07',
-        totalInvoices: 15,
-        totalAmount: 125000,
-        lastInvoice: '2024-01-15',
-        category: 'premium',
-        tags: ['jewellery', 'regular'],
-        notes: 'Preferred customer, likes gold ornaments'
-    },
-    {
-        id: 2,
-        name: 'Jane Smith',
-        email: 'jane.smith@email.com',
-        phone: '+91 87654 32109',
-        address: '456 Park Avenue, Mumbai, Maharashtra 400001',
-        gstin: '27FGHIJ5678K2M6',
-        state: 'Maharashtra',
-        stateCode: '27',
-        totalInvoices: 8,
-        totalAmount: 89000,
-        lastInvoice: '2024-01-10',
-        category: 'standard',
-        tags: ['silver', 'occasional'],
-        notes: 'Prefers silver jewellery, good payment history'
-    },
-    {
-        id: 3,
-        name: 'Rajesh Kumar',
-        email: 'rajesh.kumar@email.com',
-        phone: '+91 76543 21098',
-        address: '789 Lake Road, Bangalore, Karnataka 560001',
-        gstin: '29KLMNO9012P3Q7',
-        state: 'Karnataka',
-        stateCode: '29',
-        totalInvoices: 22,
-        totalAmount: 210000,
-        lastInvoice: '2024-01-12',
-        category: 'premium',
-        tags: ['diamond', 'luxury', 'regular'],
-        notes: 'High-value customer, prefers diamond jewellery'
-    },
-    {
-        id: 4,
-        name: 'Priya Sharma',
-        email: 'priya.sharma@email.com',
-        phone: '+91 65432 10987',
-        address: '321 Garden Street, Chennai, Tamil Nadu 600001',
-        gstin: '33RSTUV3456W4X8',
-        state: 'Tamil Nadu',
-        stateCode: '33',
-        totalInvoices: 12,
-        totalAmount: 156000,
-        lastInvoice: '2024-01-08',
-        category: 'standard',
-        tags: ['traditional', 'occasional'],
-        notes: 'Traditional jewellery preference, seasonal customer'
-    },
-    {
-        id: 5,
-        name: 'Amit Patel',
-        email: 'amit.patel@email.com',
-        phone: '+91 54321 09876',
-        address: '654 River View, Ahmedabad, Gujarat 380001',
-        gstin: '24YZAAB7890C5D9',
-        state: 'Gujarat',
-        stateCode: '24',
-        totalInvoices: 18,
-        totalAmount: 189000,
-        lastInvoice: '2024-01-14',
-        category: 'premium',
-        tags: ['platinum', 'modern', 'regular'],
-        notes: 'Modern designs, platinum preference, excellent credit'
-    }
-];
 
 // Customer status and category configurations
 // const customerCategories = ['all', 'premium', 'standard'];
@@ -107,24 +24,14 @@ const Customers = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [sortBy, setSortBy] = useState<'name' | 'created_at'>('name');
+    const [sortBy, setSortBy] = useState<'name'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     
     // Modal states
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [viewModalOpen, setViewModalOpen] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        city: '',
-        gstin: '',
-        pan_number: '',
-        pincode: '',
-        state_id: 1
-    });
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
     useEffect(() => {
         fetchCustomers();
@@ -133,12 +40,12 @@ const Customers = () => {
     const fetchCustomers = async () => {
         try {
             setLoading(true);
-            const customersResponse = await fetch('/api/customer');
+            const customersResponse = await fetch('/api/customers');
             if (!customersResponse.ok) {
                 throw new Error('Failed to fetch customers');
             }
             const data = await customersResponse.json();
-            setCustomers(data);
+            setCustomers(data.customers || []);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
@@ -155,42 +62,31 @@ const Customers = () => {
     // Handle edit customer
     const handleEdit = (customer: Customer) => {
         setSelectedCustomer(customer);
-        setFormData({
-            name: customer.name,
-            email: customer.email || '',
-            phone: customer.phone,
-            address: customer.address,
-            city: customer.city || '',
-            gstin: customer.gstin || '',
-            pan_number: customer.pan_number || '',
-            pincode: customer.pincode || '',
-            state_id: customer.state_id || 1
-        });
         setEditModalOpen(true);
     };
 
-    // Handle form submission for editing
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // Handle delete customer
+    const handleDelete = (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
         if (!selectedCustomer) return;
-        
         try {
             const response = await fetch(`/api/customers/${selectedCustomer.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                method: 'DELETE',
             });
-            
             if (response.ok) {
-                toast.success('Customer updated successfully');
+                toast.success('Customer deleted successfully');
                 fetchCustomers();
-                setEditModalOpen(false);
+                setDeleteModalOpen(false);
                 setSelectedCustomer(null);
             } else {
-                toast.error('Failed to update customer');
+                toast.error('Failed to delete customer');
             }
         } catch (error) {
-            toast.error('Error updating customer');
+            toast.error('Error deleting customer');
             console.error('Error:', error);
         }
     };
@@ -210,18 +106,10 @@ const Customers = () => {
             return matchesSearch && matchesCategory;
         })
         .sort((a, b) => {
-            let aValue: any = a[sortBy];
-            let bValue: any = b[sortBy];
-
-            if (sortBy === 'created_at') {
-                aValue = new Date(a.created_at).getTime();
-                bValue = new Date(b.created_at).getTime();
-            }
-
             if (sortOrder === 'asc') {
-                return aValue > bValue ? 1 : -1;
+                return a.name.localeCompare(b.name);
             } else {
-                return aValue < bValue ? 1 : -1;
+                return b.name.localeCompare(a.name);
             }
         });
 
@@ -239,7 +127,14 @@ const Customers = () => {
 
     return (
         <div className='w-full flex flex-col mx-auto flex-1 p-6 md:p-8'>
-            <AddCustomer setOpen={setOpen} open={open} />
+            <AddCustomer 
+    setOpen={setOpen} 
+    open={open} 
+    onCustomerSaved={() => {
+        fetchCustomers();
+        setOpen(false);
+    }}
+/>
 
             {/* Header */}
             <header className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 gap-6">
@@ -276,8 +171,8 @@ const Customers = () => {
                             <Star className="w-6 h-6 text-green-500" />
                         </div>
                         <div>
-                            <div className="text-2xl font-bold text-foreground">{mockCustomers.filter(c => c.category === 'premium').length}</div>
-                            <div className="text-sm text-muted-foreground">Premium Customers</div>
+                            <div className="text-2xl font-bold text-foreground">{customers.filter(c => c.flagged).length}</div>
+                            <div className="text-sm text-muted-foreground">Flagged Customers</div>
                         </div>
                     </div>
                 </div>
@@ -349,9 +244,7 @@ const Customers = () => {
                         >
                             <option value="name-asc">Name A-Z</option>
                             <option value="name-desc">Name Z-A</option>
-                            <option value="created_at-desc">Recently Added</option>
-                            <option value="created_at-asc">Oldest First</option>
-                        </select>
+                                                    </select>
                     </div>
                 </div>
 
@@ -425,6 +318,7 @@ const Customers = () => {
                             customer={customer}
                             onView={handleView}
                             onEdit={handleEdit}
+                            onDelete={handleDelete}
                         />
                     ))}
                 </div>
@@ -449,6 +343,7 @@ const Customers = () => {
                             customer={customer} 
                             onView={handleView}
                             onEdit={handleEdit}
+                            onDelete={handleDelete}
                         />
                     ))}
                 </div>
@@ -482,7 +377,7 @@ const Customers = () => {
                             </div>
                             <div>
                                 <label className="text-sm text-muted-foreground">PAN</label>
-                                <p className="font-medium">{selectedCustomer.pan_number || '-'}</p>
+                                <p className="font-medium">{selectedCustomer.pan_no || '-'}</p>
                             </div>
                             <div>
                                 <label className="text-sm text-muted-foreground">Pincode</label>
@@ -508,89 +403,50 @@ const Customers = () => {
                 )}
             </Modal>
 
-            {/* Edit Customer Modal */}
-            <Modal
-                isOpen={editModalOpen}
-                onClose={() => setEditModalOpen(false)}
-                title="Edit Customer"
-                size="lg"
-            >
-                {selectedCustomer && (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input 
-                                label="Name"
-                                name="name"
-                                value={formData.name || ''}
-                                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                required
-                            />
-                            <Input 
-                                label="Phone"
-                                name="phone"
-                                value={formData.phone || ''}
-                                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                                required
-                            />
-                            <Input 
-                                label="Email"
-                                type="email"
-                                name="email"
-                                value={formData.email || ''}
-                                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                            />
-                            <Input 
-                                label="GSTIN"
-                                name="gstin"
-                                value={formData.gstin || ''}
-                                onChange={(e) => setFormData(prev => ({ ...prev, gstin: e.target.value }))}
-                            />
-                            <Input 
-                                label="PAN"
-                                name="pan_number"
-                                value={formData.pan_number || ''}
-                                onChange={(e) => setFormData(prev => ({ ...prev, pan_number: e.target.value }))}
-                            />
-                            <Input 
-                                label="Pincode"
-                                name="pincode"
-                                value={formData.pincode || ''}
-                                onChange={(e) => setFormData(prev => ({ ...prev, pincode: e.target.value }))}
-                            />
-                            <Input 
-                                label="City"
-                                name="city"
-                                value={formData.city || ''}
-                                onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                            />
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-foreground">State ID</label>
-                                <input
-                                    type="number"
-                                    name="state_id"
-                                    value={formData.state_id || 1}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, state_id: Number(e.target.value) || 1 }))}
-                                    className="w-full border border-border rounded-[20px] px-4 py-3 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium mb-1 text-foreground">Address</label>
-                                <textarea
-                                    name="address"
-                                    value={formData.address || ''}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                                    rows={3}
-                                    className="w-full border border-border rounded-[20px] px-4 py-3 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 resize-none"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex justify-end gap-3">
-                            <Button type="button" variant="outline" onClick={() => setEditModalOpen(false)}>Cancel</Button>
-                            <Button type="submit">Save Changes</Button>
-                        </div>
-                    </form>
-                )}
-            </Modal>
+      {/* Add/Edit Modal */}
+      {(open || editModalOpen) && (
+        <AddCustomer
+          open={open || editModalOpen}
+          setOpen={(isOpen) => {
+            if (!isOpen) {
+              setOpen(false);
+              setEditModalOpen(false);
+              setSelectedCustomer(null);
+            }
+          }}
+          customerToEdit={selectedCustomer}
+          onCustomerSaved={() => {
+            fetchCustomers();
+            setOpen(false);
+            setEditModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Confirm Delete"
+        size="sm"
+      >
+        {selectedCustomer && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete customer <strong>{selectedCustomer.name}</strong>? 
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={confirmDelete}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
         </div>
     )
 }

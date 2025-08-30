@@ -1,5 +1,6 @@
 "use client"
 import React, { useMemo, useState } from 'react';
+import { showToast } from '@/utils/toast';
 import InvoiceSlipPreview from '../create-invoice/InvoiceSlipPreview';
 import { LineItem } from '@/types/invoiceTypes';
 import {
@@ -47,7 +48,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const taxableValue = lineItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+    const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
     const totalRoundoff = lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0);
     const taxableAfterRoundoff = Math.max(0, taxableValue - totalRoundoff);
     
@@ -75,9 +76,9 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
             if (selectedCopies.duplicateCopy) selectedCopyTypes.push('DUPLICATE FOR TRANSPORTER');
             if (selectedCopies.triplicateCopy) selectedCopyTypes.push('TRIPLICATE FOR SUPPLIER');
 
-            // If no copies are selected, show an alert
+            // If no copies are selected, show a warning
             if (selectedCopyTypes.length === 0) {
-                alert('Please select at least one invoice copy to generate.');
+                showToast.warning('Please select at least one invoice copy to generate.');
                 setIsGenerating(false);
                 return;
             }
@@ -91,9 +92,10 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                 copies: selectedCopyTypes
             };
             await downloadInvoicePDF(pdfData);
+            showToast.success('PDF generated and download started!');
         } catch (error) {
             console.error('Error generating PDF:', error);
-            alert('Error generating PDF. Please try again.');
+            showToast.error('Error generating PDF. Please try again.');
         } finally {
             setIsGenerating(false);
         }
@@ -102,6 +104,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
 
     const handleSubmitInvoice = async () => {
         setIsSubmitting(true);
+        const toastId = showToast.loading('Submitting invoice...');
 
         try {
             // Prepare invoice data for API
@@ -178,16 +181,17 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
 
             const result = await response.json();
 
+            showToast.update(toastId, 'success', `${isEdit ? 'Invoice updated' : 'Invoice submitted'} successfully!`);
             setIsSubmitting(false);
-            alert(`${isEdit ? 'Invoice updated' : 'Invoice submitted'} successfully! Invoice ID: ${result.id}`);
 
             // Optionally redirect to invoices list or reset form
             // window.location.href = '/dashboard/all-invoice';
 
         } catch (error) {
             console.error('Error submitting invoice:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to submit invoice. Please try again.';
+            showToast.update(toastId, 'error', errorMessage);
             setIsSubmitting(false);
-            alert('Failed to submit invoice. Please try again.');
         }
     };
 

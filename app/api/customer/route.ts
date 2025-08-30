@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
         const data = await request.json()
 
         // Validate required fields
-        if (!data.name || !data.address || !data.city || !data.phone || !data.pan_no) {
+        if (!data.name || !data.address || !data.city || !data.phone || !data.pan_number) {
             return NextResponse.json(
                 { error: 'Name, address, city, and phone are required fields' },
                 { status: 400 }
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
                 pincode: data.pincode || null,
                 gstin: data.gstin || null,
                 phone: data.phone,
-                pan_number: data.pan_no,
+                pan_number: data.pan_number,
                 email: data.email || null,
             },
             include: { state: true }

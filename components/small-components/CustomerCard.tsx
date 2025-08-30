@@ -1,14 +1,15 @@
-import { Customer } from "@/types/shop-profile";
-import { Edit, Eye, Mail, MapPin, MoreVertical, Phone } from "lucide-react";
+import { Customer } from "@/types/invoiceTypes";
+import { Edit, Eye, Mail, MapPin, MoreVertical, Phone, Trash2 } from "lucide-react";
 
 interface CustomerCardProps {
     customer: Customer;
     onView?: (customer: Customer) => void;
     onEdit?: (customer: Customer) => void;
+    onDelete?: (customer: Customer) => void;
 }
 
 // Customer Card Component
-export const CustomerCard = ({ customer, onView, onEdit }: CustomerCardProps) => (
+export const CustomerCard = ({ customer, onView, onEdit, onDelete }: CustomerCardProps) => (
     <div className="bg-card rounded-[24px] border border-border hover:border-primary/50 transition-all duration-200 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1">
         <div className="p-6">
             {/* Header */}
@@ -28,12 +29,7 @@ export const CustomerCard = ({ customer, onView, onEdit }: CustomerCardProps) =>
                         </div>
                     </div>
                 </div>
-                <div className="relative">
-                    <button className="p-2 hover:bg-muted rounded-[12px] transition-colors duration-200">
-                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                </div>
-            </div>
+                            </div>
 
             {/* Contact Info */}
             <div className="space-y-2 mb-4">
@@ -91,6 +87,12 @@ export const CustomerCard = ({ customer, onView, onEdit }: CustomerCardProps) =>
                 >
                     <Edit className="w-4 h-4" />
                     Edit
+                </button>
+                <button 
+                    onClick={() => onDelete?.(customer)}
+                    className="bg-destructive/10 text-destructive py-2 px-3 rounded-[12px] text-sm font-medium hover:bg-destructive/20 transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                    <Trash2 className="w-4 h-4" />
                 </button>
             </div>
         </div>
