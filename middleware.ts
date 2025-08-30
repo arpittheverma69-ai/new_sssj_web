@@ -12,6 +12,6 @@ export default withAuth(
 );
 
 export const config = {
-  // Protect only authenticated sections. Keep '/' and '/signup' public.
+  // Protect only authenticated sections. Keep '/' public.
   matcher: ["/dashboard/:path*", "/app/:path*", "/api/secure/:path*"],
 };

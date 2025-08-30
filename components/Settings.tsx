@@ -3,6 +3,7 @@ import { useState } from 'react';
 import ShopProfileTab from './settings/ShopProfileTab';
 import TaxRatesTab from './settings/TaxRatesTab';
 import InvoiceSettingsTab from './settings/InvoiceSettingsTab';
+import UserManagementTab from './settings/UserManagementTab';
 
 const SettingsPage = () => {
     const [activeTab, setActiveTab] = useState('shopProfileTab');
@@ -11,6 +12,7 @@ const SettingsPage = () => {
         { id: 'shopProfileTab', label: 'Shop Profile' },
         { id: 'taxRatesTab', label: 'Tax Rates' },
         { id: 'invoiceSettingsTab', label: 'Invoice Settings' },
+        { id: 'userManagementTab', label: 'User Management' },
     ];
 
     return (
@@ -45,6 +47,7 @@ const SettingsPage = () => {
                     {activeTab === 'shopProfileTab' && <ShopProfileTab />}
                     {activeTab === 'taxRatesTab' && <TaxRatesTab />}
                     {activeTab === 'invoiceSettingsTab' && <InvoiceSettingsTab />}
+                    {activeTab === 'userManagementTab' && <UserManagementTab />}
                 </div>
             </main>
         </div>
