@@ -4,10 +4,11 @@ import { softDeleteUtils } from "@/lib/softDelete";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const invoiceId = parseInt(params.id);
+    const resolvedParams = await params;
+    const invoiceId = parseInt(resolvedParams.id);
 
     // First restore the invoice
     const restoredInvoice = await softDeleteUtils.restore(
@@ -16,7 +17,7 @@ export async function POST(
     );
 
     // Then restore all related line items and taxes
-    const lineItems = await softDeleteUtils.findDeleted(
+    const lineItems = await softDeleteUtils.findDeleted<{ id: number; invoice_id: number }>(
       prisma.lineItem,
       { where: { invoice_id: invoiceId } }
     );
@@ -25,7 +26,7 @@ export async function POST(
       await softDeleteUtils.restore(prisma.lineItem, { id: lineItem.id });
       
       // Restore taxes for this line item
-      const taxes = await softDeleteUtils.findDeleted(
+      const taxes = await softDeleteUtils.findDeleted<{ id: number; line_item_id: number }>(
         prisma.lineItemTax,
         { where: { line_item_id: lineItem.id } }
       );

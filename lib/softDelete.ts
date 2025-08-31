@@ -1,4 +1,4 @@
-import { PrismaClient } from './generated/prisma';
+import { PrismaClient, LineItem, LineItemTax, Invoice, Customer, User, TaxRate } from './generated/prisma';
 
 // Create a raw Prisma client without extensions for hard deletes
 const rawPrisma = new PrismaClient();

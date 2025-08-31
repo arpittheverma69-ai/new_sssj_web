@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 // PUT - Update an existing customer
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const customerId = parseInt(params.id);
+        const resolvedParams = await params;
+        const customerId = parseInt(resolvedParams.id);
         const data = await request.json();
 
         // Validate required fields
@@ -63,9 +64,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE - Soft delete a customer
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const customerId = parseInt(params.id);
+        const resolvedParams = await params;
+        const customerId = parseInt(resolvedParams.id);
 
         await prisma.customer.update({
             where: { id: customerId },

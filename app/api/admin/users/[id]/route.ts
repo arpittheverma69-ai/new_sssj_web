@@ -5,21 +5,22 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 // PUT - Update user
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await getServerSession(authOptions);
         console.log('PUT /api/admin/users/[id] - Session:', session);
-        
+
         if (!session || session.user.role !== 'admin') {
-            console.log('PUT /api/admin/users/[id] - Unauthorized access attempt:', { 
-                hasSession: !!session, 
-                userRole: session?.user?.role 
+            console.log('PUT /api/admin/users/[id] - Unauthorized access attempt:', {
+                hasSession: !!session,
+                userRole: session?.user?.role
             });
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { username, email, password, role } = await request.json();
-        const userId = parseInt(params.id);
+        const resolvedParams = await params;
+        const userId = parseInt(resolvedParams.id);
 
         if (!username || !email) {
             return NextResponse.json({ error: 'Username and email are required' }, { status: 400 });
@@ -78,20 +79,21 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE - Delete user
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await getServerSession(authOptions);
         console.log('DELETE /api/admin/users/[id] - Session:', session);
-        
+
         if (!session || session.user.role !== 'admin') {
-            console.log('DELETE /api/admin/users/[id] - Unauthorized access attempt:', { 
-                hasSession: !!session, 
-                userRole: session?.user?.role 
+            console.log('DELETE /api/admin/users/[id] - Unauthorized access attempt:', {
+                hasSession: !!session,
+                userRole: session?.user?.role
             });
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const userId = params.id;
+        const resolvedParams = await params;
+        const userId = resolvedParams.id;
 
         // Prevent admin from deleting themselves
         if (session.user.id === userId) {

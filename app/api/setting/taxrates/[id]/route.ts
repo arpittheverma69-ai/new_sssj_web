@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         // 1. Get the ID from params
-        const id = parseInt(params.id);
+        const resolvedParams = await params;
+        const id = parseInt(resolvedParams.id);
         if (isNaN(id)) {
             return NextResponse.json(
                 { error: 'Invalid tax rate ID' },
