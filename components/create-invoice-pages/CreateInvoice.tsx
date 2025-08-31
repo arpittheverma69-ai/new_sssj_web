@@ -29,9 +29,15 @@ const CreateInvoiceInner: React.FC = () => {
                     ? new Date(inv.invoice_date).toISOString().slice(0, 10)
                     : "";
 
-                const matchedState = invoiceForm.states.find(
-                    (s) => s.state === (inv.buyer_state_code || "")
-                );
+                // Use customer's state data if available, otherwise fallback to stored values
+                const customerState = inv.customer?.state;
+                const matchedState = customerState
+                    ? invoiceForm.states.find(
+                        (s) => s.statecode === customerState.state_code || s.state === customerState.state_name
+                    )
+                    : invoiceForm.states.find(
+                        (s) => s.statecode === inv.buyer_state_code?.toString()
+                    );
 
                 invoiceForm.setInvoiceData({
                     type: inv.transaction_type || "retail",
@@ -43,8 +49,8 @@ const CreateInvoiceInner: React.FC = () => {
                     buyer_name: inv.buyer_name || "",
                     buyer_address: inv.buyer_address || "",
                     buyer_gstin: inv.buyer_gstin || "",
-                    buyer_state: matchedState ? matchedState.statecode : "",
-                    buyer_state_code: inv.buyer_state_code || "",
+                    buyer_state: customerState?.state_name || matchedState?.state || "",
+                    buyer_state_code: customerState?.state_code || matchedState?.statecode || "",
                 });
 
                 const mappedItems = (inv.line_items || []).map((item: any, idx: number) => ({

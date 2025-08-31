@@ -7,27 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import AddCustomer from "../forms/AddCustomer";
 import { toast } from "react-toastify";
-
-interface Customer {
-  id: number;
-  name: string;
-  email?: string;
-  phone: string;
-  address: string;
-  city: string;
-  gstin?: string;
-  pan_no?: string;
-  pincode?: string;
-  state?: {
-    id: number;
-    state_name: string;
-  };
-  state_id?: number;
-  _count?: {
-    invoices: number;
-  };
-  flagged?: boolean;
-}
+import { Customer } from "@/types/invoiceTypes";
 
 export default function CustomerTable() {
   const [search, setSearch] = useState("");

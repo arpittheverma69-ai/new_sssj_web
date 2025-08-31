@@ -11,8 +11,10 @@ import {
 import React, { useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Menu, X } from "lucide-react";
+import { useShopProfile } from "@/contexts/ShopProfileContext";
 
 export function NavbarDemo() {
+    const { shopProfile } = useShopProfile()
     const navItems = [
         {
             name: "Dashboard",
@@ -57,7 +59,7 @@ export function NavbarDemo() {
                             🧾
                         </div>
                         <div>
-                            <div className="font-bold text-sm text-foreground">J.V. Jewellers</div>
+                            <div className="font-bold text-sm text-foreground">{shopProfile.shopName}</div>
                             <div className="text-xs text-muted-foreground">GST Invoice Generator</div>
                         </div>
                     </div>

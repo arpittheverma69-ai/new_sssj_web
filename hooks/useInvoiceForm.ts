@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react';
-import { ApiState, InvoiceData, LineItem, State } from '../types/invoiceTypes';
-import { Customer } from '@/types/shop-profile';
+import { ApiState, Customer, InvoiceData, LineItem, State } from '../types/invoiceTypes';
 
 export const useInvoiceForm = () => {
     const [currentStep, setCurrentStep] = useState<number>(1);
@@ -42,7 +41,7 @@ export const useInvoiceForm = () => {
         type: 'retail',
         mode: 'component',
         invoice_date: '',
-        invoice_number: 'JVJ/021',
+        invoice_number: '',
         eway_bill: '',
         customer_id: '',
         buyer_name: '',
@@ -52,14 +51,15 @@ export const useInvoiceForm = () => {
         buyer_state_code: '',
     });
 
+    const [globalRoundoff, setGlobalRoundoff] = useState<number>(0);
+
     const addLineItem = (item: Omit<LineItem, 'id' | 'taxableValue'>) => {
-        const roundoff = item.roundoff || 0;
-        const taxableValue = item.quantity * item.rate - roundoff;
+        const taxableValue = item.quantity * item.rate;
         const newItem: LineItem = {
             ...item,
             id: Date.now(),
             taxableValue,
-            roundoff,
+            roundoff: 0, // Remove per-item roundoff
         };
         setLineItems([...lineItems, newItem]);
     };
@@ -68,7 +68,7 @@ export const useInvoiceForm = () => {
         setLineItems(lineItems.filter(item => item.id !== id));
     };
 
-    // Update a single line item (e.g., roundoff, quantity, rate, etc.)
+    // Update a single line item (e.g., quantity, rate, etc.)
     const updateLineItem = (id: number, patch: Partial<LineItem>) => {
         setLineItems(prev => prev.map(item => {
             if (item.id !== id) return item;
@@ -78,13 +78,11 @@ export const useInvoiceForm = () => {
             // Recalculate taxableValue if relevant fields change
             if (
                 patch.hasOwnProperty('quantity') ||
-                patch.hasOwnProperty('rate') ||
-                patch.hasOwnProperty('roundoff')
+                patch.hasOwnProperty('rate')
             ) {
                 const quantity = updatedItem.quantity;
                 const rate = updatedItem.rate;
-                const roundoff = Number(updatedItem.roundoff) || 0;
-                updatedItem.taxableValue = quantity * rate - roundoff;
+                updatedItem.taxableValue = quantity * rate;
             }
 
             return updatedItem as LineItem;
@@ -102,8 +100,8 @@ export const useInvoiceForm = () => {
         const matchedState = data?.state
             ? states.find(
                 (s) =>
-                    (s.state?.toLowerCase() === data.state?.state?.toLowerCase()) ||
-                    (s.statecode?.toLowerCase() === data.state?.statecode?.toLowerCase())
+                    (s.state?.toLowerCase() === data.state?.state_name?.toLowerCase()) ||
+                    (s.statecode?.toLowerCase() === data.state?.state_code?.toLowerCase())
             )
             : undefined;
 
@@ -118,7 +116,6 @@ export const useInvoiceForm = () => {
         }));
     };
 
-
     const nextStep = () => setCurrentStep(prev => prev + 1);
     const prevStep = () => setCurrentStep(prev => prev - 1);
 
@@ -127,6 +124,8 @@ export const useInvoiceForm = () => {
         lineItems,
         invoiceData,
         states,
+        globalRoundoff,
+        setGlobalRoundoff,
         addLineItem,
         removeLineItem,
         updateLineItem,

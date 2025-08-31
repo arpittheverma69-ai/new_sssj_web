@@ -34,12 +34,26 @@ export interface Invoice {
     total_invoice_value: number;
     buyer_address: string;
     buyer_gstin?: string;
+    eway_bill?: string;
+    buyer_id?: number;
+    buyer_state_code?: number;
+    roundoff?: number;
+    customer?: {
+        id: number;
+        name: string;
+        state?: {
+            id: number;
+            state_name: string;
+            state_code: string;
+        };
+    };
     line_items: Array<{
         description: string;
         quantity: number;
         unit: string;
         rate: number;
         taxable_value: number;
+        hsn_sac_code: string;
         taxes: Array<{
             tax_name: string;
             tax_rate: number;
@@ -79,6 +93,7 @@ export interface Customer {
     state?: {
         id: number;
         state_name: string;
+        state_code: string;
     };
     flagged?: boolean;
     _count?: {

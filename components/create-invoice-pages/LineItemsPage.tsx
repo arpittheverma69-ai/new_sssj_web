@@ -11,6 +11,8 @@ interface LineItemsPageProps {
     removeLineItem: (id: number) => void;
     updateLineItem: (id: number, updates: Partial<LineItem>) => void;
     invoiceData: any;
+    globalRoundoff: number;
+    setGlobalRoundoff: (value: number) => void;
     nextStep: () => void;
     prevStep: () => void;
 }
@@ -21,6 +23,8 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     removeLineItem,
     updateLineItem,
     invoiceData,
+    globalRoundoff,
+    setGlobalRoundoff,
     nextStep,
     prevStep,
 }) => {
@@ -100,7 +104,17 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                 showToast.warning('Please enter valid target amount and rate values for reverse calculation.');
                 return;
             }
-            quantity = targetAmount / rate;
+            
+            // Calculate total tax rate
+            const totalTaxRate = isIGST 
+                ? (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100
+                : (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100;
+            
+            // Calculate taxable value from final target amount (including taxes)
+            const taxableValueFromTarget = targetAmount / (1 + totalTaxRate);
+            
+            // Calculate quantity based on taxable value
+            quantity = taxableValueFromTarget / rate;
         } else if (invoiceData.mode === 'direct') {
             // Direct Amount Entry: Use direct amount as taxable value
             if (directAmount <= 0) {
@@ -156,26 +170,24 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
 
     const isIGST = String(invoiceData?.type || '').toLowerCase() === 'inter_state' || String(invoiceData?.type || '').toLowerCase() === 'outer_state';
     const calculateTotals = () => {
-        // taxableValue already has roundoff subtracted per item in the hook
         const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
-        const totalRoundoff = lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0);
 
-        // Use taxableValue directly since roundoff is already applied per item
         const cgstAmt = isIGST ? 0 : taxableValue * (parseFloat(cgstRate) / 100);
         const sgstAmt = isIGST ? 0 : taxableValue * (parseFloat(sgstRate) / 100);
         const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
         const igstAmt = isIGST ? taxableValue * (igstRate / 100) : 0;
-        const total = taxableValue + cgstAmt + sgstAmt + igstAmt;
+        const totalBeforeRoundoff = taxableValue + cgstAmt + sgstAmt + igstAmt;
+        const finalTotal = totalBeforeRoundoff + globalRoundoff; // Apply global roundoff to final total
 
         return {
             taxableValue,
-            totalRoundoff,
-            adjustedTaxableValue: taxableValue, // Same as taxableValue since roundoff already applied
             cgstAmount: cgstAmt,
             sgstAmount: sgstAmt,
             igstAmount: igstAmt,
             igstRate,
-            total
+            totalBeforeRoundoff,
+            globalRoundoff,
+            finalTotal
         };
     };
 
@@ -352,14 +364,31 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                                 if (invoiceData.mode === 'reverse') {
                                                     // Auto-calculate quantity when rate changes in reverse mode
                                                     const targetAmount = parseFloat(formData.targetAmount) || 0;
-                                                    const calculatedQuantity = parseFloat(rate) > 0 && targetAmount > 0
-                                                        ? (targetAmount / parseFloat(rate)).toFixed(3)
-                                                        : '0.000';
-                                                    setFormData({
-                                                        ...formData,
-                                                        rate,
-                                                        quantity: calculatedQuantity
-                                                    });
+                                                    
+                                                    if (parseFloat(rate) > 0 && targetAmount > 0) {
+                                                        // Calculate total tax rate
+                                                        const totalTaxRate = isIGST 
+                                                            ? (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100
+                                                            : (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100;
+                                                        
+                                                        // Calculate taxable value from final target amount (including taxes)
+                                                        const taxableValueFromTarget = targetAmount / (1 + totalTaxRate);
+                                                        
+                                                        // Calculate quantity based on taxable value
+                                                        const calculatedQuantity = (taxableValueFromTarget / parseFloat(rate)).toFixed(3);
+                                                        
+                                                        setFormData({
+                                                            ...formData,
+                                                            rate,
+                                                            quantity: calculatedQuantity
+                                                        });
+                                                    } else {
+                                                        setFormData({
+                                                            ...formData,
+                                                            rate,
+                                                            quantity: '0.000'
+                                                        });
+                                                    }
                                                 } else {
                                                     setFormData({ ...formData, rate });
                                                 }
@@ -387,12 +416,31 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                                 onChange={(e) => {
                                                     const targetAmount = e.target.value;
                                                     const rate = parseFloat(formData.rate) || 0;
-                                                    const calculatedQuantity = rate > 0 ? (parseFloat(targetAmount) / rate).toFixed(3) : '0.000';
-                                                    setFormData({
-                                                        ...formData,
-                                                        targetAmount,
-                                                        quantity: calculatedQuantity
-                                                    });
+                                                    
+                                                    if (rate > 0 && parseFloat(targetAmount) > 0) {
+                                                        // Calculate total tax rate
+                                                        const totalTaxRate = isIGST 
+                                                            ? (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100
+                                                            : (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100;
+                                                        
+                                                        // Calculate taxable value from final target amount (including taxes)
+                                                        const taxableValueFromTarget = parseFloat(targetAmount) / (1 + totalTaxRate);
+                                                        
+                                                        // Calculate quantity based on taxable value
+                                                        const calculatedQuantity = (taxableValueFromTarget / rate).toFixed(3);
+                                                        
+                                                        setFormData({
+                                                            ...formData,
+                                                            targetAmount,
+                                                            quantity: calculatedQuantity
+                                                        });
+                                                    } else {
+                                                        setFormData({
+                                                            ...formData,
+                                                            targetAmount,
+                                                            quantity: '0.000'
+                                                        });
+                                                    }
                                                 }}
                                                 className="w-full px-4 py-3 border border-orange-500/30 rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-orange-500/50"
                                                 placeholder="Enter desired total amount"
@@ -588,20 +636,6 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         ₹{totals.taxableValue.toFixed(2)}
                                     </span>
                                 </div>
-                                {totals.totalRoundoff > 0 && (
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">RoundOff:</span>
-                                        <span className="font-semibold text-foreground">
-                                            ₹{totals.totalRoundoff.toFixed(2)}
-                                        </span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Adjusted Taxable Value:</span>
-                                    <span className="font-semibold text-foreground">
-                                        ₹{totals.adjustedTaxableValue.toFixed(2)}
-                                    </span>
-                                </div>
                                 {isIGST ? (
                                     <div className="flex justify-between text-sm">
                                         <span className="text-muted-foreground">IGST ({totals.igstRate}%):</span>
@@ -627,11 +661,34 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 )}
                             </div>
 
-                            <div className="border-t border-border pt-4">
+                            <div className="border-t border-border pt-4 space-y-3">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Total Before Roundoff:</span>
+                                    <span className="font-semibold text-foreground">
+                                        ₹{totals.totalBeforeRoundoff.toFixed(2)}
+                                    </span>
+                                </div>
+                                
+                                {/* Global Roundoff Input */}
                                 <div className="flex justify-between items-center">
-                                    <span className="font-bold text-lg text-foreground">Total Invoice Value:</span>
+                                    <span className="text-muted-foreground">Roundoff Adjustment:</span>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={globalRoundoff}
+                                            onChange={(e) => setGlobalRoundoff(Number(e.target.value) || 0)}
+                                            className="w-24 px-2 py-1 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-right"
+                                            placeholder="0.00"
+                                        />
+                                        <span className="text-xs text-muted-foreground">₹</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex justify-between items-center border-t border-border pt-3">
+                                    <span className="font-bold text-lg text-foreground">Final Invoice Total:</span>
                                     <span className="text-2xl font-bold text-primary">
-                                        ₹{totals.total.toFixed(2)}
+                                        ₹{totals.finalTotal.toFixed(2)}
                                     </span>
                                 </div>
                             </div>

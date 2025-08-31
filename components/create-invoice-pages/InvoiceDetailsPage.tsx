@@ -1,9 +1,8 @@
 "use client"
-import { InvoiceData, State, transactionTypes } from '@/types/invoiceTypes';
+import { Customer, InvoiceData, State, transactionTypes } from '@/types/invoiceTypes';
 import React, { useEffect, useState } from 'react';
 import { showToast } from '@/utils/toast';
 import { Calendar, Hash, User, MapPin, Building2, CreditCard, Calculator, ArrowRight } from 'lucide-react';
-import { Customer } from '@/types/shop-profile';
 
 interface InvoiceDetailsPageProps {
     invoiceData: InvoiceData;
@@ -108,20 +107,18 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                 buyer_gstin: '',
                 buyer_state: '',
                 buyer_state_code: '',
-            })
+            });
+            setDefaultCustomer(false);
         } else {
-            updateInvoiceData({ customer_id: e.target.value })
-        }
-        const selectedCustomerData = customers?.find(
-            (custo) => custo.id === Number(e.target.value)
-        );
+            const selectedCustomerData = customers?.find(
+                (custo) => custo.id === Number(e.target.value)
+            );
 
-        if (selectedCustomerData) {
-            selectedCustomer(selectedCustomerData); // pass the actual customer object
-            setDefaultCustomer(true);
+            if (selectedCustomerData) {
+                selectedCustomer(selectedCustomerData); // This will populate buyer fields via the hook
+                setDefaultCustomer(true);
+            }
         }
-
-        updateInvoiceData({ customer_id: e.target.value });
     };
 
     const inputModes = [

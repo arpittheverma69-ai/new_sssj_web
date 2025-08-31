@@ -8,11 +8,15 @@ export async function GET(
   try {
     const { id: idParam } = await params;
     const id = parseInt(idParam);
-    
+
     const invoice = await prisma.invoice.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: {
+          include: {
+            state: true,
+          },
+        },
         line_items: {
           include: {
             taxes: true,
@@ -48,7 +52,11 @@ export async function PUT(
       where: { id },
       data: body,
       include: {
-        customer: true,
+        customer: {
+          include: {
+            state: true,
+          },
+        },
         line_items: {
           include: {
             taxes: true,

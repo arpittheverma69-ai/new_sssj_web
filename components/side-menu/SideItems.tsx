@@ -10,9 +10,11 @@ import plus from "@/lib/icon-files/plus.json"
 import setting from "@/lib/icon-files/setting.json"
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { useShopProfile } from "@/contexts/ShopProfileContext";
 
 const SideItems = () => {
     const pathname = usePathname();
+    const { shopProfile } = useShopProfile();
     const navItems = [
         {
             name: "Dashboard",
@@ -54,7 +56,7 @@ const SideItems = () => {
                             🧾
                         </div>
                         <div>
-                            <h1 className="font-bold text-lg text-foreground">J.V. Jewellers</h1>
+                            <h1 className="font-bold text-lg text-foreground">{shopProfile.shopName}</h1>
                             <p className="text-xs text-muted-foreground">GST Invoice Generator</p>
                         </div>
                     </div>

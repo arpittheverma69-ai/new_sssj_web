@@ -31,18 +31,18 @@ export interface ShopProfileFormData {
     branch_ifsc?: string
 }
 
-export interface Customer {
-    id: number;
-    name: string;
-    email?: string;
-    phone: string;
-    address: string;
-    city: string;
-    pincode?: string;
-    gstin?: string;
-    pan_number?: string;
-    state_id?: number;
-    state?: State;
-    created_at: string;
-    updated_at: string;
-}
+// export interface Customer {
+//     id: number;
+//     name: string;
+//     email?: string;
+//     phone: string;
+//     address: string;
+//     city: string;
+//     pincode?: string;
+//     gstin?: string;
+//     pan_number?: string;
+//     state_id?: number;
+//     state?: State;
+//     created_at: string;
+//     updated_at: string;
+// }

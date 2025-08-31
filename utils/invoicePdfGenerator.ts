@@ -1,23 +1,63 @@
 import { InvoiceData, LineItem } from '@/types/invoiceTypes';
 import { numberToWords } from '@/utils/numberToWords';
 
+interface ShopProfile {
+    shopName: string;
+    gstin: string;
+    address: string;
+    city: string;
+    state: string;
+    stateCode: string;
+    vatTin?: string;
+    panNumber?: string;
+    bankName?: string;
+    branchIfsc?: string;
+}
+
 interface InvoicePdfData {
     invoiceData: InvoiceData;
     lineItems: LineItem[];
 }
 
-export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
-    // Calculate totals
-    const taxableValue = lineItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
-    const totalRoundoff = lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0);
-    const taxableAfterRoundoff = Math.max(0, taxableValue - totalRoundoff);
+export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRoundoff: number = 0, shopProfile?: ShopProfile) => {
+    // Default shop profile if not provided
+    const defaultShopProfile: ShopProfile = {
+        shopName: 'J.V. JEWELLERS',
+        gstin: '09ADCPV2673H1Z7',
+        address: 'SHOP NO. -2, KRISHNA HIEGHT, JAY SINGH PURA',
+        city: 'MATHURA',
+        state: 'Uttar Pradesh',
+        stateCode: '09',
+        vatTin: '',
+        panNumber: '',
+        bankName: '',
+        branchIfsc: ''
+    };
 
-    const cgstRate = 1.5;
-    const sgstRate = 1.5;
-    const cgstAmount = taxableAfterRoundoff * cgstRate / 100;
-    const sgstAmount = taxableAfterRoundoff * sgstRate / 100;
+    console.log("invoiceData", invoiceData);
+
+    const profile = shopProfile || defaultShopProfile;
+    // Calculate totals
+    const taxableValue = lineItems.reduce((sum, item) => sum + Number(item.taxableValue), 0);
+
+    // Calculate tax rates dynamically from line items if available
+    let cgstRate = 1.5; // default
+    let sgstRate = 1.5; // default
+
+    // Try to get tax rates from the first line item's taxes
+    if (lineItems.length > 0 && lineItems[0].taxes && lineItems[0].taxes.length > 0) {
+        const taxes = lineItems[0].taxes;
+        const cgstTax = taxes.find((tax: any) => tax.tax_name === 'CGST');
+        const sgstTax = taxes.find((tax: any) => tax.tax_name === 'SGST');
+        if (cgstTax) cgstRate = Number(cgstTax.tax_rate);
+        if (sgstTax) sgstRate = Number(sgstTax.tax_rate);
+    }
+
+    const cgstAmount = taxableValue * cgstRate / 100;
+    const sgstAmount = taxableValue * sgstRate / 100;
     const totalTax = cgstAmount + sgstAmount;
-    const totalInvoice = taxableAfterRoundoff + totalTax;
+    const totalBeforeRoundoff = taxableValue + totalTax;
+    const totalInvoice = totalBeforeRoundoff + globalRoundoff;
 
     // Copy types for the 3 pages
     const copyTypes = [
@@ -64,12 +104,12 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
         <div class="max-w-4xl mx-auto border border-black">
             <div class="grid grid-cols-2">
                 <div class="h-[275px]">
-                    <div class="border-b border-black w-[90%] pt-1 ml-0.5 leading-[1.4] h-[75.59px]">
-                        <h1 class="font-bold">J.V. JEWELLERS</h1>
-                        <p>SHOP NO. -2, KRISHNA HIEGHT, JAY SINGH PURA</p>
-                        <p>MATHURA</p>
-                        <p>GSTIN/UIN: 09ADCPV2673H1Z7</p>
-                        <p>State Name : Uttar Pradesh, Code : 09</p>
+                    <div class="border-b border-black w-[100%] pt-1 ml-0.5 leading-[1.4] h-auto">
+                        <h1 class="font-bold">${profile.shopName.toUpperCase()}</h1>
+                        <p>${profile.address}</p>
+                        <p>${profile.city}</p>
+                        <p>GSTIN/UIN: ${profile.gstin}</p>
+                        <p>State Name : ${profile.state}, Code : ${profile.stateCode.split(' ')[0] || profile.stateCode}</p>
                     </div>
                     <div class="leading-[1.4] ml-0.5 pt-0.5 h-[75.5px]">
                         <p class="text-[9px]">Buyer (Bill to)</p>
@@ -150,10 +190,10 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         <td class="border-r border-black pt-2 text-center">${index + 1}</td>
                         <td class="border-r border-black pt-2">${item.description}</td>
                         <td class="border-r border-black pt-2 text-center">${item.hsn_sac_code}</td>
-                        <td class="border-r border-black pt-2 text-right">${item.quantity.toFixed(3)} ${item.unit}</td>
-                        <td class="border-r border-black pt-2 text-right">${item.rate.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="border-r border-black pt-2 text-right">${Number(item.quantity).toFixed(3)} ${item.unit}</td>
+                        <td class="border-r border-black pt-2 text-right">${Number(item.rate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                         <td class="border-r border-black pt-2 text-center">${item.unit}</td>
-                        <td class="text-right pt-2">${item.taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-right pt-2">${Number(item.taxableValue).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                     </tr>
                     `).join('')}
                     <tr class="font-bold h-[15px]">
@@ -184,7 +224,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black text-right"></td>
-                        <td class="w-[98.27px] text-right">${totalRoundoff ? `(-)${totalRoundoff.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '0.00'}</td>
+                        <td class="w-[98.27px] text-right">${globalRoundoff !== 0 ? (globalRoundoff > 0 ? `(+)${globalRoundoff.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : `(-)${Math.abs(globalRoundoff).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`) : '0.00'}</td>
                     </tr>
                     <tr class="font-bold h-full max-h-auto">
                         <td class="border-r border-black"></td>
@@ -264,23 +304,23 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                 <div class="grid grid-cols-2 mt-4 p-1">
                     <div>
                         <div class="flex">
-                            <div class="w-[138px]">Company's VAT TIN </div>
-                            <div class="font-bold">: 09627100742</div>
-                        </div>
-                        <div class="flex">
                             <div class="w-[138px]">Buyer's VAT TIN</div>
                             <div class="font-bold">: ${invoiceData.buyer_gstin || ''}</div>
                         </div>
                         <div class="flex">
+                            <div class="w-[138px]">Company's VAT TIN </div>
+                            <div class="font-bold">: ${profile.vatTin || ''}</div>
+                        </div>
+                        <div class="flex">
                             <div class="w-[138px]">Company's PAN </div>
-                            <div class="font-bold">: ADCPV2673H</div>
+                            <div class="font-bold">: ${profile.panNumber || ''}</div>
                         </div>
                     </div>
                     <div>
                         <p><span>Company's Bank Details</span></p>
                         <div class="flex">
                             <div class="w-[94.4px]">Bank Name</div>
-                            <div class="font-bold">: ICICI BANK C/A NO. 027405001417 (JVM)</div>
+                            <div class="font-bold">: ${profile.bankName || ''}</div>
                         </div>
                         <div class="flex">
                             <div class="w-[94.4px]">A/c No.</div>
@@ -288,7 +328,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         </div>
                         <div class="flex">
                             <div class="w-[94.4px]">Branch & IFS Code</div>
-                            <div class="font-bold">:</div>
+                            <div class="font-bold">: ${profile.branchIfsc || ''}</div>
                         </div>
                     </div>
                 </div>
@@ -301,7 +341,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
                         </span>
                     </div>
                     <div class="text-right border-l border-t border-black w-[50%] flex flex-col justify-between">
-                        <p class="font-bold pr-3">for J.V. JEWELLERS</p>
+                        <p class="font-bold pr-3">for ${profile.shopName.toUpperCase()}</p>
                         <div class="pr-3">
                             Authorised Signatory
                         </div>
@@ -316,8 +356,8 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[]) => {
 };
 
 // Build combined HTML with up to 3 copies, only header text differs
-export function generateInvoiceHTML(data: { invoiceData: InvoiceData; lineItems: LineItem[]; cgstRate?: number; sgstRate?: number; copies?: Array<'ORIGINAL FOR RECIPIENT' | 'DUPLICATE FOR TRANSPORTER' | 'TRIPLICATE FOR SUPPLIER'>; }) {
-    const base = generateInvoicePDF(data.invoiceData, data.lineItems);
+export function generateInvoiceHTML(data: { invoiceData: InvoiceData; lineItems: LineItem[]; cgstRate?: number; sgstRate?: number; globalRoundoff?: number; copies?: Array<'ORIGINAL FOR RECIPIENT' | 'DUPLICATE FOR TRANSPORTER' | 'TRIPLICATE FOR SUPPLIER'>; shopProfile?: ShopProfile; }) {
+    const base = generateInvoicePDF(data.invoiceData, data.lineItems, data.globalRoundoff || 0, data.shopProfile);
     const headMatch = base.match(/<head[\s\S]*?<\/head>/i);
     const bodyMatch = base.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     const head = headMatch ? headMatch[0] : '<head><meta charset="UTF-8"><title>Tax Invoice</title><script src="https://cdn.tailwindcss.com"></script></head>';
@@ -346,8 +386,8 @@ export function generateInvoiceHTML(data: { invoiceData: InvoiceData; lineItems:
     return `<!DOCTYPE html><html lang="en">${head.replace('</head>', style + '</head>')}<body class="bg-white">${pages}</body></html>`;
 }
 
-export const downloadInvoicePDF = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; copies?: string[] }) => {
-    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, copies: data.copies as any });
+export const downloadInvoicePDF = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; globalRoundoff?: number; copies?: string[] }) => {
+    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, globalRoundoff: data.globalRoundoff, copies: data.copies as any });
 
     // Create a new window with the HTML content for printing
     const printWindow = window.open('', '_blank');
@@ -365,10 +405,10 @@ export const downloadInvoicePDF = async (data: InvoicePdfData & { cgstRate?: num
     }
 };
 
-export const generatePDFBlob = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; copies?: string[] }): Promise<Blob> => {
+export const generatePDFBlob = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; globalRoundoff?: number; copies?: string[] }): Promise<Blob> => {
     // For client-side PDF generation, we'll use the browser's print to PDF functionality
     // This requires user interaction but provides exact formatting
-    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, copies: data.copies as any });
+    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, globalRoundoff: data.globalRoundoff, copies: data.copies as any });
 
     return new Promise((resolve) => {
         const iframe = document.createElement('iframe');

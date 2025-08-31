@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "J.V. Jewellers - GST Invoice Generator",
-  description: "Professional GST invoice generator for jewellery businesses",
-  keywords: ["invoice", "GST", "jewellery", "business", "tax"],
+  title: "GST Invoice Generator - Dashboard",
+  description: "Professional GST invoice generator for businesses",
+  keywords: ["invoice", "GST", "business", "tax"],
 };
 
 export default function RootLayout({

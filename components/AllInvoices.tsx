@@ -1,12 +1,12 @@
 "use client"
 import React, { useState } from 'react'
-import { Plus, Search, Download, Eye, Edit, Flag, DollarSign, FileText, Package } from 'lucide-react'
-import { FaRegPenToSquare, FaTrashCan, FaEye, FaFlag } from "react-icons/fa6";
+import { Plus, Search, Download, Trash2, Flag, DollarSign, FileText, Package } from 'lucide-react'
+import { FaRegPenToSquare, FaEye } from "react-icons/fa6";
 import { IconButton, Tooltip } from "@mui/material";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Invoice } from '@/types/invoiceTypes';
-import { showToast } from '@/utils/toast';
+import { DownloadPDFModal } from './DownloadPDFModal';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 const invoiceCategories = ['all', 'retail', 'inter_state', 'outer_state'];
@@ -23,6 +23,8 @@ const AllInvoices = () => {
     const [selectedInvoice, setSelectedInvoice] = React.useState<Invoice | null>(null);
     const [viewModalOpen, setViewModalOpen] = React.useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
+    const [downloadModalOpen, setDownloadModalOpen] = useState(false)
+    const [downloadInvoice, setDownloadInvoice] = useState<Invoice | null>(null);
 
     // Fetch invoices on component mount
     React.useEffect(() => {
@@ -59,6 +61,11 @@ const AllInvoices = () => {
     const handleDelete = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setDeleteModalOpen(true);
+    };
+
+    const handleDownload = (invoice: Invoice) => {
+        setDownloadInvoice(invoice);
+        setDownloadModalOpen(true);
     };
 
     const confirmDelete = async () => {
@@ -375,15 +382,21 @@ const AllInvoices = () => {
                                             <FaRegPenToSquare className="text-green-500" />
                                         </IconButton>
                                     </Tooltip>
-                                    <Tooltip title={invoice.flagged ? "Unflag" : "Flag"}>
-                                        <IconButton size="small" onClick={() => toggleFlag(invoice)}>
-                                            <FaFlag className={invoice.flagged ? "text-red-500" : "text-gray-400"} />
-                                        </IconButton>
+                                    <Tooltip title="Download PDF">
+                                        <button
+                                            onClick={() => handleDownload(invoice)}
+                                            className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
+                                        >
+                                            <Download className="h-4 w-4" />
+                                        </button>
                                     </Tooltip>
                                     <Tooltip title="Delete">
-                                        <IconButton size="small" onClick={() => handleDelete(invoice)}>
-                                            <FaTrashCan className="text-red-500" />
-                                        </IconButton>
+                                        <button
+                                            onClick={() => handleDelete(invoice)}
+                                            className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
                                     </Tooltip>
                                 </div>
                             </div>
@@ -494,15 +507,21 @@ const AllInvoices = () => {
                                                     <FaRegPenToSquare className="text-green-500" />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Tooltip title={invoice.flagged ? "Unflag" : "Flag"}>
-                                                <IconButton size="small" onClick={() => toggleFlag(invoice)}>
-                                                    <FaFlag className={invoice.flagged ? "text-red-500" : "text-gray-400"} />
-                                                </IconButton>
+                                            <Tooltip title="Download PDF">
+                                                <button
+                                                    onClick={() => handleDownload(invoice)}
+                                                    className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
+                                                >
+                                                    <Download className="h-4 w-4" />
+                                                </button>
                                             </Tooltip>
                                             <Tooltip title="Delete">
-                                                <IconButton size="small" onClick={() => handleDelete(invoice)}>
-                                                    <FaTrashCan className="text-red-500" />
-                                                </IconButton>
+                                                <button
+                                                    onClick={() => handleDelete(invoice)}
+                                                    className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
                                             </Tooltip>
                                         </div>
                                     </div>
@@ -617,6 +636,21 @@ const AllInvoices = () => {
                             </Button>
                         </div>
                     </div>
+                )}
+            </Modal>
+
+            {/* Download PDF Modal */}
+            <Modal
+                isOpen={downloadModalOpen}
+                onClose={() => setDownloadModalOpen(false)}
+                title="Download Invoice PDF"
+                size="lg"
+            >
+                {downloadInvoice && (
+                    <DownloadPDFModal
+                        invoice={downloadInvoice}
+                        onClose={() => setDownloadModalOpen(false)}
+                    />
                 )}
             </Modal>
         </main>

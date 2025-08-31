@@ -58,12 +58,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                                     Taxable Value
                                 </div>
                             </th>
-                            <th scope="col" className="px-6 py-4 text-left">
-                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                    <Minus className="w-4 h-4 text-muted-foreground" />
-                                    RoundOff
-                                </div>
-                            </th>
                             <th scope="col" className="px-6 py-4 text-center">
                                 <span className="text-sm font-semibold text-foreground">Actions</span>
                             </th>
@@ -72,7 +66,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                     <tbody className="divide-y divide-border">
                         {lineItems.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="text-center py-16 px-6">
+                                <td colSpan={6} className="text-center py-16 px-6">
                                     <div className="flex flex-col items-center gap-3">
                                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                                             <Package className="w-8 h-8 text-muted-foreground" />
@@ -145,34 +139,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-red-500/10 rounded-[12px] flex items-center justify-center">
-                                                <Minus className="w-4 h-4 text-red-600" />
-                                            </div>
-                                            <div className="flex-1">
-                                                {onUpdateItem ? (
-                                                    <input
-                                                        type="number"
-                                                        step="1"
-                                                        min="0"
-                                                        value={item.roundoff || ''}
-                                                        onChange={(e) => {
-                                                            const value = Number(e.target.value) || 0;
-                                                            onUpdateItem(item.id, { roundoff: value });
-                                                        }}
-                                                        className="w-20 px-2 py-1 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                                                        placeholder="0"
-                                                    />
-                                                ) : (
-                                                    <div className="font-semibold text-foreground">
-                                                        {item.roundoff > 0 ? `-${formatCurrency(item.roundoff)}` : formatCurrency(0)}
-                                                    </div>
-                                                )}
-                                                <div className="text-xs text-muted-foreground mt-1">RoundOff</div>
-                                            </div>
-                                        </div>
-                                    </td>
                                     <td className="px-6 py-4 text-center">
                                         <button
                                             onClick={() => onRemoveItem(item.id)}
@@ -201,11 +167,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
                             <div className="text-xl font-bold text-primary">
                                 {formatCurrency(lineItems.reduce((sum, item) => sum + item.taxableValue, 0))}
                             </div>
-                            {lineItems.some(item => item.roundoff > 0) && (
-                                <div className="text-sm text-red-600 mt-1">
-                                    Total RoundOff: -{formatCurrency(lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0))}
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>

@@ -28,12 +28,14 @@ import { useSearchParams } from 'next/navigation';
 interface ReviewGeneratePageProps {
     invoiceData: any;
     lineItems: LineItem[];
+    globalRoundoff: number;
     prevStep: () => void;
 }
 
 const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     invoiceData,
     lineItems,
+    globalRoundoff,
     prevStep,
 }) => {
     const searchParams = useSearchParams();
@@ -49,17 +51,15 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
-    const totalRoundoff = lineItems.reduce((sum, item) => sum + (item.roundoff || 0), 0);
-    // taxableValue already has roundoff subtracted per item, so use it directly
-    const taxableAfterRoundoff = taxableValue;
-    
+
     const isIGST = String(invoiceData?.type || '').toLowerCase() === 'inter_state' || String(invoiceData?.type || '').toLowerCase() === 'outer_state';
     const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
-    const cgstAmount = isIGST ? 0 : taxableAfterRoundoff * (parseFloat(cgstRate) / 100);
-    const sgstAmount = isIGST ? 0 : taxableAfterRoundoff * (parseFloat(sgstRate) / 100);
-    const igstAmount = isIGST ? taxableAfterRoundoff * (igstRate / 100) : 0;
+    const cgstAmount = isIGST ? 0 : taxableValue * (parseFloat(cgstRate) / 100);
+    const sgstAmount = isIGST ? 0 : taxableValue * (parseFloat(sgstRate) / 100);
+    const igstAmount = isIGST ? taxableValue * (igstRate / 100) : 0;
     const totalTax = cgstAmount + sgstAmount + igstAmount;
-    const totalInvoice = taxableAfterRoundoff + totalTax;
+    const totalBeforeRoundoff = taxableValue + totalTax;
+    const totalInvoice = totalBeforeRoundoff + globalRoundoff;
 
     const handleCopyChange = (copy: keyof typeof selectedCopies) => {
         setSelectedCopies(prev => ({
@@ -90,6 +90,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                 lineItems,
                 cgstRate: parseFloat(cgstRate),
                 sgstRate: parseFloat(sgstRate),
+                globalRoundoff: globalRoundoff,
                 copies: selectedCopyTypes
             };
             await downloadInvoicePDF(pdfData);
@@ -131,6 +132,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                 buyer_state_code: invoiceData.buyer_state_code ? Number(invoiceData.buyer_state_code) : undefined,
                 tax_type: derivedTaxType,
                 total_invoice_value: totalInvoice,
+                roundoff: globalRoundoff,
                 line_items: lineItems.map(item => ({
                     hsn_sac_code: item.hsn_sac_code,
                     description: item.description,
@@ -145,7 +147,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 tax_rate: Number(cgstRate) + Number(sgstRate),
                                 tax_amount: item.taxableValue * (Number(cgstRate) + Number(sgstRate)) / 100,
                             },
-                          ]
+                        ]
                         : [
                             {
                                 tax_name: 'CGST',
@@ -157,7 +159,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 tax_rate: Number(sgstRate),
                                 tax_amount: item.taxableValue * Number(sgstRate) / 100
                             }
-                          ]
+                        ]
                 }))
             };
             console.log("invoicePayload", invoicePayload);
@@ -382,6 +384,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                                 lineItems={lineItems}
                                 cgstRate={parseFloat(cgstRate)}
                                 sgstRate={parseFloat(sgstRate)}
+                                globalRoundoff={globalRoundoff}
                             />
                         </div>
                     </div>

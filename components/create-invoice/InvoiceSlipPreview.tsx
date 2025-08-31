@@ -7,6 +7,7 @@ interface InvoiceSlipPreviewProps {
     lineItems: LineItem[];
     cgstRate: number;
     sgstRate: number;
+    globalRoundoff: number;
 }
 
 const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
@@ -14,6 +15,7 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
     lineItems,
     cgstRate,
     sgstRate,
+    globalRoundoff,
 }) => {
     // ✅ Helper for currency formatting
     const formatCurrency = (amount: number) =>
@@ -26,7 +28,8 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
     const taxableValue = lineItems.reduce((sum, item) => sum + Number(item.taxableValue || 0), 0);
     const cgstAmount = taxableValue * (Number(cgstRate) / 100);
     const sgstAmount = taxableValue * (Number(sgstRate) / 100);
-    const totalInvoice = taxableValue + cgstAmount + sgstAmount;
+    const totalBeforeRoundoff = taxableValue + cgstAmount + sgstAmount;
+    const totalInvoice = totalBeforeRoundoff + Number(globalRoundoff || 0);
     const totalQuantity = lineItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const unit = lineItems.length > 0 ? lineItems[0].unit : 'KGS';
 

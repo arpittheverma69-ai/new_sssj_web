@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ShopProfileProvider } from '@/contexts/ShopProfileContext';
+import { DynamicHead } from '@/components/DynamicHead';
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -15,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "J.V. Jewellers - GST Invoice Generator",
-    description: "Professional GST invoice generator for jewellery businesses",
-    keywords: ["invoice", "GST", "jewellery", "business", "tax"],
+    title: "GST Invoice Generator",
+    description: "Professional GST invoice generator for businesses",
+    keywords: ["invoice", "GST", "business", "tax"],
 };
 
 export default function RootLayout({
@@ -30,19 +32,22 @@ export default function RootLayout({
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
-                {children}
-                <ToastContainer
-                    position="top-right"
-                    autoClose={5000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="colored"
-                />
+                <ShopProfileProvider>
+                    <DynamicHead />
+                    {children}
+                    <ToastContainer
+                        position="top-right"
+                        autoClose={5000}
+                        hideProgressBar={false}
+                        newestOnTop={false}
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                        theme="colored"
+                    />
+                </ShopProfileProvider>
             </body>
         </html>
     );
