@@ -54,6 +54,11 @@ export interface TaxRateRow {
     description: string;
 };
 
+export interface ApiState {
+    state: string;
+    statecode: string;
+}
+
 export interface State {
     id: number;
     state: string;

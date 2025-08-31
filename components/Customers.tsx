@@ -26,7 +26,7 @@ const Customers = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [sortBy, setSortBy] = useState<'name'>('name');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-    
+
     // Modal states
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -127,14 +127,14 @@ const Customers = () => {
 
     return (
         <div className='w-full flex flex-col mx-auto flex-1 p-6 md:p-8'>
-            <AddCustomer 
-    setOpen={setOpen} 
-    open={open} 
-    onCustomerSaved={() => {
-        fetchCustomers();
-        setOpen(false);
-    }}
-/>
+            <AddCustomer
+                setOpen={setOpen}
+                open={open}
+                onCustomerSaved={() => {
+                    fetchCustomers();
+                    setOpen(false);
+                }}
+            />
 
             {/* Header */}
             <header className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 gap-6">
@@ -244,7 +244,7 @@ const Customers = () => {
                         >
                             <option value="name-asc">Name A-Z</option>
                             <option value="name-desc">Name Z-A</option>
-                                                    </select>
+                        </select>
                     </div>
                 </div>
 
@@ -313,8 +313,8 @@ const Customers = () => {
             ) : viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredCustomers.map(customer => (
-                        <CustomerCard 
-                            key={customer.id} 
+                        <CustomerCard
+                            key={customer.id}
                             customer={customer}
                             onView={handleView}
                             onEdit={handleEdit}
@@ -338,9 +338,9 @@ const Customers = () => {
 
                     {/* List Items */}
                     {filteredCustomers.map(customer => (
-                        <CustomerListItem 
-                            key={customer.id} 
-                            customer={customer} 
+                        <CustomerListItem
+                            key={customer.id}
+                            customer={customer}
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
@@ -377,7 +377,7 @@ const Customers = () => {
                             </div>
                             <div>
                                 <label className="text-sm text-muted-foreground">PAN</label>
-                                <p className="font-medium">{selectedCustomer.pan_no || '-'}</p>
+                                <p className="font-medium">{selectedCustomer.pan_number || '-'}</p>
                             </div>
                             <div>
                                 <label className="text-sm text-muted-foreground">Pincode</label>
@@ -403,50 +403,50 @@ const Customers = () => {
                 )}
             </Modal>
 
-      {/* Add/Edit Modal */}
-      {(open || editModalOpen) && (
-        <AddCustomer
-          open={open || editModalOpen}
-          setOpen={(isOpen) => {
-            if (!isOpen) {
-              setOpen(false);
-              setEditModalOpen(false);
-              setSelectedCustomer(null);
-            }
-          }}
-          customerToEdit={selectedCustomer}
-          onCustomerSaved={() => {
-            fetchCustomers();
-            setOpen(false);
-            setEditModalOpen(false);
-          }}
-        />
-      )}
+            {/* Add/Edit Modal */}
+            {(open || editModalOpen) && (
+                <AddCustomer
+                    open={open || editModalOpen}
+                    setOpen={(isOpen) => {
+                        if (!isOpen) {
+                            setOpen(false);
+                            setEditModalOpen(false);
+                            setSelectedCustomer(null);
+                        }
+                    }}
+                    customerToEdit={selectedCustomer}
+                    onCustomerSaved={() => {
+                        fetchCustomers();
+                        setOpen(false);
+                        setEditModalOpen(false);
+                    }}
+                />
+            )}
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        title="Confirm Delete"
-        size="sm"
-      >
-        {selectedCustomer && (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Are you sure you want to delete customer <strong>{selectedCustomer.name}</strong>? 
-              This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="danger" onClick={confirmDelete}>
-                Delete
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                title="Confirm Delete"
+                size="sm"
+            >
+                {selectedCustomer && (
+                    <div className="space-y-4">
+                        <p className="text-sm text-gray-600">
+                            Are you sure you want to delete customer <strong>{selectedCustomer.name}</strong>?
+                            This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button variant="danger" onClick={confirmDelete}>
+                                Delete
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     )
 }

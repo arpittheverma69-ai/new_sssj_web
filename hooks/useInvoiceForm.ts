@@ -23,9 +23,8 @@ export const useInvoiceForm = () => {
                 // Transform API response to match component expectations
                 const transformedStates: State[] = apiStates.map((apiState, index) => ({
                     id: index + 1, // Generate a temporary ID
-                    state_name: apiState.state,
-                    state_code: apiState.statecode,
-                    state_numeric_code: index + 1 // Generate a temporary numeric code
+                    state: apiState.state,
+                    statecode: apiState.statecode
                 }));
 
                 setStates(transformedStates);
@@ -103,8 +102,8 @@ export const useInvoiceForm = () => {
         const matchedState = data?.state
             ? states.find(
                 (s) =>
-                    (s.state_name?.toLowerCase() === data.state?.state_name?.toLowerCase()) ||
-                    (s.state_code?.toLowerCase() === data.state?.state_code?.toLowerCase())
+                    (s.state?.toLowerCase() === data.state?.state?.toLowerCase()) ||
+                    (s.statecode?.toLowerCase() === data.state?.statecode?.toLowerCase())
             )
             : undefined;
 
@@ -114,8 +113,8 @@ export const useInvoiceForm = () => {
             buyer_name: data?.name ?? "",
             buyer_address: data?.address ?? "",
             buyer_gstin: data?.gstin ?? "",
-            buyer_state: matchedState ? matchedState.state_name : "",
-            buyer_state_code: matchedState ? matchedState.state_code : "",
+            buyer_state: matchedState ? matchedState.state : "",
+            buyer_state_code: matchedState ? matchedState.statecode : "",
         }));
     };
 

@@ -29,7 +29,7 @@ const CreateInvoice: React.FC = () => {
                 const invoice_date = inv.invoice_date ? new Date(inv.invoice_date).toISOString().slice(0, 10) : '';
 
                 // Attempt to find state name from buyer_state_code using loaded states
-                const matchedState = invoiceForm.states.find(s => s.state_code === (inv.buyer_state_code || ''));
+                const matchedState = invoiceForm.states.find(s => s.state === (inv.buyer_state_code || ''));
 
                 invoiceForm.setInvoiceData({
                     type: inv.transaction_type || 'retail',
@@ -41,7 +41,7 @@ const CreateInvoice: React.FC = () => {
                     buyer_name: inv.buyer_name || '',
                     buyer_address: inv.buyer_address || '',
                     buyer_gstin: inv.buyer_gstin || '',
-                    buyer_state: matchedState ? matchedState.state_name : '',
+                    buyer_state: matchedState ? matchedState.statecode : '',
                     buyer_state_code: inv.buyer_state_code || '',
                 });
 
