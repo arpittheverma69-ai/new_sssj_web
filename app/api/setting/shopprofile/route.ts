@@ -28,6 +28,7 @@ export async function GET() {
             vatTin: shopProfile.vat_tin || '',
             panNumber: shopProfile.pan_number || '',
             bankName: shopProfile.bank_name || '',
+            accountNumber: shopProfile.account_number || '',
             branchIfsc: shopProfile.branch_ifsc || ''
         })
     } catch (error) {
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
                     vat_tin: data.vatTin || null,
                     pan_number: data.panNumber || null,
                     bank_name: data.bankName || null,
+                    account_number: data.accountNumber || null,
                     branch_ifsc: data.branchIfsc || null
                 },
                 include: { state: true }
@@ -103,6 +105,7 @@ export async function POST(request: Request) {
                     vat_tin: data.vatTin || null,
                     pan_number: data.panNumber || null,
                     bank_name: data.bankName || null,
+                    account_number: data.accountNumber || null,
                     branch_ifsc: data.branchIfsc || null
                 },
                 include: { state: true }
@@ -123,6 +126,7 @@ export async function POST(request: Request) {
                 vatTin: shopProfile.vat_tin || '',
                 panNumber: shopProfile.pan_number || '',
                 bankName: shopProfile.bank_name || '',
+                accountNumber: shopProfile.account_number || '',
                 branchIfsc: shopProfile.branch_ifsc || ''
             }
         })

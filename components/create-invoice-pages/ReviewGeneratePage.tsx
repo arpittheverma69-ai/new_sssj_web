@@ -1,5 +1,5 @@
 "use client"
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { showToast } from '@/utils/toast';
 import InvoiceSlipPreview from '../create-invoice/InvoiceSlipPreview';
 import { LineItem } from '@/types/invoiceTypes';
@@ -24,6 +24,7 @@ import {
     Shield
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import { useShopProfile } from '@/contexts/ShopProfileContext';
 
 interface ReviewGeneratePageProps {
     invoiceData: any;
@@ -39,6 +40,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
     prevStep,
 }) => {
     const searchParams = useSearchParams();
+    const { shopProfile } = useShopProfile();
     const editId = searchParams.get('edit');
     const [cgstRate] = useState('1.5');
     const [sgstRate] = useState('1.5');
@@ -91,7 +93,8 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                 cgstRate: parseFloat(cgstRate),
                 sgstRate: parseFloat(sgstRate),
                 globalRoundoff: globalRoundoff,
-                copies: selectedCopyTypes
+                copies: selectedCopyTypes,
+                shopProfile
             };
             await downloadInvoicePDF(pdfData);
             showToast.success('PDF generated and download started!');

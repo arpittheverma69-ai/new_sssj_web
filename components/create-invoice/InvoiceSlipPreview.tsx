@@ -56,12 +56,16 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
 
             <div
                 id="invoice-slip-container"
-                className="border rounded-lg p-6 bg-gray-50 dark:bg-gray-800 overflow-auto"
+                className="border rounded-lg p-6 bg-gray-50 dark:bg-gray-800 overflow-x-auto overflow-y-auto max-h-screen"
             >
                 <div
                     id="invoice-content"
                     className="bg-white dark:bg-gray-900 text-black dark:text-white mx-auto p-8 shadow-lg rounded-lg"
-                    style={{ maxWidth: '210mm', minHeight: '297mm' }}
+                    style={{ 
+                        width: '210mm', 
+                        minWidth: '210mm',
+                        minHeight: '297mm'
+                    }}
                 >
                     {/* Header Section */}
                     <div className="border-b-2 border-black pb-4 mb-6">
@@ -168,6 +172,14 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
                                     </td>
                                     <td className="border border-black p-2 text-right">
                                         ₹{formatCurrency(sgstAmount)}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={6} className="border border-black p-2 text-right">
+                                        Round Off:
+                                    </td>
+                                    <td className="border border-black p-2 text-right">
+                                        ₹{formatCurrency(Number(globalRoundoff || 0))}
                                     </td>
                                 </tr>
                                 <tr className="bg-yellow-100 dark:bg-yellow-900">

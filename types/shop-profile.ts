@@ -1,4 +1,3 @@
-import { InvoiceData, State } from "./invoiceTypes"
 
 export interface ShopProfile {
     id?: number

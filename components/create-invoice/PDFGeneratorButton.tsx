@@ -3,12 +3,15 @@ import React, { useState } from 'react';
 import { Download, Printer, Eye } from 'lucide-react';
 import { InvoiceData, LineItem } from '@/types/invoiceTypes';
 import { generateInvoiceHTML, downloadInvoicePDF } from '@/utils/invoicePdfGenerator';
+import { useShopProfile } from '@/contexts/ShopProfileContext';
+import { ShopProfile } from '@/types/shop-profile';
 
 interface PDFGeneratorButtonProps {
   invoiceData: InvoiceData;
   lineItems: LineItem[];
   cgstRate: number;
   sgstRate: number;
+  shopProfile?: ShopProfile;
   className?: string;
 }
 
@@ -19,6 +22,7 @@ const PDFGeneratorButton: React.FC<PDFGeneratorButtonProps> = ({
   sgstRate,
   className = ""
 }) => {
+  const { shopProfile } = useShopProfile();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
 
@@ -29,7 +33,8 @@ const PDFGeneratorButton: React.FC<PDFGeneratorButtonProps> = ({
         invoiceData,
         lineItems,
         cgstRate,
-        sgstRate
+        sgstRate,
+        shopProfile
       };
 
       switch (action) {

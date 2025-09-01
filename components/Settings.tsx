@@ -30,11 +30,10 @@ const SettingsPage = () => {
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
-                            className={`px-6 py-3 rounded-[20px] font-medium whitespace-nowrap transition-all duration-200 ${
-                                activeTab === tab.id
+                            className={`px-6 py-3 rounded-[20px] font-medium whitespace-nowrap transition-all duration-200 ${activeTab === tab.id
                                     ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
                                     : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                            }`}
+                                }`}
                             onClick={() => setActiveTab(tab.id)}
                         >
                             {tab.label}

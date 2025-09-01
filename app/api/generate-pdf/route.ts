@@ -4,14 +4,15 @@ import { generateInvoiceHTML } from '@/utils/invoicePdfGenerator';
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const { invoiceData, lineItems, cgstRate, sgstRate } = data;
+    const { invoiceData, lineItems, cgstRate, sgstRate, shopProfile } = data;
 
     // Generate HTML content
     const htmlContent = generateInvoiceHTML({
       invoiceData,
       lineItems,
       cgstRate,
-      sgstRate
+      sgstRate,
+      shopProfile
     });
 
     // Return HTML content for client-side PDF generation

@@ -58,7 +58,7 @@ export const ShopProfileProvider: React.FC<ShopProfileProviderProps> = ({ childr
             setLoading(true)
             setError(null)
             const response = await fetch('/api/setting/shopprofile')
-            
+
             if (!response.ok) {
                 // If no profile exists, use default
                 if (response.status === 404) {
@@ -67,7 +67,7 @@ export const ShopProfileProvider: React.FC<ShopProfileProviderProps> = ({ childr
                 }
                 throw new Error('Failed to fetch shop profile')
             }
-            
+
             const data = await response.json()
             setShopProfile(data)
         } catch (err) {

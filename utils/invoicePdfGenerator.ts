@@ -11,7 +11,9 @@ interface ShopProfile {
     vatTin?: string;
     panNumber?: string;
     bankName?: string;
+    accountNumber?: string;
     branchIfsc?: string;
+    shopProfile?: ShopProfile;
 }
 
 interface InvoicePdfData {
@@ -20,21 +22,23 @@ interface InvoicePdfData {
 }
 
 export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRoundoff: number = 0, shopProfile?: ShopProfile) => {
-    // Default shop profile if not provided
+    // Default shop profile if not provided - should be fetched from database
     const defaultShopProfile: ShopProfile = {
-        shopName: 'J.V. JEWELLERS',
-        gstin: '09ADCPV2673H1Z7',
-        address: 'SHOP NO. -2, KRISHNA HIEGHT, JAY SINGH PURA',
-        city: 'MATHURA',
-        state: 'Uttar Pradesh',
-        stateCode: '09',
+        shopName: 'Shop Name Not Set',
+        gstin: 'GSTIN Not Set',
+        address: 'Address Not Set',
+        city: 'City Not Set',
+        state: 'State Not Set',
+        stateCode: '00',
         vatTin: '',
         panNumber: '',
         bankName: '',
+        accountNumber: '',
         branchIfsc: ''
     };
 
     console.log("invoiceData", invoiceData);
+    console.log("shopProfile", shopProfile);
 
     const profile = shopProfile || defaultShopProfile;
     // Calculate totals
@@ -324,7 +328,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
                         </div>
                         <div class="flex">
                             <div class="w-[94.4px]">A/c No.</div>
-                            <div class="font-bold">:</div>
+                            <div class="font-bold">: ${profile.accountNumber || ''}</div>
                         </div>
                         <div class="flex">
                             <div class="w-[94.4px]">Branch & IFS Code</div>
@@ -356,7 +360,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
 };
 
 // Build combined HTML with up to 3 copies, only header text differs
-export function generateInvoiceHTML(data: { invoiceData: InvoiceData; lineItems: LineItem[]; cgstRate?: number; sgstRate?: number; globalRoundoff?: number; copies?: Array<'ORIGINAL FOR RECIPIENT' | 'DUPLICATE FOR TRANSPORTER' | 'TRIPLICATE FOR SUPPLIER'>; shopProfile?: ShopProfile; }) {
+export function generateInvoiceHTML(data: { invoiceData: InvoiceData; lineItems: LineItem[]; cgstRate?: number; sgstRate?: number; globalRoundoff?: number; copies?: Array<'ORIGINAL FOR RECIPIENT' | 'DUPLICATE FOR TRANSPORTER' | 'TRIPLICATE FOR SUPPLIER'>; shopProfile: ShopProfile; }) {
     const base = generateInvoicePDF(data.invoiceData, data.lineItems, data.globalRoundoff || 0, data.shopProfile);
     const headMatch = base.match(/<head[\s\S]*?<\/head>/i);
     const bodyMatch = base.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -386,8 +390,8 @@ export function generateInvoiceHTML(data: { invoiceData: InvoiceData; lineItems:
     return `<!DOCTYPE html><html lang="en">${head.replace('</head>', style + '</head>')}<body class="bg-white">${pages}</body></html>`;
 }
 
-export const downloadInvoicePDF = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; globalRoundoff?: number; copies?: string[] }) => {
-    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, globalRoundoff: data.globalRoundoff, copies: data.copies as any });
+export const downloadInvoicePDF = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; globalRoundoff?: number; copies?: string[]; shopProfile: ShopProfile }) => {
+    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, globalRoundoff: data.globalRoundoff, copies: data.copies as any, shopProfile: data.shopProfile });
 
     // Create a new window with the HTML content for printing
     const printWindow = window.open('', '_blank');
@@ -396,19 +400,19 @@ export const downloadInvoicePDF = async (data: InvoicePdfData & { cgstRate?: num
         printWindow.document.close();
 
         // Wait for content to load then trigger print
-        printWindow.onload = () => {
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 500);
-        };
+        // printWindow.onload = () => {
+        //     setTimeout(() => {
+        //         printWindow.print();
+        //         printWindow.close();
+        //     }, 500);
+        // };
     }
 };
 
-export const generatePDFBlob = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; globalRoundoff?: number; copies?: string[] }): Promise<Blob> => {
+export const generatePDFBlob = async (data: InvoicePdfData & { cgstRate?: number; sgstRate?: number; globalRoundoff?: number; copies?: string[]; shopProfile: ShopProfile }): Promise<Blob> => {
     // For client-side PDF generation, we'll use the browser's print to PDF functionality
     // This requires user interaction but provides exact formatting
-    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, globalRoundoff: data.globalRoundoff, copies: data.copies as any });
+    const htmlContent = generateInvoiceHTML({ invoiceData: data.invoiceData, lineItems: data.lineItems, cgstRate: data.cgstRate, sgstRate: data.sgstRate, globalRoundoff: data.globalRoundoff, copies: data.copies as any, shopProfile: data.shopProfile });
 
     return new Promise((resolve) => {
         const iframe = document.createElement('iframe');

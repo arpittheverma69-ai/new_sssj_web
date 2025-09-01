@@ -57,7 +57,7 @@ const UserManagementTab = () => {
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!formData.username || !formData.email || (!editingUser && !formData.password)) {
             toast.error('Please fill in all required fields');
             return;
@@ -66,7 +66,7 @@ const UserManagementTab = () => {
         try {
             const url = editingUser ? `/api/admin/users/${editingUser}` : '/api/admin/users';
             const method = editingUser ? 'PUT' : 'POST';
-            
+
             const response = await fetch(url, {
                 method,
                 headers: {
@@ -273,11 +273,10 @@ const UserManagementTab = () => {
                                         </td>
                                         <td className="p-4 text-muted-foreground">{user.email}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                user.role === 'admin' 
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'admin'
                                                     ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                                                     : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-                                            }`}>
+                                                }`}>
                                                 {user.role}
                                             </span>
                                         </td>

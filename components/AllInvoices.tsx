@@ -607,9 +607,6 @@ const AllInvoices = () => {
                             <Button variant="outline" onClick={() => setViewModalOpen(false)}>
                                 Close
                             </Button>
-                            {/* <Button onClick={() => handleDownload(selectedInvoice)}>
-                                            Download PDF
-                                        </Button> */}
                         </div>
                     </div>
                 )}

@@ -11,6 +11,7 @@ interface ShopProfileData {
     vatTin: string;
     panNumber: string;
     bankName: string;
+    accountNumber: string;
     branchIfsc: string;
 }
 
@@ -25,6 +26,7 @@ const ShopProfileTab = () => {
         vatTin: '',
         panNumber: '',
         bankName: '',
+        accountNumber: '',
         branchIfsc: '',
     });
     const [loading, setLoading] = useState(true);
@@ -224,12 +226,22 @@ const ShopProfileTab = () => {
                         />
                     </div>
 
-                    <div className="md:col-span-2">
+                    <div>
                         <label className="block text-gray-600 text-sm md:text-base">Bank Name</label>
                         <input
                             type="text"
                             name="bankName"
                             value={formData.bankName}
+                            onChange={handleChange}
+                            className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-gray-600 text-sm md:text-base">Account Number</label>
+                        <input
+                            type="text"
+                            name="accountNumber"
+                            value={formData.accountNumber}
                             onChange={handleChange}
                             className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base"
                         />
