@@ -10,12 +10,14 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
   return (
     <SessionProvider>
       <div className="relative w-full flex bg-background min-h-screen">
+
         <div className="w-80 max-lg:hidden relative">
           <div className="fixed top-0 w-65">
             <SideItems />
           </div>
         </div>
-        <div className="flex-1 flex flex-col">
+
+        <div className="flex-1 flex flex-col w-full">
           <NavbarDemo />
           {children}
         </div>

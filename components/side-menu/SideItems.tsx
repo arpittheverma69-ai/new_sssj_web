@@ -36,11 +36,11 @@ const SideItems = () => {
             link: "/dashboard/customers",
             icon: Individual
         },
-        {
-            name: "Reports",
-            link: "/dashboard/reports",
-            icon: Report
-        },
+        // {
+        //     name: "Reports",
+        //     link: "/dashboard/reports",
+        //     icon: Report
+        // },
         {
             name: "Settings",
             link: "/dashboard/setting",
@@ -69,14 +69,13 @@ const SideItems = () => {
                         const lottieRef = useRef<LottieRefCurrentProps>(null);
                         const active = pathname === item.link
                         return (
-                            <Link 
-                                href={item.link} 
-                                key={id} 
-                                className={`${
-                                    active 
-                                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' 
+                            <Link
+                                href={item.link}
+                                key={id}
+                                className={`${active
+                                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
                                         : 'hover:bg-accent hover:text-accent-foreground'
-                                } px-4 py-3 rounded-[24px] flex items-center transition-all duration-200 group`}
+                                    } px-4 py-3 rounded-[24px] flex items-center transition-all duration-200 group`}
                                 onMouseEnter={() => lottieRef.current?.play()}
                                 onMouseLeave={() => lottieRef.current?.stop()}
                             >

@@ -18,27 +18,27 @@ export function NavbarDemo() {
     const navItems = [
         {
             name: "Dashboard",
-            link: "./",
+            link: "/dashboard",
         },
         {
             name: "Create Invoice",
-            link: "./create-invoice",
+            link: "/dashboard/create-invoice",
         },
         {
             name: "All Invoices",
-            link: "./all-invoice",
+            link: "/dashboard/all-invoice",
         },
         {
             name: "Customers",
-            link: "./customers",
+            link: "/dashboard/customers",
         },
-        {
-            name: "Reports",
-            link: "./reports",
-        },
+        // {
+        //     name: "Reports",
+        //     link: "/dashboard/reports",
+        // },
         {
             name: "Settings",
-            link: "./setting",
+            link: "/dashboard/setting",
         },
     ];
 
@@ -88,7 +88,7 @@ export function NavbarDemo() {
                                 key={`mobile-link-${idx}`}
                                 href={item.link}
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className="block px-4 py-3 rounded-[20px] text-foreground hover:bg-accent transition-all duration-200 font-medium"
+                                className="block px-4 py-3 rounded-[20px] text-black hover:bg-accent transition-all duration-200 font-medium"
                             >
                                 {item.name}
                             </a>

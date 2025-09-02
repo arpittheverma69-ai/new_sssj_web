@@ -325,7 +325,7 @@ const RecentInvoices = () => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="font-semibold text-foreground text-sm">{formatCurrency(invoice.total_invoice_value)}</div>
+                                            <div className="font-semibold text-foreground text-sm">{formatCurrency((invoice.total_invoice_value))}</div>
                                             <div className="text-xs text-muted-foreground mt-1 capitalize">{invoice.transaction_type.replace('_', ' ')}</div>
                                         </div>
                                     </div>
@@ -759,8 +759,8 @@ export default function Dashboard() {
                                 <button
                                     key={category}
                                     className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-2 rounded-[12px] sm:rounded-[16px] transition-all duration-200 ${selectedSalesCategory === category
-                                            ? 'bg-background text-foreground shadow-md shadow-black/10'
-                                            : 'text-muted-foreground hover:text-foreground'
+                                        ? 'bg-background text-foreground shadow-md shadow-black/10'
+                                        : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                     onClick={() => setSelectedSalesCategory(category)}
                                 >

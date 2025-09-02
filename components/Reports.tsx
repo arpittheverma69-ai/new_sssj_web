@@ -8,7 +8,7 @@ type TimeRange = 'This Month' | 'Last Month' | 'This Year';
 const Reports = () => {
     const [timeRange, setTimeRange] = useState<TimeRange>('This Month');
     return (
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <main className="flex-1 p-6 md:p-8 overflow-hidden">
             <header className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 gap-6">
                 <div>
                     <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Sales Reports</h2>

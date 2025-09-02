@@ -4,7 +4,7 @@ import { Invoice } from '@/types/invoiceTypes'
 import { toast } from 'react-toastify'
 
 const SalesInvoice = () => {
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    // const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
         totalSales: 0,
@@ -21,14 +21,56 @@ const SalesInvoice = () => {
                 const response = await fetch('/api/invoices');
                 const data = await response.json();
                 const invoiceList = data.invoices || [];
-                setInvoices(invoiceList);
+                // setInvoices(invoiceList);
+                console.log("invoiceList", invoiceList);
 
-                // Calculate statistics
-                const totalSales = invoiceList.reduce((sum: number, inv: Invoice) => sum + inv.total_invoice_value, 0);
+                // Calculate statistics - ensure proper number conversion
+                const totalSales = invoiceList.reduce(
+                    (sum: number, inv: Invoice) => {
+                        const invoiceValue = parseFloat(inv.total_invoice_value.toString()) || 0;
+                        console.log(`Invoice ${inv.invoice_number}: ${inv.total_invoice_value} -> ${invoiceValue}`);
+                        return sum + invoiceValue;
+                    },
+                    0
+                );
+
+                // Calculate tax collected - better approach
+                let taxCollected = 0;
+                let taxableAmount = 0;
+
+                invoiceList.forEach((inv: Invoice) => {
+                    if (inv.line_items && Array.isArray(inv.line_items)) {
+                        inv.line_items.forEach((item: any) => {
+                            // Add taxable value - ensure number conversion
+                            const taxableVal = parseFloat(item.taxable_value?.toString()) || 0;
+                            taxableAmount += taxableVal;
+
+                            // Calculate tax from line items
+                            if (item.taxes && Array.isArray(item.taxes)) {
+                                item.taxes.forEach((tax: any) => {
+                                    const taxAmount = parseFloat(tax.tax_amount?.toString()) || 0;
+                                    taxCollected += taxAmount;
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // Fallback calculation if no tax data found
+                if (taxCollected === 0 && taxableAmount > 0) {
+                    // Use standard GST rates based on transaction type
+                    taxCollected = taxableAmount * 0.03; //(1.5% CGST + 1.5% SGST or 3% IGST)
+                } else if (taxCollected === 0 && totalSales > 0) {
+                    // Last resort - estimate from total sales
+                    taxCollected = totalSales * 0.15; // Approximate 15% effective tax rate
+                }
+
+                console.log("totalSales", totalSales);
+                console.log("taxableAmount", taxableAmount);
+                console.log("taxCollected", taxCollected);
+
                 const invoicesGenerated = invoiceList.length;
                 const avgInvoiceValue = invoicesGenerated > 0 ? totalSales / invoicesGenerated : 0;
-                // Assuming 18% tax rate for calculation
-                const taxCollected = totalSales * 0.18;
 
                 setStats({
                     totalSales,
@@ -116,13 +158,13 @@ const SalesInvoice = () => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {statCards.map((card, index) => (
-                <div 
-                    key={index} 
+                <div
+                    key={index}
                     className="group relative bg-card p-6 rounded-[24px] shadow-lg shadow-black/5 border border-border hover:shadow-xl hover:shadow-black/10 transition-all duration-300 hover:-translate-y-1"
                 >
                     {/* Gradient overlay */}
                     <div className={`absolute inset-0 ${card.bgColor} rounded-[24px] opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                    
+
                     {/* Content */}
                     <div className="relative z-10 flex items-center gap-4">
                         <div className={`${card.bgColor} ${card.textColor} w-12 h-12 md:w-14 md:h-14 rounded-[20px] flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
@@ -135,13 +177,13 @@ const SalesInvoice = () => {
                                 <span className={`text-xs ${card.isPositive ? 'text-green-500' : 'text-red-500'} font-semibold flex items-center gap-1`}>
                                     <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d={card.isPositive ? "M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" : "M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z"} clipRule="evenodd" />
-                                    </svg> 
+                                    </svg>
                                     <span className="truncate">{card.change}</span>
                                 </span>
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Border accent */}
                     <div className={`absolute bottom-0 left-0 right-0 h-1 ${card.borderColor} rounded-b-[24px] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`} />
                 </div>

@@ -3,7 +3,9 @@ import React from 'react'
 
 const page = () => {
     return (
-        <Reports />
+        <div className='w-full max-sm:pt-26'>
+            <Reports />
+        </div>
     )
 }
 
