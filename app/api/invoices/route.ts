@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       taxType = "IGST";
     } else if (txLower === "inter_state") {
       chosenPrefix = prefixInterCity;
-      taxType = "IGST";
+      taxType = "CGST+SGST";
     } else {
       // retail or default
       taxType = "CGST+SGST";
@@ -170,8 +170,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(invoice, { status: 201 });
   } catch (error) {
     console.error("Error creating invoice:", error);
+    
+    // Provide more specific error messages
+    let errorMessage = "Failed to create invoice";
+    if (error instanceof Error) {
+      if (error.message.includes('Unique constraint')) {
+        errorMessage = "Invoice number already exists. Please use a different invoice number.";
+      } else if (error.message.includes('Foreign key constraint')) {
+        errorMessage = "Invalid customer or state reference. Please check your data.";
+      } else if (error.message.includes('required')) {
+        errorMessage = "Missing required fields. Please check your input.";
+      } else if (error.message.includes('validation')) {
+        errorMessage = "Invalid data format. Please check your input values.";
+      }
+    }
+    
     return NextResponse.json(
-      { error: "Failed to create invoice" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

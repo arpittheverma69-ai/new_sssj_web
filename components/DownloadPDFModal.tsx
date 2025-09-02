@@ -203,19 +203,33 @@ export const DownloadPDFModal: React.FC<DownloadPDFModalProps> = ({ invoice, onC
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button variant="outline" onClick={onClose}>
+            <div className="flex flex-col sm:flex-row sm:justify-end sm:space-x-3 space-y-2 sm:space-y-0 pt-4 border-t w-full">
+                <Button
+                    variant="outline"
+                    onClick={onClose}
+                    className="w-full sm:w-auto"
+                >
                     Cancel
                 </Button>
-                <Button variant="outline" onClick={handlePreview}>
+
+                <Button
+                    variant="outline"
+                    onClick={handlePreview}
+                    className="w-full sm:w-auto flex items-center justify-center"
+                >
                     <Eye className="h-4 w-4 mr-2" />
                     Preview
                 </Button>
-                <Button onClick={handleGeneratePDF}>
+
+                <Button
+                    onClick={handleGeneratePDF}
+                    className="w-full sm:w-auto flex items-center justify-center"
+                >
                     <Download className="h-4 w-4 mr-2" />
                     Download PDF
                 </Button>
             </div>
+
         </div>
     )
 }

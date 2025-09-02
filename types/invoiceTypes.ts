@@ -103,7 +103,7 @@ export interface Customer {
 
 export const transactionTypes = [
     { value: 'retail', taxType: "CGST + SGST", label: 'Retail Sales', description: 'Intra-state sales with CGST + SGST', icon: '🏪', color: 'bg-blue-500' },
-    { value: 'inter_state', taxType: "IGST", label: 'Inter-state Sales', description: 'Inter-state sales with IGST', icon: '🏙️', color: 'bg-cyan-500' },
+    { value: 'inter_state', taxType: "CGST + SGST", label: 'Inter-state Sales', description: 'Inter-state sales with CGST + SGST', icon: '🏙️', color: 'bg-cyan-500' },
     { value: 'outer_state', taxType: "IGST", label: 'Outer-state Sales', description: 'Out-of-state sales with IGST', icon: '🚚', color: 'bg-purple-500' },
     // { value: 'purchase', label: 'Purchase', description: 'Inward procurement', icon: '📦', color: 'bg-green-500' }
 ];

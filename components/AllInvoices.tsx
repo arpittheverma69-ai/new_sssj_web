@@ -132,7 +132,10 @@ const AllInvoices = () => {
 
     // Calculate statistics
     const totalInvoices = invoices.length;
-    const totalRevenue = invoices.reduce((sum, inv) => sum + inv.total_invoice_value, 0);
+    const totalRevenue = invoices.reduce((sum, inv) => {
+        const invoiceValue = parseFloat(inv.total_invoice_value.toString()) || 0;
+        return sum + invoiceValue;
+    }, 0);
     const flaggedInvoices = invoices.filter(inv => inv.flagged).length;
 
     // Format currency in Indian Rupees

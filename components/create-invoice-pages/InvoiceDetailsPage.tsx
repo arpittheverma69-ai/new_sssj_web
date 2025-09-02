@@ -443,7 +443,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             {/* Tax Type Display */}
                             {(() => {
                                 const t = String(invoiceData.type || '').toLowerCase();
-                                const isIGST = t === 'inter_state' || t === 'outer_state';
+                                const isIGST = t === 'outer_state';
                                 return (
                                     <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 p-4 rounded-[20px] border border-blue-500/20">
                                         <div className="flex items-center gap-3">

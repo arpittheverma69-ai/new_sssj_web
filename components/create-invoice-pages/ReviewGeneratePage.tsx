@@ -54,7 +54,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
 
     const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
 
-    const isIGST = String(invoiceData?.type || '').toLowerCase() === 'inter_state' || String(invoiceData?.type || '').toLowerCase() === 'outer_state';
+    const isIGST = String(invoiceData?.type || '').toLowerCase() === 'outer_state';
     const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
     const cgstAmount = isIGST ? 0 : taxableValue * (parseFloat(cgstRate) / 100);
     const sgstAmount = isIGST ? 0 : taxableValue * (parseFloat(sgstRate) / 100);
@@ -115,7 +115,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
             // Prepare invoice data for API
             const derivedTaxType = (() => {
                 const t = (invoiceData.type || '').toLowerCase();
-                if (t === 'outer_state' || t === 'inter_state') return 'IGST';
+                if (t === 'outer_state') return 'IGST';
                 return 'CGST+SGST';
             })();
 
@@ -195,7 +195,21 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
 
         } catch (error) {
             console.error('Error submitting invoice:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to submit invoice. Please try again.';
+            let errorMessage = 'Failed to submit invoice. Please try again.';
+            
+            if (error instanceof Error) {
+                // Handle specific error types
+                if (error.message.includes('duplicate') || error.message.includes('already exists')) {
+                    errorMessage = 'Invoice number already exists. Please use a different invoice number.';
+                } else if (error.message.includes('required')) {
+                    errorMessage = 'Please fill in all required fields before submitting.';
+                } else if (error.message.includes('validation')) {
+                    errorMessage = 'Please check your input data and try again.';
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+            
             showToast.update(toastId, 'error', errorMessage);
             setIsSubmitting(false);
         }

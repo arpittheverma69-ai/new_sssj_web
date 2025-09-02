@@ -9,9 +9,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         const data = await request.json();
 
         // Validate required fields
-        if (!data.name || !data.address || !data.city || !data.phone || !data.pan_number) {
+        if (!data.name || !data.address || !data.city || !data.gstin || !data.state_id) {
             return NextResponse.json(
-                { error: 'Name, address, city, phone, and PAN number are required fields' },
+                { error: 'Name, address, city, GSTIN, and state are required fields' },
                 { status: 400 }
             );
         }

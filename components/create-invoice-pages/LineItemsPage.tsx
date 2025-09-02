@@ -35,7 +35,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         description: '',
         quantity: '1.000',
         unit: 'PCS',
-        rate: '0.00',
+        rate: '0',
         targetAmount: '0.00',
         directAmount: '0.00',
     });
@@ -144,8 +144,8 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         // Reset form fields
         setFormData(prev => ({
             ...prev,
-            quantity: '1', // Reset to 1 instead of 0.000
-            rate: invoiceData.mode === 'direct' ? directAmount.toFixed(2) : '0.00',
+            quantity: '1', 
+            rate: invoiceData.mode === 'direct' ? directAmount.toFixed(2) : '0',
             targetAmount: '0.00',
             directAmount: '0.00',
         }));
@@ -168,7 +168,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         nextStep();
     };
 
-    const isIGST = String(invoiceData?.type || '').toLowerCase() === 'inter_state' || String(invoiceData?.type || '').toLowerCase() === 'outer_state';
+    const isIGST = String(invoiceData?.type || '').toLowerCase() === 'outer_state';
     const calculateTotals = () => {
         const taxableValue = lineItems.reduce((sum, item) => sum + item.taxableValue, 0);
 
@@ -333,10 +333,10 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                                         className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
                                     >
-                                        <option>KGS</option>
-                                        <option>GMS</option>
                                         <option>PCS</option>
                                         <option>NOS</option>
+                                        <option>KGS</option>
+                                        <option>GMS</option>
                                     </select>
                                 </div>
 
@@ -394,7 +394,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                                 }
                                             }}
                                             className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
-                                            placeholder="0.00"
+                                            placeholder="0"
                                         />
                                     )}
                                 </div>
@@ -679,7 +679,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                             value={globalRoundoff}
                                             onChange={(e) => setGlobalRoundoff(Number(e.target.value) || 0)}
                                             className="w-24 px-2 py-1 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-right"
-                                            placeholder="0.00"
+                                            placeholder="0"
                                         />
                                         <span className="text-xs text-muted-foreground">₹</span>
                                     </div>

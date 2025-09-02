@@ -140,9 +140,9 @@ const QuickActions = () => {
 // Performance Metrics Component
 const PerformanceMetrics = () => {
     const [metrics, setMetrics] = useState([
-        { label: 'Conversion Rate', value: '12.5%', trend: '+2.1%', icon: TrendingUp, color: 'text-green-500' },
-        { label: 'Avg. Order Value', value: '₹2,450', trend: '+8.3%', icon: DollarSign, color: 'text-blue-500' },
-        { label: 'Customer Retention', value: '87.2%', trend: '+1.8%', icon: Users, color: 'text-purple-500' }
+        { label: 'Conversion Rate', value: '0.0%', trend: 'No data', icon: TrendingUp, color: 'text-green-500' },
+        { label: 'Avg. Order Value', value: '₹0', trend: 'No data', icon: DollarSign, color: 'text-blue-500' },
+        { label: 'Customer Retention', value: '0.0%', trend: 'No data', icon: Users, color: 'text-purple-500' }
     ]);
     const [loading, setLoading] = useState(true);
 
@@ -155,12 +155,16 @@ const PerformanceMetrics = () => {
                 const invoices = data.invoices || [];
 
                 if (invoices.length > 0) {
-                    // Calculate conversion rate (assuming 70% of customers who inquire actually purchase)
-                    const conversionRate = ((invoices.length / (invoices.length * 1.4)) * 100).toFixed(1);
+                    // Calculate conversion rate based on actual data
+                    const uniqueCustomers = new Set(invoices.map((inv: any) => inv.buyer_name)).size;
+                    const conversionRate = uniqueCustomers > 0 ? ((invoices.length / uniqueCustomers) * 100).toFixed(1) : '0.0';
 
-                    // Calculate average order value
-                    const totalValue = invoices.reduce((sum: number, inv: any) => sum + (inv.total_amount || inv.total_invoice_value || 0), 0);
-                    const avgOrderValue = Math.round(totalValue / invoices.length);
+                    // Calculate average order value with proper number conversion
+                    const totalValue = invoices.reduce((sum: number, inv: any) => {
+                        const value = parseFloat((inv.total_invoice_value || 0).toString()) || 0;
+                        return sum + value;
+                    }, 0);
+                    const avgOrderValue = invoices.length > 0 ? Math.round(totalValue / invoices.length) : 0;
 
                     // Calculate customer retention (unique customers with multiple orders)
                     const customerOrders = invoices.reduce((acc: any, inv: any) => {
@@ -172,9 +176,9 @@ const PerformanceMetrics = () => {
                     const retentionRate = totalCustomers > 0 ? ((repeatCustomers / totalCustomers) * 100).toFixed(1) : '0.0';
 
                     setMetrics([
-                        { label: 'Conversion Rate', value: `${conversionRate}%`, trend: '+2.1%', icon: TrendingUp, color: 'text-green-500' },
-                        { label: 'Avg. Order Value', value: `₹${avgOrderValue.toLocaleString()}`, trend: '+8.3%', icon: DollarSign, color: 'text-blue-500' },
-                        { label: 'Customer Retention', value: `${retentionRate}%`, trend: '+1.8%', icon: Users, color: 'text-purple-500' }
+                        { label: 'Conversion Rate', value: `${conversionRate}%`, trend: `${uniqueCustomers} customers`, icon: TrendingUp, color: 'text-green-500' },
+                        { label: 'Avg. Order Value', value: `₹${avgOrderValue.toLocaleString('en-IN')}`, trend: `Per invoice`, icon: DollarSign, color: 'text-blue-500' },
+                        { label: 'Customer Retention', value: `${retentionRate}%`, trend: `${repeatCustomers}/${totalCustomers} repeat`, icon: Users, color: 'text-purple-500' }
                     ]);
                 }
             } catch (error) {

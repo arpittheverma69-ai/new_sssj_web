@@ -65,9 +65,10 @@ const SalesInvoice = () => {
                     taxCollected = totalSales * 0.15; // Approximate 15% effective tax rate
                 }
 
-                console.log("totalSales", totalSales);
-                console.log("taxableAmount", taxableAmount);
-                console.log("taxCollected", taxCollected);
+                console.log("=== FINAL CALCULATIONS ===");
+                console.log("Total Sales:", totalSales, "(Expected: 1011800)");
+                console.log("Taxable Amount:", taxableAmount);
+                console.log("Tax Collected:", taxCollected);
 
                 const invoicesGenerated = invoiceList.length;
                 const avgInvoiceValue = invoicesGenerated > 0 ? totalSales / invoicesGenerated : 0;
@@ -104,7 +105,7 @@ const SalesInvoice = () => {
         {
             title: 'Total Sales',
             value: loading ? '...' : formatCurrency(stats.totalSales),
-            change: '12.5%',
+            change: stats.invoicesGenerated > 0 ? `${stats.invoicesGenerated} invoices` : 'No data',
             isPositive: true,
             icon: (
                 <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -119,7 +120,7 @@ const SalesInvoice = () => {
         {
             title: 'Tax Collected',
             value: loading ? '...' : formatCurrency(stats.taxCollected),
-            change: '8.3%',
+            change: stats.totalSales > 0 ? `${((stats.taxCollected / stats.totalSales) * 100).toFixed(1)}% of sales` : 'No data',
             isPositive: true,
             icon: <span className="font-bold text-lg md:text-xl">%</span>,
             bgColor: 'bg-purple-500/10',
@@ -129,7 +130,7 @@ const SalesInvoice = () => {
         {
             title: 'Invoices Generated',
             value: loading ? '...' : stats.invoicesGenerated.toString(),
-            change: '5.2%',
+            change: 'Total count',
             isPositive: true,
             icon: (
                 <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -143,8 +144,8 @@ const SalesInvoice = () => {
         {
             title: 'Avg. Invoice Value',
             value: loading ? '...' : formatCurrency(stats.avgInvoiceValue),
-            change: '2.1%',
-            isPositive: false,
+            change: stats.invoicesGenerated > 0 ? `Per invoice` : 'No data',
+            isPositive: true,
             icon: (
                 <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />

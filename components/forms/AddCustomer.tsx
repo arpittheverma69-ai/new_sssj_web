@@ -89,10 +89,18 @@ export default function AddCustomer({ setOpen, open, customerToEdit, onCustomerS
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate required fields
-        if (!formData.name || !formData.address || !formData.city || !formData.phone) {
-            setError('Name, address, city, and phone are required fields');
-            showToast.error('Please fill in all required fields');
+        // Validate required fields with specific error messages
+        const missingFields = [];
+        if (!formData.name) missingFields.push('Name');
+        if (!formData.address) missingFields.push('Address');
+        if (!formData.city) missingFields.push('City');
+        if (!formData.gstin) missingFields.push('GSTIN');
+        if (!formData.state_id) missingFields.push('State');
+
+        if (missingFields.length > 0) {
+            const errorMessage = `Please fill in the following required fields: ${missingFields.join(', ')}`;
+            setError(errorMessage);
+            showToast.error(errorMessage);
             return;
         }
 
@@ -118,7 +126,10 @@ export default function AddCustomer({ setOpen, open, customerToEdit, onCustomerS
 
                     if (!response.ok) {
                         const errorData = await response.json();
-                        throw new Error(errorData.error || 'Failed to save customer');
+                        // Show user-friendly error message
+                        const errorMessage = errorData.error || 'Failed to save customer';
+                        showToast.error(errorMessage);
+                        throw new Error(errorMessage);
                     }
 
                     const result = await response.json();
@@ -148,7 +159,9 @@ export default function AddCustomer({ setOpen, open, customerToEdit, onCustomerS
                 }
             );
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unknown error');
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(errorMessage);
+            // Don't show toast here as it's already shown in the API error handling above
         }
     };
 
@@ -202,14 +215,13 @@ export default function AddCustomer({ setOpen, open, customerToEdit, onCustomerS
 
                                     <div>
                                         <label className="block text-sm font-medium mb-1 text-foreground">
-                                            PAN Card *
+                                            PAN Card
                                         </label>
                                         <input
                                             type="text"
                                             name="pan_number"
                                             value={formData.pan_number}
                                             onChange={handleChange}
-                                            required
                                             className="w-full border border-border rounded-[20px] px-4 py-3 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
                                             placeholder="Enter customer name"
                                         />
@@ -219,14 +231,13 @@ export default function AddCustomer({ setOpen, open, customerToEdit, onCustomerS
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium mb-1 text-foreground">
-                                            Phone *
+                                            Phone
                                         </label>
                                         <input
                                             type="tel"
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleChange}
-                                            required
                                             className="w-full border border-border rounded-[20px] px-4 py-3 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
                                             placeholder="Enter phone number"
                                         />
@@ -296,12 +307,13 @@ export default function AddCustomer({ setOpen, open, customerToEdit, onCustomerS
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium mb-1 text-foreground">
-                                            State
+                                            State *
                                         </label>
                                         <select
                                             name="state_id"
                                             value={formData.state_id}
                                             onChange={handleChange}
+                                            required
                                             className="w-full border border-border rounded-[20px] px-4 py-3 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
                                         >
                                             <option value="">Select State</option>
@@ -315,15 +327,16 @@ export default function AddCustomer({ setOpen, open, customerToEdit, onCustomerS
 
                                     <div>
                                         <label className="block text-sm font-medium mb-1 text-foreground">
-                                            GSTIN
+                                            GSTIN *
                                         </label>
                                         <input
                                             type="text"
                                             name="gstin"
                                             value={formData.gstin}
                                             onChange={handleChange}
+                                            required
                                             className="w-full border border-border rounded-[20px] px-4 py-3 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
-                                            placeholder="Enter GSTIN (optional)"
+                                            placeholder="Enter GSTIN"
                                         />
                                     </div>
                                 </div>
