@@ -31,6 +31,13 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
         if (!invoiceData.invoice_number) newErrors.invoice_number = 'Invoice number is required';
         if (!invoiceData.buyer_name) newErrors.buyer_name = 'Buyer name is required';
         if (!invoiceData.buyer_address) newErrors.buyer_address = 'Buyer address is required';
+        if (!invoiceData.buyer_state_code) newErrors.buyer_state_code = 'State is required';
+        
+        // Conditional GSTIN validation based on transaction type
+        const requiresGSTIN = invoiceData.type === 'inter_state' || invoiceData.type === 'outer_state';
+        if (requiresGSTIN && !invoiceData.buyer_gstin) {
+            newErrors.buyer_gstin = 'GSTIN is required for inter-state and outer-state transactions';
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -395,7 +402,12 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             {/* GSTIN and State */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-semibold text-foreground mb-2">GSTIN</label>
+                                    <label className="block text-sm font-semibold text-foreground mb-2">
+                                        GSTIN 
+                                        {(invoiceData.type === 'inter_state' || invoiceData.type === 'outer_state') && (
+                                            <span className="text-destructive">*</span>
+                                        )}
+                                    </label>
                                     <div className="relative">
                                         <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <input
@@ -403,15 +415,21 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                             value={invoiceData.buyer_gstin}
                                             disabled={defaultCustomer}
                                             onChange={(e) => updateInvoiceData({ buyer_gstin: e.target.value })}
-                                            className="w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200"
+                                            className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${errors.buyer_gstin ? 'border-destructive' : 'hover:border-primary/50'
+                                                }`}
                                             placeholder="22AAAAA0000A1Z5"
                                         />
                                     </div>
+                                    {errors.buyer_gstin && (
+                                        <div className="text-destructive text-xs mt-2 flex items-center gap-1">
+                                            <span>⚠</span> {errors.buyer_gstin}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                        State & Code
+                                        State & Code <span className="text-destructive">*</span>
                                     </label>
                                     <select
                                         value={invoiceData.buyer_state_code}
@@ -427,7 +445,8 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                                 });
                                             }
                                         }}
-                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
+                                        className={`w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${errors.buyer_state_code ? 'border-destructive' : 'hover:border-primary/50'
+                                            }`}
                                     >
                                         <option value="">Select State</option>
                                         {states.map((state) => (
@@ -436,7 +455,11 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                             </option>
                                         ))}
                                     </select>
-
+                                    {errors.buyer_state_code && (
+                                        <div className="text-destructive text-xs mt-2 flex items-center gap-1">
+                                            <span>⚠</span> {errors.buyer_state_code}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
