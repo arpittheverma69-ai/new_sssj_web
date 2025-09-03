@@ -78,7 +78,7 @@ const CreateInvoiceInner: React.FC = () => {
 
     return (
         <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-            <div className="flex-1">
+            <div className="flex-1 max-md:pt-6">
                 <InvoiceStepper currentStep={invoiceForm.currentStep} />
 
                 {invoiceForm.currentStep === 1 && (

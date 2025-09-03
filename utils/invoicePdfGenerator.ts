@@ -37,8 +37,8 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
         branchIfsc: ''
     };
 
-    console.log("invoiceData", invoiceData);
-    console.log("shopProfile", shopProfile);
+    // console.log("invoiceData", invoiceData);
+    // console.log("shopProfile", shopProfile);
 
     const profile = shopProfile || defaultShopProfile;
     // Calculate totals

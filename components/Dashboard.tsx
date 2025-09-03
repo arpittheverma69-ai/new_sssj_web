@@ -696,7 +696,7 @@ export default function Dashboard() {
     return (
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
             {/* Header */}
-            <header className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 sm:mb-8 gap-4 lg:gap-6">
+            <header className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 sm:mb-8 gap-4 lg:gap-6 max-md:pt-6">
                 <div className="text-center lg:text-left">
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">Dashboard</h2>
                     <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Overview of your sales and invoices</p>

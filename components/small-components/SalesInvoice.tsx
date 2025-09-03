@@ -22,13 +22,13 @@ const SalesInvoice = () => {
                 const data = await response.json();
                 const invoiceList = data.invoices || [];
                 // setInvoices(invoiceList);
-                console.log("invoiceList", invoiceList);
+                // console.log("invoiceList", invoiceList);
 
                 // Calculate statistics - ensure proper number conversion
                 const totalSales = invoiceList.reduce(
                     (sum: number, inv: Invoice) => {
                         const invoiceValue = parseFloat(inv.total_invoice_value.toString()) || 0;
-                        console.log(`Invoice ${inv.invoice_number}: ${inv.total_invoice_value} -> ${invoiceValue}`);
+                        // console.log(`Invoice ${inv.invoice_number}: ${inv.total_invoice_value} -> ${invoiceValue}`);
                         return sum + invoiceValue;
                     },
                     0
@@ -65,10 +65,10 @@ const SalesInvoice = () => {
                     taxCollected = totalSales * 0.15; // Approximate 15% effective tax rate
                 }
 
-                console.log("=== FINAL CALCULATIONS ===");
-                console.log("Total Sales:", totalSales, "(Expected: 1011800)");
-                console.log("Taxable Amount:", taxableAmount);
-                console.log("Tax Collected:", taxCollected);
+                // console.log("=== FINAL CALCULATIONS ===");
+                // console.log("Total Sales:", totalSales, "(Expected: 1011800)");
+                // console.log("Taxable Amount:", taxableAmount);
+                // console.log("Tax Collected:", taxCollected);
 
                 const invoicesGenerated = invoiceList.length;
                 const avgInvoiceValue = invoicesGenerated > 0 ? totalSales / invoicesGenerated : 0;

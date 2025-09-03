@@ -4,11 +4,11 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seeding...');
+  // console.log('🌱 Starting database seeding...');
 
   // Create default admin user
   const hashedPassword = await bcrypt.hash('admin123', 12);
-  
+
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@jvjewellers.com' },
     update: {},
@@ -20,7 +20,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Admin user created:', adminUser.email);
+  // console.log('✅ Admin user created:', adminUser.email);
 
   // Create Indian states
   const states = [
@@ -63,7 +63,7 @@ async function main() {
     });
   }
 
-  console.log('✅ States created');
+  // console.log('✅ States created');
 
   // Create business profile
   const businessProfile = await prisma.businessProfile.upsert({
@@ -83,7 +83,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Business profile created');
+  // console.log('✅ Business profile created');
 
   // Create sample customers
   const customers = [
@@ -128,7 +128,7 @@ async function main() {
     });
   }
 
-  console.log('✅ Sample customers created');
+  // console.log('✅ Sample customers created');
 
   // Create tax rates
   const taxRates = [
@@ -166,7 +166,7 @@ async function main() {
     });
   }
 
-  console.log('✅ Tax rates created');
+  // console.log('✅ Tax rates created');
 
   // Create invoice settings
   const invoiceSettings = await prisma.invoiceSetting.upsert({
@@ -184,12 +184,12 @@ async function main() {
     },
   });
 
-  console.log('✅ Invoice settings created');
+  // console.log('✅ Invoice settings created');
 
-  console.log('🎉 Database seeding completed successfully!');
-  console.log('\n📋 Default Login Credentials:');
-  console.log('Email: admin@jvjewellers.com');
-  console.log('Password: admin123');
+  // console.log('🎉 Database seeding completed successfully!');
+  // console.log('\n📋 Default Login Credentials:');
+  // console.log('Email: admin@jvjewellers.com');
+  // console.log('Password: admin123');
 }
 
 main()

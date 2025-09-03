@@ -117,7 +117,7 @@ export const DownloadPDFModal: React.FC<DownloadPDFModalProps> = ({ invoice, onC
             shopProfile: shopProfile
         })
 
-        console.log("pdfHtml", pdfHtml);
+        // console.log("pdfHtml", pdfHtml);
 
 
         const newWindow = window.open('', '_blank')
