@@ -370,7 +370,7 @@ const RecentInvoices = () => {
                                 <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-semibold text-foreground">Customer</th>
                                 <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-semibold text-foreground hidden lg:table-cell">Type</th>
                                 <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-semibold text-foreground">Amount</th>
-                                <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-semibold text-foreground">Actions</th>
+                                {/* <th className="text-left p-3 sm:p-4 text-xs sm:text-sm font-semibold text-foreground">Actions</th> */}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -400,7 +400,7 @@ const RecentInvoices = () => {
                                         <td className="p-3 sm:p-4">
                                             <div className="font-semibold text-foreground text-xs sm:text-sm">{formatCurrency(invoice.total_invoice_value)}</div>
                                         </td>
-                                        <td className="p-3 sm:p-4">
+                                        {/* <td className="p-3 sm:p-4">
                                             <div className="flex items-center gap-1 sm:gap-2">
                                                 <button
                                                     onClick={() => router.push(`/dashboard/all-invoice?view=${invoice.id}`)}
@@ -420,7 +420,7 @@ const RecentInvoices = () => {
                                                     <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
                                                 </button>
                                             </div>
-                                        </td>
+                                        </td> */}
                                     </tr>
                                 ))
                             )}

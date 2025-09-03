@@ -176,7 +176,7 @@ const TaxRatesTab = () => {
                 />
             </div>
 
-            <div className="bg-gray-50 rounded shadow p-4 md:p-6 w-full">
+            <div className="rounded shadow p-4 md:p-6 w-full">
                 <h2 className="text-lg font-semibold mb-4">
                     {editMode ? 'Edit Tax Rate' : 'Add New Tax Rate'}
                 </h2>

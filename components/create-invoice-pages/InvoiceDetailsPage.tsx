@@ -3,6 +3,7 @@ import { Customer, InvoiceData, State, transactionTypes } from '@/types/invoiceT
 import React, { useEffect, useState } from 'react';
 import { showToast } from '@/utils/toast';
 import { Calendar, Hash, User, MapPin, Building2, CreditCard, Calculator, ArrowRight } from 'lucide-react';
+import { useShopProfile } from '@/hooks/useShopProfile';
 
 interface InvoiceDetailsPageProps {
     invoiceData: InvoiceData;
@@ -24,6 +25,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
     const [isFetchingCustomers, setIsFetchingCustomers] = useState(false);
     const [defaultCustomer, setDefaultCustomer] = useState(false);
     const [isLoadingInvoiceNumber, setIsLoadingInvoiceNumber] = useState(false);
+    const { shopProfile, loading: shopProfileLoading } = useShopProfile();
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -32,7 +34,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
         if (!invoiceData.buyer_name) newErrors.buyer_name = 'Buyer name is required';
         if (!invoiceData.buyer_address) newErrors.buyer_address = 'Buyer address is required';
         if (!invoiceData.buyer_state_code) newErrors.buyer_state_code = 'State is required';
-        
+
         // Conditional GSTIN validation based on transaction type
         const requiresGSTIN = invoiceData.type === 'inter_state' || invoiceData.type === 'outer_state';
         if (requiresGSTIN && !invoiceData.buyer_gstin) {
@@ -336,17 +338,24 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             {/* Customer Selection */}
                             <div>
                                 <label className="block text-sm font-semibold text-foreground mb-2">Select Customer</label>
-                                <select
-                                    value={invoiceData.customer_id}
-                                    onChange={(e) => selectCustomer(e)}
-                                    disabled={isFetchingCustomers}
-                                    className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 disabled:opacity-50"
-                                >
-                                    <option value="">{isFetchingCustomers ? 'Loading customers...' : 'Select a customer from your database'}</option>
-                                    {customers?.map((customer, index) => (
-                                        <option key={index} value={customer.id}>{`${customer.name}, (${customer.phone})`}</option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        value={invoiceData.customer_id}
+                                        onChange={(e) => selectCustomer(e)}
+                                        disabled={isFetchingCustomers}
+                                        className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 disabled:opacity-50 appearance-none cursor-pointer"
+                                    >
+                                        <option value="">{isFetchingCustomers ? 'Loading customers...' : 'Select a customer from your database'}</option>
+                                        {customers?.map((customer, index) => (
+                                            <option key={index} value={customer.id}>{`${customer.name}, (${customer.phone})`}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Buyer Name */}
@@ -403,7 +412,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-semibold text-foreground mb-2">
-                                        GSTIN 
+                                        GSTIN
                                         {(invoiceData.type === 'inter_state' || invoiceData.type === 'outer_state') && (
                                             <span className="text-destructive">*</span>
                                         )}
@@ -431,30 +440,37 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                     <label className="block text-sm font-semibold text-foreground mb-2">
                                         State & Code <span className="text-destructive">*</span>
                                     </label>
-                                    <select
-                                        value={invoiceData.buyer_state_code}
-                                        disabled={defaultCustomer}
-                                        onChange={(e) => {
-                                            const selectedState = states.find(
-                                                (state) => state.statecode === e.target.value
-                                            );
-                                            if (selectedState) {
-                                                updateInvoiceData({
-                                                    buyer_state: selectedState.state,
-                                                    buyer_state_code: selectedState.statecode,
-                                                });
-                                            }
-                                        }}
-                                        className={`w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 ${errors.buyer_state_code ? 'border-destructive' : 'hover:border-primary/50'
-                                            }`}
-                                    >
-                                        <option value="">Select State</option>
-                                        {states.map((state) => (
-                                            <option key={state.id} value={state.statecode}>
-                                                {state.state} ({state.statecode})
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div className="relative">
+                                        <select
+                                            value={invoiceData.buyer_state_code}
+                                            disabled={defaultCustomer}
+                                            onChange={(e) => {
+                                                const selectedState = states.find(
+                                                    (state) => state.statecode === e.target.value
+                                                );
+                                                if (selectedState) {
+                                                    updateInvoiceData({
+                                                        buyer_state: selectedState.state,
+                                                        buyer_state_code: selectedState.statecode,
+                                                    });
+                                                }
+                                            }}
+                                            className={`w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 appearance-none cursor-pointer ${errors.buyer_state_code ? 'border-destructive' : 'hover:border-primary/50'
+                                                } ${defaultCustomer ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            <option value="">Select State</option>
+                                            {states.map((state) => (
+                                                <option key={state.id} value={state.statecode}>
+                                                    {state.state} ({state.statecode})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                            <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </div>
+                                    </div>
                                     {errors.buyer_state_code && (
                                         <div className="text-destructive text-xs mt-2 flex items-center gap-1">
                                             <span>⚠</span> {errors.buyer_state_code}
@@ -504,22 +520,35 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             <h3 className="font-semibold text-foreground">Company Details</h3>
                         </div>
                         <div className="p-4 space-y-3">
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-primary rounded-[20px] flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
-                                    🧾
+                            {shopProfileLoading ? (
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-primary rounded-[20px] flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
+                                        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                    <div className="text-muted-foreground">Loading...</div>
                                 </div>
-                                <div className="font-bold text-foreground text-lg">J.V. JEWELLERS</div>
-                            </div>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                                <div>Shop No. -2, Krishna Height</div>
-                                <div>Jay Singh Pura, Mathura</div>
-                                <div className="pt-2 border-t border-border">
-                                    <div className="font-medium text-foreground">GSTIN:</div>
-                                    <div>09ADCPV2673H1Z7</div>
-                                    <div className="font-medium text-foreground mt-1">State:</div>
-                                    <div>Uttar Pradesh (09)</div>
-                                </div>
-                            </div>
+                            ) : (
+                                <>
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 bg-primary rounded-[20px] flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
+                                            🧾
+                                        </div>
+                                        <div className="font-bold text-foreground text-lg">
+                                            {shopProfile.shopName || 'Shop Name Not Set'}
+                                        </div>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground space-y-1">
+                                        <div>{shopProfile.address || 'Address Not Set'}</div>
+                                        <div>{shopProfile.city || 'City Not Set'}</div>
+                                        <div className="pt-2 border-t border-border">
+                                            <div className="font-medium text-foreground">GSTIN:</div>
+                                            <div>{shopProfile.gstin || 'GSTIN Not Set'}</div>
+                                            <div className="font-medium text-foreground mt-1">State:</div>
+                                            <div>{shopProfile.state ? `${shopProfile.state} (${shopProfile.stateCode})` : 'State Not Set'}</div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -532,22 +561,12 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             <div>
                                 <div className="font-medium text-foreground mb-2">Transaction Types</div>
                                 <div className="space-y-2 text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                        <span>Retail: CGST + SGST</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                                        <span>Inter-state: IGST</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                                        <span>Outer-state: IGST</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                        <span>Purchase: Inward</span>
-                                    </div>
+                                    {transactionTypes.map((type) => (
+                                        <div key={type.value} className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${type.color.replace('bg-', 'bg-')}`}></div>
+                                            <span>{type.label}: {type.taxType}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 

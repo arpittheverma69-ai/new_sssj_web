@@ -120,3 +120,25 @@ body {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+.custom-textfield {
+  background-color: #1e1e2f;
+}
+
+.custom-textfield input {
+  color: white;
+}
+
+.custom-textfield label {
+  color: #aaa;
+}
+
+.custom-datagrid {
+  background-color: #121212;
+  color: white;
+}
+
+.custom-datagrid .MuiDataGrid-columnHeaders {
+  background-color: #1e1e2f;
+  color: white;
+}

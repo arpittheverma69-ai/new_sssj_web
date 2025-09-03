@@ -18,6 +18,7 @@ const CreateInvoiceInner: React.FC = () => {
         if (!editId) return;
 
         const loadInvoice = async () => {
+            const loadingToast = toast.loading("Loading invoice data for editing...");
             try {
                 const res = await fetch(`/api/invoices/${editId}`);
                 if (!res.ok) {
@@ -66,9 +67,20 @@ const CreateInvoiceInner: React.FC = () => {
                 invoiceForm.setLineItems(mappedItems);
 
                 invoiceForm.setCurrentStep(1);
+                toast.update(loadingToast, {
+                    render: "Invoice data loaded successfully!",
+                    type: "success",
+                    isLoading: false,
+                    autoClose: 2000
+                });
             } catch (err) {
                 console.error(err);
-                toast.error("Unable to load invoice for editing");
+                toast.update(loadingToast, {
+                    render: "Unable to load invoice for editing",
+                    type: "error",
+                    isLoading: false,
+                    autoClose: 3000
+                });
             }
         };
 
