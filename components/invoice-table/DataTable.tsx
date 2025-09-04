@@ -10,13 +10,15 @@ type DataTableProps = {
     loading: boolean;
     handleEdit: (id: GridRowId) => void;
     handleDelete: (id: number) => void;
+    handleSetDefault?: (id: number) => void;
 };
 
 export default function DataTable({
     tableData,
     loading,
     handleEdit,
-    handleDelete
+    handleDelete,
+    handleSetDefault
 }: DataTableProps) {
     const [search, setSearch] = useState("");
     const [filteredRows, setFilteredRows] = useState<TaxRateRow[]>([]);
@@ -78,13 +80,14 @@ export default function DataTable({
                             <tr className="bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border">
                                 <th className="text-left p-4 text-sm font-semibold text-foreground">HSN/SAC Code</th>
                                 <th className="text-left p-4 text-sm font-semibold text-foreground">Description</th>
+                                <th className="text-left p-4 text-sm font-semibold text-foreground">Default</th>
                                 <th className="text-left p-4 text-sm font-semibold text-foreground">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={3} className="p-8 text-center">
+                                    <td colSpan={4} className="p-8 text-center">
                                         <div className="flex items-center justify-center gap-2">
                                             <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                                             <span className="text-muted-foreground">Loading...</span>
@@ -93,7 +96,7 @@ export default function DataTable({
                                 </tr>
                             ) : filteredRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={3} className="p-8 text-center text-muted-foreground">
+                                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
                                         No tax rates found
                                     </td>
                                 </tr>
@@ -105,6 +108,24 @@ export default function DataTable({
                                         </td>
                                         <td className="p-4">
                                             <div className="text-foreground">{row.description}</div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                {row.is_default ? (
+                                                    <span className="px-2 py-1 bg-green-500/10 text-green-600 text-xs font-medium rounded-full">
+                                                        Default
+                                                    </span>
+                                                ) : (
+                                                    handleSetDefault && (
+                                                        <button
+                                                            onClick={() => handleSetDefault(row.id)}
+                                                            className="px-2 py-1 bg-gray-500/10 hover:bg-green-500/10 text-gray-600 hover:text-green-600 text-xs font-medium rounded-full transition-colors duration-200"
+                                                        >
+                                                            Set Default
+                                                        </button>
+                                                    )
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="p-4">
                                             <div className="flex items-center gap-2">

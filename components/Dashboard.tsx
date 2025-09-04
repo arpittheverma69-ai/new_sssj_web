@@ -323,7 +323,7 @@ const RecentInvoices = () => {
                                 <div key={invoice.id} className="p-4 hover:bg-muted/20 transition-colors duration-200">
                                     <div className="flex items-start justify-between mb-3">
                                         <div>
-                                            <div className="font-semibold text-foreground text-sm">INV-{invoice.id}</div>
+                                            <div className="font-semibold text-foreground text-sm">{invoice.invoice_number}</div>
                                             <div className="text-xs text-muted-foreground mt-1">
                                                 {new Date(invoice.invoice_date).toLocaleDateString('en-IN')}
                                             </div>
@@ -384,7 +384,7 @@ const RecentInvoices = () => {
                                 filteredInvoices.map((invoice) => (
                                     <tr key={invoice.id} className="hover:bg-muted/20 transition-colors duration-200">
                                         <td className="p-3 sm:p-4">
-                                            <div className="font-semibold text-foreground text-xs sm:text-sm">INV-{invoice.id}</div>
+                                            <div className="font-semibold text-foreground text-xs sm:text-sm">{invoice.invoice_number}</div>
                                         </td>
                                         <td className="p-3 sm:p-4">
                                             <div className="text-xs sm:text-sm text-foreground">

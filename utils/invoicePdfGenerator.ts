@@ -37,29 +37,39 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
         branchIfsc: ''
     };
 
-    // console.log("invoiceData", invoiceData);
-    // console.log("shopProfile", shopProfile);
+    console.log("invoiceData", invoiceData);
+    console.log("invoiceData.type:", invoiceData.type);
+    console.log("invoiceData.transaction_type:", invoiceData.transaction_type);
 
     const profile = shopProfile || defaultShopProfile;
     // Calculate totals
     const taxableValue = lineItems.reduce((sum, item) => sum + Number(item.taxableValue), 0);
 
+    // Determine tax type based on transaction type
+    const isIGST = invoiceData.type === 'outer_state' || invoiceData.transaction_type === 'outer_state';
+    console.log("isIGST:", isIGST);
+    
     // Calculate tax rates dynamically from line items if available
     let cgstRate = 1.5; // default
     let sgstRate = 1.5; // default
+    let igstRate = 3.0; // default
 
     // Try to get tax rates from the first line item's taxes
     if (lineItems.length > 0 && lineItems[0].taxes && lineItems[0].taxes.length > 0) {
         const taxes = lineItems[0].taxes;
         const cgstTax = taxes.find((tax: any) => tax.tax_name === 'CGST');
         const sgstTax = taxes.find((tax: any) => tax.tax_name === 'SGST');
+        const igstTax = taxes.find((tax: any) => tax.tax_name === 'IGST');
         if (cgstTax) cgstRate = Number(cgstTax.tax_rate);
         if (sgstTax) sgstRate = Number(sgstTax.tax_rate);
+        if (igstTax) igstRate = Number(igstTax.tax_rate);
     }
 
-    const cgstAmount = taxableValue * cgstRate / 100;
-    const sgstAmount = taxableValue * sgstRate / 100;
-    const totalTax = cgstAmount + sgstAmount;
+    // Calculate tax amounts based on transaction type
+    const cgstAmount = isIGST ? 0 : taxableValue * cgstRate / 100;
+    const sgstAmount = isIGST ? 0 : taxableValue * sgstRate / 100;
+    const igstAmount = isIGST ? taxableValue * igstRate / 100 : 0;
+    const totalTax = cgstAmount + sgstAmount + igstAmount;
     const totalBeforeRoundoff = taxableValue + totalTax;
     const totalInvoice = totalBeforeRoundoff + globalRoundoff;
 
@@ -200,6 +210,24 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
                         <td class="text-right pt-2">${Number(item.taxableValue).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                     </tr>
                     `).join('')}
+                    ${isIGST ? `
+                    <tr class="font-bold h-[15px]">
+                        <td class="border-r border-black pt-3" rowspan="4"></td>
+                        <td class="border-r border-black pt-3 text-right">IGST @ ${igstRate}%</td>
+                        <td class="border-r border-black pt-3"></td>
+                        <td class="border-r border-black pt-3"></td>
+                        <td class="border-r border-black pt-3"></td>
+                        <td class="border-r border-black pt-3 text-right"></td>
+                        <td class="text-right pt-3">${igstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                    <tr class="font-bold h-[15px]">
+                        <td class="border-r border-black text-right"></td>
+                        <td class="border-r border-black"></td>
+                        <td class="border-r border-black"></td>
+                        <td class="border-r border-black"></td>
+                        <td class="border-r border-black text-right"></td>
+                        <td class="text-right"></td>
+                    </tr>` : `
                     <tr class="font-bold h-[15px]">
                         <td class="border-r border-black pt-3" rowspan="4"></td>
                         <td class="border-r border-black pt-3 text-right">CGST @ ${cgstRate}%</td>
@@ -216,7 +244,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black text-right"></td>
                         <td class="text-right">${sgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                    </tr>
+                    </tr>`}
                     <tr class="font-bold h-[15px]">
                         <td class="border-r border-black">
                             <div class="w-full flex justify-between">
@@ -265,8 +293,9 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
                     <tr class="border-b border-black ">
                         <th class="border-r border-black h-[17px] w-[38%] font-normal" rowspan="2">HSN/SAC</th>
                         <th class="border-r border-black font-normal" rowspan="2">Taxable Value</th>
-                        <th class="border-r border-black font-normal h-[17px]" colspan="2">CGST</th>
-                        <th class="border-r border-black font-normal" colspan="2">SGST/UTGST</th>
+                        ${isIGST ? `<th class="border-r border-black font-normal h-[17px]" colspan="2">IGST</th>
+                        <th class="border-r border-black font-normal" colspan="2"></th>` : `<th class="border-r border-black font-normal h-[17px]" colspan="2">CGST</th>
+                        <th class="border-r border-black font-normal" colspan="2">SGST/UTGST</th>`}
                         <th class="p-1 font-normal" rowspan="2">Total Tax Amount</th>
                     </tr>
                     <tr class="border-b border-black">
@@ -281,11 +310,17 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
                     <tr class="h-[13.22px]">
                         <td class="border-r border-black">${item.hsn_sac_code}</td>
                         <td class="border-r border-black text-right">${item.taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        ${isIGST ? `
+                        <td class="border-r border-black text-right">${igstRate.toFixed(2)}%</td>
+                        <td class="border-r border-black text-right">${(item.taxableValue * igstRate / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="border-r border-black text-right"></td>
+                        <td class="border-r border-black text-right"></td>
+                        <td class="text-right">${(item.taxableValue * igstRate / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>` : `
                         <td class="border-r border-black text-right">${cgstRate.toFixed(2)}%</td>
                         <td class="border-r border-black text-right">${(item.taxableValue * cgstRate / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                         <td class="border-r border-black text-right">${sgstRate.toFixed(2)}%</td>
                         <td class="border-r border-black text-right">${(item.taxableValue * sgstRate / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                        <td class="text-right">${(item.taxableValue * (cgstRate + sgstRate) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="text-right">${(item.taxableValue * (cgstRate + sgstRate) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>`}
                     </tr>
                     `).join('')}
                 </tbody>
@@ -294,16 +329,21 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
                         <td class="font-bold border-r border-black text-right">Total</td>
                         <td class="font-bold border-r border-black text-right">${taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                         <td class="border-r border-black text-right"></td>
+                        ${isIGST ? `
+                        <td class="font-bold border-r border-black text-right">${igstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="border-r border-black text-right"></td>
+                        <td class="font-bold border-r border-black text-right"></td>
+                        <td class="font-bold text-right">${igstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>` : `
                         <td class="font-bold border-r border-black text-right">${cgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                         <td class="border-r border-black text-right"></td>
                         <td class="font-bold border-r border-black text-right">${sgstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                        <td class="font-bold text-right">${(cgstAmount + sgstAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td class="font-bold text-right">${(cgstAmount + sgstAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>`}
                     </tr>
                 </tfoot>
             </table>
             
             <div class="w-full h-full">
-                <p class="text-[10px]"><span class="mr-4 p-1">Tax Amount (in words) :</span><span class="font-bold">Indian ${numberToWords(cgstAmount + sgstAmount)}</span></p>
+                <p class="text-[10px]"><span class="mr-4 p-1">Tax Amount (in words) :</span><span class="font-bold">Indian ${numberToWords(totalTax)}</span></p>
 
                 <div class="grid grid-cols-2 mt-4 p-1">
                     <div>

@@ -26,9 +26,14 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
 
     // ✅ Ensure all numeric values are properly casted
     const taxableValue = lineItems.reduce((sum, item) => sum + Number(item.taxableValue || 0), 0);
-    const cgstAmount = taxableValue * (Number(cgstRate) / 100);
-    const sgstAmount = taxableValue * (Number(sgstRate) / 100);
-    const totalBeforeRoundoff = taxableValue + cgstAmount + sgstAmount;
+    const isIGST = String(invoiceData?.type || '').toLowerCase() === 'outer_state';
+    
+    const cgstAmount = isIGST ? 0 : taxableValue * (Number(cgstRate) / 100);
+    const sgstAmount = isIGST ? 0 : taxableValue * (Number(sgstRate) / 100);
+    const igstRate = Number(cgstRate) + Number(sgstRate);
+    const igstAmount = isIGST ? taxableValue * (igstRate / 100) : 0;
+    
+    const totalBeforeRoundoff = taxableValue + cgstAmount + sgstAmount + igstAmount;
     const totalInvoice = totalBeforeRoundoff + Number(globalRoundoff || 0);
     const totalQuantity = lineItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const unit = lineItems.length > 0 ? lineItems[0].unit : 'KGS';
@@ -61,8 +66,8 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
                 <div
                     id="invoice-content"
                     className="bg-white dark:bg-gray-900 text-black dark:text-white mx-auto p-8 shadow-lg rounded-lg"
-                    style={{ 
-                        width: '210mm', 
+                    style={{
+                        width: '210mm',
                         minWidth: '210mm',
                         minHeight: '297mm'
                     }}
@@ -109,10 +114,10 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
                                 <span className="font-semibold text-sm">Date: </span>
                                 <span className="text-sm">{formattedDate}</span>
                             </div>
-                            <div>
+                            {/* <div>
                                 <span className="font-semibold text-sm">E-Way Bill: </span>
                                 <span className="text-sm">{invoiceData.eway_bill || 'N/A'}</span>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
 
@@ -158,22 +163,35 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
                                         ₹{formatCurrency(taxableValue)}
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td colSpan={6} className="border border-black p-2 text-right">
-                                        CGST ({cgstRate}%):
-                                    </td>
-                                    <td className="border border-black p-2 text-right">
-                                        ₹{formatCurrency(cgstAmount)}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colSpan={6} className="border border-black p-2 text-right">
-                                        SGST ({sgstRate}%):
-                                    </td>
-                                    <td className="border border-black p-2 text-right">
-                                        ₹{formatCurrency(sgstAmount)}
-                                    </td>
-                                </tr>
+                                {isIGST ? (
+                                    <tr>
+                                        <td colSpan={6} className="border border-black p-2 text-right">
+                                            IGST ({igstRate}%):
+                                        </td>
+                                        <td className="border border-black p-2 text-right">
+                                            ₹{formatCurrency(igstAmount)}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    <>
+                                        <tr>
+                                            <td colSpan={6} className="border border-black p-2 text-right">
+                                                CGST ({cgstRate}%):
+                                            </td>
+                                            <td className="border border-black p-2 text-right">
+                                                ₹{formatCurrency(cgstAmount)}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colSpan={6} className="border border-black p-2 text-right">
+                                                SGST ({sgstRate}%):
+                                            </td>
+                                            <td className="border border-black p-2 text-right">
+                                                ₹{formatCurrency(sgstAmount)}
+                                            </td>
+                                        </tr>
+                                    </>
+                                )}
                                 <tr>
                                     <td colSpan={6} className="border border-black p-2 text-right">
                                         Round Off:

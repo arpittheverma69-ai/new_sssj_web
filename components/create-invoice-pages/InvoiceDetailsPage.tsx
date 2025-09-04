@@ -32,7 +32,13 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
         if (!invoiceData.invoice_date) newErrors.invoice_date = 'Invoice date is required';
         if (!invoiceData.invoice_number) newErrors.invoice_number = 'Invoice number is required';
         if (!invoiceData.buyer_name) newErrors.buyer_name = 'Buyer name is required';
-        if (!invoiceData.buyer_address) newErrors.buyer_address = 'Buyer address is required';
+        
+        // Conditional address validation - not required for retail sales
+        const requiresAddress = invoiceData.type !== 'retail';
+        if (requiresAddress && !invoiceData.buyer_address) {
+            newErrors.buyer_address = 'Buyer address is required for inter-state and outer-state transactions';
+        }
+        
         if (!invoiceData.buyer_state_code) newErrors.buyer_state_code = 'State is required';
 
         // Conditional GSTIN validation based on transaction type
@@ -386,7 +392,12 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             {/* Address */}
                             <div>
                                 <label className="block text-sm font-semibold text-foreground mb-2">
-                                    Address <span className="text-destructive">*</span>
+                                    Address 
+                                    {invoiceData.type !== 'retail' ? (
+                                        <span className="text-destructive">*</span>
+                                    ) : (
+                                        <span className="text-muted-foreground text-xs">(Optional for retail sales)</span>
+                                    )}
                                 </label>
                                 <div className="relative">
                                     <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
@@ -396,9 +407,9 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                         onChange={(e) => updateInvoiceData({ buyer_address: e.target.value })}
                                         className={`w-full pl-10 pr-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 resize-none ${errors.buyer_address ? 'border-destructive' : 'hover:border-primary/50'
                                             }`}
-                                        placeholder="Enter complete billing address"
+                                        placeholder={invoiceData.type === 'retail' ? 'Enter billing address (optional)' : 'Enter complete billing address'}
                                         rows={3}
-                                        required
+                                        required={invoiceData.type !== 'retail'}
                                     />
                                 </div>
                                 {errors.buyer_address && (

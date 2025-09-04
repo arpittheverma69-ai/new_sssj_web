@@ -32,9 +32,9 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     const [loadingHsnSac, setLoadingHsnSac] = useState(true);
     const [formData, setFormData] = useState({
         hsnSac: '',
-        description: '',
+        description: 'silver ornament',
         quantity: '1.000',
-        unit: 'PCS',
+        unit: 'KGS',
         rate: '0',
         targetAmount: '0.00',
         directAmount: '0.00',
@@ -52,12 +52,15 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                 if (response.ok) {
                     const data = await response.json();
                     setHsnSacOptions(data);
-                    // Set default values if data exists
+                    // Set default values - prioritize default tax rate, fallback to first item
                     if (data.length > 0 && !formData.hsnSac) {
+                        const defaultTaxRate = data.find((rate: TaxRateRow) => rate.is_default);
+                        const selectedRate = defaultTaxRate || data[0];
+
                         setFormData(prev => ({
                             ...prev,
-                            hsnSac: `${data[0].hsn_code} - ${data[0].description}`,
-                            description: data[0].description
+                            hsnSac: `${selectedRate.hsn_code} - ${selectedRate.description}`,
+                            description: selectedRate.description
                         }));
                     }
                 }
@@ -104,15 +107,15 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                 showToast.warning('Please enter valid target amount and rate values for reverse calculation.');
                 return;
             }
-            
+
             // Calculate total tax rate
-            const totalTaxRate = isIGST 
+            const totalTaxRate = isIGST
                 ? (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100
                 : (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100;
-            
+
             // Calculate taxable value from final target amount (including taxes)
             const taxableValueFromTarget = targetAmount / (1 + totalTaxRate);
-            
+
             // Calculate quantity based on taxable value
             quantity = taxableValueFromTarget / rate;
         } else if (invoiceData.mode === 'direct') {
@@ -144,7 +147,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         // Reset form fields
         setFormData(prev => ({
             ...prev,
-            quantity: '1', 
+            quantity: '1',
             rate: invoiceData.mode === 'direct' ? directAmount.toFixed(2) : '0',
             targetAmount: '0.00',
             directAmount: '0.00',
@@ -333,10 +336,10 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                                         className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
                                     >
-                                        <option>PCS</option>
-                                        <option>NOS</option>
                                         <option>KGS</option>
                                         <option>GMS</option>
+                                        <option>PCS</option>
+                                        <option>NOS</option>
                                     </select>
                                 </div>
 
@@ -364,19 +367,19 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                                 if (invoiceData.mode === 'reverse') {
                                                     // Auto-calculate quantity when rate changes in reverse mode
                                                     const targetAmount = parseFloat(formData.targetAmount) || 0;
-                                                    
+
                                                     if (parseFloat(rate) > 0 && targetAmount > 0) {
                                                         // Calculate total tax rate
-                                                        const totalTaxRate = isIGST 
+                                                        const totalTaxRate = isIGST
                                                             ? (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100
                                                             : (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100;
-                                                        
+
                                                         // Calculate taxable value from final target amount (including taxes)
                                                         const taxableValueFromTarget = targetAmount / (1 + totalTaxRate);
-                                                        
+
                                                         // Calculate quantity based on taxable value
                                                         const calculatedQuantity = (taxableValueFromTarget / parseFloat(rate)).toFixed(3);
-                                                        
+
                                                         setFormData({
                                                             ...formData,
                                                             rate,
@@ -416,19 +419,19 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                                 onChange={(e) => {
                                                     const targetAmount = e.target.value;
                                                     const rate = parseFloat(formData.rate) || 0;
-                                                    
+
                                                     if (rate > 0 && parseFloat(targetAmount) > 0) {
                                                         // Calculate total tax rate
-                                                        const totalTaxRate = isIGST 
+                                                        const totalTaxRate = isIGST
                                                             ? (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100
                                                             : (parseFloat(cgstRate) + parseFloat(sgstRate)) / 100;
-                                                        
+
                                                         // Calculate taxable value from final target amount (including taxes)
                                                         const taxableValueFromTarget = parseFloat(targetAmount) / (1 + totalTaxRate);
-                                                        
+
                                                         // Calculate quantity based on taxable value
                                                         const calculatedQuantity = (taxableValueFromTarget / rate).toFixed(3);
-                                                        
+
                                                         setFormData({
                                                             ...formData,
                                                             targetAmount,
@@ -668,7 +671,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         ₹{totals.totalBeforeRoundoff.toFixed(2)}
                                     </span>
                                 </div>
-                                
+
                                 {/* Global Roundoff Input */}
                                 <div className="flex justify-between items-center">
                                     <span className="text-muted-foreground">Roundoff Adjustment:</span>
@@ -684,7 +687,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         <span className="text-xs text-muted-foreground">₹</span>
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex justify-between items-center border-t border-border pt-3">
                                     <span className="font-bold text-lg text-foreground">Final Invoice Total:</span>
                                     <span className="text-2xl font-bold text-primary">

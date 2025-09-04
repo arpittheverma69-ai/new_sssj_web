@@ -42,6 +42,7 @@ const TaxRatesTab = () => {
                 id: rate.id,
                 hsn_code: rate.hsn_code,
                 description: rate.description,
+                is_default: rate.is_default || false,
             }));
 
             setTableData(formattedData);
@@ -160,6 +161,35 @@ const TaxRatesTab = () => {
         }
     };
 
+    const handleSetDefault = async (id: number) => {
+        try {
+            await apiToast.call(
+                async () => {
+                    const response = await fetch(`/api/setting/taxrates/${id}/set-default`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to set default tax rate');
+                    }
+
+                    await fetchTaxRates();
+                    return response.json();
+                },
+                {
+                    loading: 'Setting as default...',
+                    success: 'Default tax rate updated successfully!',
+                    error: 'Failed to set default tax rate'
+                }
+            );
+        } catch (error) {
+            console.error('Error setting default tax rate:', error);
+        }
+    };
+
     return (
         <div className="p-4 md:p-6">
             <div className="mb-6 overflow-x-auto">
@@ -173,6 +203,7 @@ const TaxRatesTab = () => {
                     loading={loading}
                     handleEdit={handleEdit}
                     handleDelete={handleDelete}
+                    handleSetDefault={handleSetDefault}
                 />
             </div>
 

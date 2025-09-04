@@ -66,6 +66,7 @@ export interface TaxRateRow {
     id: number;
     hsn_code: string;
     description: string;
+    is_default?: boolean;
 };
 
 export interface ApiState {

@@ -9,7 +9,7 @@ import { Invoice } from '@/types/invoiceTypes';
 import { DownloadPDFModal } from './DownloadPDFModal';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
-const invoiceCategories = ['all', 'retail', 'inter_state', 'outer_state'];
+// Invoice categories will be populated with counts dynamically
 
 const AllInvoices = () => {
     const router = useRouter();
@@ -25,6 +25,7 @@ const AllInvoices = () => {
     const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
     const [downloadModalOpen, setDownloadModalOpen] = useState(false)
     const [downloadInvoice, setDownloadInvoice] = useState<Invoice | null>(null);
+    const [flaggingInvoices, setFlaggingInvoices] = useState<Set<number>>(new Set());
 
     // Fetch invoices on component mount
     React.useEffect(() => {
@@ -93,7 +94,7 @@ const AllInvoices = () => {
     // Filter and search invoices
     const filteredInvoices = invoices
         .filter(invoice => {
-            const matchesSearch = invoice.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+            const matchesSearch = invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 invoice.buyer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (invoice.buyer_gstin || '').toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -137,6 +138,19 @@ const AllInvoices = () => {
         return sum + invoiceValue;
     }, 0);
     const flaggedInvoices = invoices.filter(inv => inv.flagged).length;
+    
+    // Calculate transaction type counts
+    const retailCount = invoices.filter(inv => inv.transaction_type === 'retail').length;
+    const interStateCount = invoices.filter(inv => inv.transaction_type === 'inter_state').length;
+    const outerStateCount = invoices.filter(inv => inv.transaction_type === 'outer_state').length;
+    
+    // Dynamic invoice categories with counts
+    const invoiceCategories = [
+        { value: 'all', label: `All Invoices (${totalInvoices})` },
+        { value: 'retail', label: `Retail Sales (${retailCount})` },
+        { value: 'inter_state', label: `Inter-State Sales (${interStateCount})` },
+        { value: 'outer_state', label: `Outer-State Sales (${outerStateCount})` }
+    ];
 
     // Format currency in Indian Rupees
     const formatCurrency = (amount: number) => {
@@ -151,6 +165,8 @@ const AllInvoices = () => {
     // Toggle flag status
     const toggleFlag = async (invoice: Invoice) => {
         try {
+            setFlaggingInvoices(prev => new Set(prev).add(invoice.id));
+            
             const response = await fetch(`/api/invoices/${invoice.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -160,9 +176,18 @@ const AllInvoices = () => {
             if (response.ok) {
                 fetchInvoices();
                 toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`);
+            } else {
+                const errorData = await response.json();
+                toast.error(errorData.error || 'Failed to update flag');
             }
         } catch (error) {
             toast.error('Failed to update flag');
+        } finally {
+            setFlaggingInvoices(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(invoice.id);
+                return newSet;
+            });
         }
     };
 
@@ -262,8 +287,8 @@ const AllInvoices = () => {
                             className="w-full sm:w-auto px-3 md:px-4 py-2 md:py-2 border border-border rounded-[12px] md:rounded-[16px] bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50 text-sm md:text-base"
                         >
                             {invoiceCategories.map(category => (
-                                <option key={category} value={category}>
-                                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                                <option key={category.value} value={category.value}>
+                                    {category.label}
                                 </option>
                             ))}
                         </select>
@@ -333,12 +358,17 @@ const AllInvoices = () => {
                                     <div className="flex items-center gap-3">
                                         <button
                                             onClick={() => toggleFlag(invoice)}
-                                            className={`p-2 rounded-full transition-all duration-200 hover:scale-110 ${invoice.flagged
+                                            disabled={flaggingInvoices.has(invoice.id)}
+                                            className={`p-2 rounded-full transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${invoice.flagged
                                                 ? 'text-red-500 hover:text-red-600'
                                                 : 'text-muted-foreground hover:text-red-500'
                                                 }`}
                                         >
-                                            <Flag className={`w-4 h-4 ${invoice.flagged ? 'fill-current' : ''}`} />
+                                            {flaggingInvoices.has(invoice.id) ? (
+                                                <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                            ) : (
+                                                <Flag className={`w-4 h-4 ${invoice.flagged ? 'fill-current' : ''}`} />
+                                            )}
                                         </button>
                                         <div>
                                             <div className="font-semibold text-foreground text-sm">INV-{invoice.id}</div>
@@ -450,18 +480,23 @@ const AllInvoices = () => {
                                         <div className="col-span-1">
                                             <button
                                                 onClick={() => toggleFlag(invoice)}
-                                                className={`p-2 rounded-full transition-all duration-200 hover:scale-110 ${invoice.flagged
+                                                disabled={flaggingInvoices.has(invoice.id)}
+                                                className={`p-2 rounded-full transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${invoice.flagged
                                                     ? 'text-red-500 hover:text-red-600'
                                                     : 'text-muted-foreground hover:text-red-500'
                                                     }`}
                                             >
-                                                <Flag className={`w-4 h-4 ${invoice.flagged ? 'fill-current' : ''}`} />
+                                                {flaggingInvoices.has(invoice.id) ? (
+                                                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                ) : (
+                                                    <Flag className={`w-4 h-4 ${invoice.flagged ? 'fill-current' : ''}`} />
+                                                )}
                                             </button>
                                         </div>
 
-                                        {/* Invoice ID */}
+                                        {/* Invoice Number */}
                                         <div className="col-span-2">
-                                            <div className="font-semibold text-foreground">INV-{invoice.id}</div>
+                                            <div className="font-semibold text-foreground">{invoice.invoice_number}</div>
                                             <div className="text-xs text-muted-foreground">{invoice.transaction_type}</div>
                                         </div>
 

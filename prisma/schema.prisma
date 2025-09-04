@@ -134,6 +134,7 @@ model TaxRate {
   id          Int       @id @default(autoincrement())
   hsn_code    String    @db.VarChar(100)
   description String    @db.VarChar(255)
+  is_default  Boolean   @default(false)
   created_at  DateTime  @default(now())
   updated_at  DateTime  @default(now()) @updatedAt
   deletedAt   DateTime? // Soft delete field

@@ -48,7 +48,28 @@ export async function PUT(
     const id = parseInt(idParam);
     const data = await request.json();
 
-    // Validate required fields
+    // Check if this is a flag-only update
+    if (Object.keys(data).length === 1 && 'flagged' in data) {
+      const updatedInvoice = await prisma.invoice.update({
+        where: { id },
+        data: { flagged: data.flagged },
+        include: {
+          customer: {
+            include: {
+              state: true,
+            },
+          },
+          line_items: {
+            include: {
+              taxes: true,
+            },
+          },
+        },
+      });
+      return NextResponse.json(updatedInvoice);
+    }
+
+    // Validate required fields for full invoice updates
     if (!data.transaction_type || !data.buyer_name || !data.line_items || data.line_items.length === 0) {
       return NextResponse.json(
         { error: "Transaction type, buyer name, and at least one line item are required" },
