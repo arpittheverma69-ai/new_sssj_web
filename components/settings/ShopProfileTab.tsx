@@ -32,7 +32,7 @@ const ShopProfileTab = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
-    const [states, setStates] = useState<Array<{ state: string, statecode: string }>>([]);
+    const [states, setStates] = useState<Array<{ state: string, statecode: string, numeric_code: number, id: number }>>([]);
 
     // Fetch shop profile data and states on component mount
     useEffect(() => {
@@ -76,8 +76,27 @@ const ShopProfileTab = () => {
             setFormData(prev => ({
                 ...prev,
                 state: selectedState.state,
-                stateCode: `${selectedState.statecode} (${selectedState.state.slice(0, 2).toUpperCase()})`
+                stateCode: `${selectedState.numeric_code.toString().padStart(2, '0')} (${selectedState.statecode})`
             }));
+        }
+    };
+
+    const handleGstinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const gstin = e.target.value.toUpperCase();
+        setFormData(prev => ({ ...prev, gstin }));
+
+        // Extract state code from GSTIN (first 2 digits)
+        if (gstin.length >= 2) {
+            const gstinStateCode = gstin.substring(0, 2);
+            const matchingState = states.find(s => s.numeric_code.toString().padStart(2, '0') === gstinStateCode);
+            
+            if (matchingState) {
+                setFormData(prev => ({
+                    ...prev,
+                    state: matchingState.state,
+                    stateCode: `${matchingState.numeric_code.toString().padStart(2, '0')} (${matchingState.statecode})`
+                }));
+            }
         }
     };
 
@@ -147,7 +166,7 @@ const ShopProfileTab = () => {
                             type="text"
                             name="gstin"
                             value={formData.gstin}
-                            onChange={handleChange}
+                            onChange={handleGstinChange}
                             className="w-full border rounded px-3 py-2 mt-1 text-sm md:text-base"
                             required
                         />

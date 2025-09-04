@@ -19,24 +19,36 @@ export async function GET(request: Request) {
 
         // Get the appropriate prefix based on transaction type
         let prefix = '';
+        let searchTransactionTypes = [transactionType];
+        
         switch (transactionType) {
             case 'retail':
                 prefix = settings.prefix_retail;
                 break;
             case 'inter_state':
                 prefix = settings.prefix_inter_city;
+                // For inter_state and outer_state, use the same prefix and shared numbering
+                if (settings.prefix_inter_city === settings.prefix_outer_state) {
+                    searchTransactionTypes = ['inter_state', 'outer_state'];
+                }
                 break;
             case 'outer_state':
                 prefix = settings.prefix_outer_state;
+                // For inter_state and outer_state, use the same prefix and shared numbering
+                if (settings.prefix_inter_city === settings.prefix_outer_state) {
+                    searchTransactionTypes = ['inter_state', 'outer_state'];
+                }
                 break;
             default:
                 prefix = settings.prefix_retail;
         }
 
-        // Get the latest invoice number for this transaction type to determine next sequence
+        // Get the latest invoice number across shared transaction types to determine next sequence
         const latestInvoice = await prisma.invoice.findFirst({
             where: {
-                transaction_type: transactionType,
+                transaction_type: {
+                    in: searchTransactionTypes
+                },
                 invoice_number: {
                     startsWith: prefix
                 }

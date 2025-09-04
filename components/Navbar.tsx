@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Menu, X } from "lucide-react";
 import { useShopProfile } from "@/contexts/ShopProfileContext";
+import Image from "next/image";
 
 export function NavbarDemo() {
     const { shopProfile } = useShopProfile()
@@ -56,7 +57,12 @@ export function NavbarDemo() {
                 <MobileNavHeader>
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-primary rounded-[20px] flex items-center justify-center text-white text-sm font-bold">
-                            🧾
+                            <Image
+                                src={'/jw_logo.png'}
+                                alt="Jewellers Logo"
+                                width={24}
+                                height={24}
+                            />
                         </div>
                         <div>
                             <div className="font-bold text-sm text-foreground">{shopProfile.shopName}</div>

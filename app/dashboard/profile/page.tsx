@@ -87,7 +87,7 @@ export default function ProfilePage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('New passwords do not match');
       return;
@@ -131,7 +131,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex-1 p-6 md:p-8 overflow-y-auto">
+    <div className="flex-1 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -319,7 +319,7 @@ export default function ProfilePage() {
               onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
               required
             />
-            
+
             <div className="flex justify-end space-x-3 pt-4">
               <Button
                 type="button"

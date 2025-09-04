@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { showToast } from '@/utils/toast';
 import { Calendar, Hash, User, MapPin, Building2, CreditCard, Calculator, ArrowRight } from 'lucide-react';
 import { useShopProfile } from '@/hooks/useShopProfile';
+import Image from 'next/image';
 
 interface InvoiceDetailsPageProps {
     invoiceData: InvoiceData;
@@ -32,13 +33,13 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
         if (!invoiceData.invoice_date) newErrors.invoice_date = 'Invoice date is required';
         if (!invoiceData.invoice_number) newErrors.invoice_number = 'Invoice number is required';
         if (!invoiceData.buyer_name) newErrors.buyer_name = 'Buyer name is required';
-        
+
         // Conditional address validation - not required for retail sales
         const requiresAddress = invoiceData.type !== 'retail';
         if (requiresAddress && !invoiceData.buyer_address) {
             newErrors.buyer_address = 'Buyer address is required for inter-state and outer-state transactions';
         }
-        
+
         if (!invoiceData.buyer_state_code) newErrors.buyer_state_code = 'State is required';
 
         // Conditional GSTIN validation based on transaction type
@@ -392,7 +393,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             {/* Address */}
                             <div>
                                 <label className="block text-sm font-semibold text-foreground mb-2">
-                                    Address 
+                                    Address
                                     {invoiceData.type !== 'retail' ? (
                                         <span className="text-destructive">*</span>
                                     ) : (
@@ -542,7 +543,12 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                 <>
                                     <div className="text-center">
                                         <div className="w-16 h-16 bg-primary rounded-[20px] flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
-                                            🧾
+                                            <Image
+                                                src={'/jw_logo.png'}
+                                                alt="Jewellers Logo"
+                                                width={60}
+                                                height={60}
+                                            />
                                         </div>
                                         <div className="font-bold text-foreground text-lg">
                                             {shopProfile.shopName || 'Shop Name Not Set'}

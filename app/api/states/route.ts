@@ -10,6 +10,7 @@ export async function GET() {
         const formattedStates = states.map(s => ({
             state: s.state_name,
             statecode: s.state_code,
+            numeric_code: s.state_numeric_code,
             id: s.id
         }));
 

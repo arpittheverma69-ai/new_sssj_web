@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(invoice, { status: 201 });
   } catch (error) {
     console.error("Error creating invoice:", error);
-    
+
     // Provide more specific error messages
     let errorMessage = "Failed to create invoice";
     if (error instanceof Error) {
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
         errorMessage = "Invalid data format. Please check your input values.";
       }
     }
-    
+
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

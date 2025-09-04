@@ -22,9 +22,12 @@ const CreateInvoiceInner: React.FC = () => {
             try {
                 const res = await fetch(`/api/invoices/${editId}`);
                 if (!res.ok) {
-                    throw new Error("Failed to load invoice");
+                    const errorText = await res.text();
+                    console.error("Invoice fetch error:", res.status, errorText);
+                    throw new Error(`Failed to load invoice: ${res.status}`);
                 }
                 const inv = await res.json();
+                console.log("Invoice data loaded:", inv);
 
                 const invoice_date = inv.invoice_date
                     ? new Date(inv.invoice_date).toISOString().slice(0, 10)
@@ -66,6 +69,9 @@ const CreateInvoiceInner: React.FC = () => {
                 }));
                 invoiceForm.setLineItems(mappedItems);
 
+                // Set the global roundoff value from the fetched invoice
+                invoiceForm.setGlobalRoundoff(Number(inv.roundoff) || 0);
+
                 invoiceForm.setCurrentStep(1);
                 toast.update(loadingToast, {
                     render: "Invoice data loaded successfully!",
@@ -89,7 +95,7 @@ const CreateInvoiceInner: React.FC = () => {
     }, [searchParams]);
 
     return (
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <main className="flex-1 md:p-8">
             <div className="flex-1 max-md:pt-6">
                 <InvoiceStepper currentStep={invoiceForm.currentStep} />
 

@@ -22,10 +22,10 @@ interface InvoiceSettings {
 
 const InvoiceSettingsTab = () => {
     const [settings, setSettings] = useState<InvoiceSettings>({
-        invoice_prefix: 'JVJ/D/',
-        prefix_retail: 'JVJ/D/',
-        prefix_inter_city: 'JVJ/D/',
-        prefix_outer_state: 'JVJ/S/',
+        invoice_prefix: 'SSSJ/D/',
+        prefix_retail: 'SSSJ/D/',
+        prefix_inter_city: 'SSSJ/D/',
+        prefix_outer_state: 'SSSJ/D/',
         default_transaction_type: 'retail',
         number_digits: 3,
         default_input_mode: 'component',
@@ -143,7 +143,7 @@ const InvoiceSettingsTab = () => {
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded mb-2 text-sm md:text-base"
                         />
-                        <p className="text-xs md:text-sm text-gray-500">Default: JVJ/D/</p>
+                        <p className="text-xs md:text-sm text-gray-500">Default: SSSJ/D/</p>
                     </div>
 
                     <div>
@@ -157,7 +157,7 @@ const InvoiceSettingsTab = () => {
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded mb-2 text-sm md:text-base"
                         />
-                        <p className="text-xs md:text-sm text-gray-500">Default: JVJ/D/</p>
+                        <p className="text-xs md:text-sm text-gray-500">Default: SSSJ/D/</p>
                     </div>
 
                     <div>
@@ -171,7 +171,7 @@ const InvoiceSettingsTab = () => {
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded mb-2 text-sm md:text-base"
                         />
-                        <p className="text-xs md:text-sm text-gray-500">Default: JVJ/S/</p>
+                        <p className="text-xs md:text-sm text-gray-500">Default: SSSJ/D/</p>
                     </div>
 
                     <div>

@@ -20,6 +20,11 @@ export const metadata: Metadata = {
     title: "GST Invoice Generator",
     description: "Professional GST invoice generator for businesses",
     keywords: ["invoice", "GST", "business", "tax"],
+    icons: {
+        icon: "/jw_logo.png",
+        shortcut: "/jw_logo.png",
+        apple: "/jw_logo.png",
+    },
 };
 
 export default function RootLayout({

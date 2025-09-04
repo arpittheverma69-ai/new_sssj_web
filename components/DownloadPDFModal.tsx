@@ -155,7 +155,7 @@ export const DownloadPDFModal: React.FC<DownloadPDFModalProps> = ({ invoice, onC
                     </div>
                     <div>
                         <span className="text-gray-600 dark:text-gray-400">Total Amount:</span>
-                        <div className="font-medium">₹{Number(invoice.total_invoice_value).toFixed(2)}</div>
+                        <div className="font-medium">₹{Number(invoice.total_invoice_value).toFixed(3)}</div>
                     </div>
                     <div>
                         <span className="text-gray-600 dark:text-gray-400">Date:</span>

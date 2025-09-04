@@ -11,6 +11,7 @@ import setting from "@/lib/icon-files/setting.json"
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useShopProfile } from "@/contexts/ShopProfileContext";
+import Image from "next/image";
 
 const SideItems = () => {
     const pathname = usePathname();
@@ -49,14 +50,19 @@ const SideItems = () => {
     ];
     return (
         <div className="fixed md:relative border-r border-border transform -translate-x-full md:translate-x-0 h-screen bg-card shadow-xl">
-            <div className="p-6 border-b border-border bg-gradient-to-br from-primary/5 to-primary/10">
-                <div className="flex items-center justify-between mb-3">
+            <div className="px-2 py-4 border-b border-border bg-gradient-to-br from-primary/5 to-primary/10">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary rounded-[24px] flex items-center justify-center text-white text-xl font-bold">
-                            🧾
+                        <div className="bg-primary rounded-[24px] flex items-center justify-center">
+                            <Image
+                                src={'/jw_logo.png'}
+                                alt="Jewellers Logo"
+                                width={60}
+                                height={60}
+                            />
                         </div>
                         <div>
-                            <h1 className="font-bold text-lg text-foreground">{shopProfile.shopName}</h1>
+                            <h1 className="font-bold text-md text-foreground">{shopProfile.shopName}</h1>
                             <p className="text-xs text-muted-foreground">GST Invoice Generator</p>
                         </div>
                     </div>
@@ -73,8 +79,8 @@ const SideItems = () => {
                                 href={item.link}
                                 key={id}
                                 className={`${active
-                                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                                        : 'hover:bg-accent hover:text-accent-foreground'
+                                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                                    : 'hover:bg-accent hover:text-accent-foreground'
                                     } px-4 py-3 rounded-[24px] flex items-center transition-all duration-200 group`}
                                 onMouseEnter={() => lottieRef.current?.play()}
                                 onMouseLeave={() => lottieRef.current?.stop()}

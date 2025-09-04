@@ -56,12 +56,12 @@ export async function POST(request: Request) {
         const stateCodeMatch = data.stateCode.match(/^(\w+)/)
         const stateCode = stateCodeMatch ? stateCodeMatch[1] : ''
 
-        // Find matching state
+        // Find matching state by name (primary) or state_code
         const state = await prisma.states.findFirst({
             where: {
                 OR: [
-                    { state_code: stateCode },
-                    { state_name: { contains: data.state } }
+                    { state_name: data.state },
+                    { state_code: stateCode }
                 ]
             }
         })
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
                     gstin: data.gstin,
                     address: data.address,
                     city: data.city,
-                    state_id: state.state_numeric_code,
+                    state_id: state.id,
                     vat_tin: data.vatTin || null,
                     pan_number: data.panNumber || null,
                     bank_name: data.bankName || null,
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
                     gstin: data.gstin,
                     address: data.address,
                     city: data.city,
-                    state_id: state.state_numeric_code,
+                    state_id: state.id,
                     vat_tin: data.vatTin || null,
                     pan_number: data.panNumber || null,
                     bank_name: data.bankName || null,

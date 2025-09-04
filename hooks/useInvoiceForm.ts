@@ -64,6 +64,11 @@ export const useInvoiceForm = () => {
         setLineItems([...lineItems, newItem]);
     };
 
+    // Clear all line items (useful for edit mode)
+    const clearLineItems = () => {
+        setLineItems([]);
+    };
+
     const removeLineItem = (id: number) => {
         setLineItems(lineItems.filter(item => item.id !== id));
     };
@@ -136,5 +141,6 @@ export const useInvoiceForm = () => {
         selectedCustomer,
         setCurrentStep,
         setLineItems, // expose for edit flow
+        clearLineItems, // expose for clearing items
     };
 };

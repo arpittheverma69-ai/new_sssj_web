@@ -18,8 +18,15 @@ export async function GET(
           },
         },
         line_items: {
+          where: {
+            deletedAt: null, // Only include non-deleted line items
+          },
           include: {
-            taxes: true,
+            taxes: {
+              where: {
+                deletedAt: null, // Only include non-deleted taxes
+              },
+            },
           },
         },
       },
@@ -32,8 +39,10 @@ export async function GET(
     return NextResponse.json(invoice);
   } catch (error) {
     console.error("Error fetching invoice:", error);
+    console.error("Error details:", error instanceof Error ? error.message : String(error));
+    console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: "Failed to fetch invoice" },
+      { error: "Failed to fetch invoice", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -60,8 +69,15 @@ export async function PUT(
             },
           },
           line_items: {
+            where: {
+              deletedAt: null, // Only include non-deleted line items
+            },
             include: {
-              taxes: true,
+              taxes: {
+                where: {
+                  deletedAt: null, // Only include non-deleted taxes
+                },
+              },
             },
           },
         },
@@ -134,8 +150,15 @@ export async function PUT(
           },
         },
         line_items: {
+          where: {
+            deletedAt: null, // Only include non-deleted line items
+          },
           include: {
-            taxes: true,
+            taxes: {
+              where: {
+                deletedAt: null, // Only include non-deleted taxes
+              },
+            },
           },
         },
       },
@@ -144,7 +167,7 @@ export async function PUT(
     return NextResponse.json(updatedInvoice);
   } catch (error) {
     console.error("Error updating invoice:", error);
-    
+
     // Provide more specific error messages
     let errorMessage = "Failed to update invoice";
     if (error instanceof Error) {
@@ -156,7 +179,7 @@ export async function PUT(
         errorMessage = "Missing required fields. Please check your input.";
       }
     }
-    
+
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

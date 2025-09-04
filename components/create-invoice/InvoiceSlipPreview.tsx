@@ -20,19 +20,19 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
     // ✅ Helper for currency formatting
     const formatCurrency = (amount: number) =>
         Number(amount || 0).toLocaleString('en-IN', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
+            minimumFractionDigits: 3,
+            maximumFractionDigits: 3,
         });
 
     // ✅ Ensure all numeric values are properly casted
     const taxableValue = lineItems.reduce((sum, item) => sum + Number(item.taxableValue || 0), 0);
     const isIGST = String(invoiceData?.type || '').toLowerCase() === 'outer_state';
-    
+
     const cgstAmount = isIGST ? 0 : taxableValue * (Number(cgstRate) / 100);
     const sgstAmount = isIGST ? 0 : taxableValue * (Number(sgstRate) / 100);
     const igstRate = Number(cgstRate) + Number(sgstRate);
     const igstAmount = isIGST ? taxableValue * (igstRate / 100) : 0;
-    
+
     const totalBeforeRoundoff = taxableValue + cgstAmount + sgstAmount + igstAmount;
     const totalInvoice = totalBeforeRoundoff + Number(globalRoundoff || 0);
     const totalQuantity = lineItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
@@ -208,7 +208,7 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
                                         TOTAL AMOUNT:
                                     </td>
                                     <td className="border border-black p-2 text-right font-bold text-lg">
-                                        ₹{Math.round(totalInvoice)}
+                                        ₹{formatCurrency(totalInvoice)}
                                     </td>
                                 </tr>
                             </tbody>
@@ -219,7 +219,7 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
                     <div className="mb-6 p-4 border border-black">
                         <p className="font-bold text-sm mb-2">Amount in Words:</p>
                         <p className="text-sm italic">
-                            {numberToWords(Math.round(totalInvoice))} Rupees Only
+                            {numberToWords(totalInvoice)} Rupees Only
                         </p>
                     </div>
 

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { showToast } from '@/utils/toast';
 import LineItemsTable from '../create-invoice/LineItemsTable';
 import { LineItem, TaxRateRow } from '@/types/invoiceTypes';
-import { Plus, ArrowLeft, ArrowRight, Calculator, Package, Info, AlertCircle } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, Calculator, Package, Info, AlertCircle, Minus } from 'lucide-react';
 
 interface LineItemsPageProps {
     lineItems: LineItem[];
@@ -15,6 +15,7 @@ interface LineItemsPageProps {
     setGlobalRoundoff: (value: number) => void;
     nextStep: () => void;
     prevStep: () => void;
+    clearLineItems?: () => void;
 }
 
 const LineItemsPage: React.FC<LineItemsPageProps> = ({
@@ -27,6 +28,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     setGlobalRoundoff,
     nextStep,
     prevStep,
+    clearLineItems,
 }) => {
     const [hsnSacOptions, setHsnSacOptions] = useState<TaxRateRow[]>([]);
     const [loadingHsnSac, setLoadingHsnSac] = useState(true);
@@ -351,7 +353,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                     {invoiceData.mode === 'direct' ? (
                                         <input
                                             type="number"
-                                            step="0.01"
+                                            step="0.001"
                                             value={formData.directAmount}
                                             onChange={(e) => setFormData({ ...formData, directAmount: e.target.value })}
                                             className="w-full px-4 py-3 border border-border rounded-[20px] bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background transition-all duration-200 hover:border-primary/50"
@@ -360,7 +362,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                     ) : (
                                         <input
                                             type="number"
-                                            step="0.01"
+                                            step="0.001"
                                             value={formData.rate}
                                             onChange={(e) => {
                                                 const rate = e.target.value;
@@ -414,7 +416,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                             </label>
                                             <input
                                                 type="number"
-                                                step="0.01"
+                                                step="0.001"
                                                 value={formData.targetAmount}
                                                 onChange={(e) => {
                                                     const targetAmount = e.target.value;
@@ -515,16 +517,31 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                     {/* Line Items Table */}
                     <div className="bg-card rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
                         <div className="bg-gradient-to-r from-purple-500/10 to-purple-500/5 p-6 border-b border-border">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-purple-500 rounded-[20px] flex items-center justify-center text-white">
-                                    <Package className="w-5 h-5" />
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-purple-500 rounded-[20px] flex items-center justify-center text-white">
+                                        <Package className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-foreground">Line Items</h2>
+                                        <p className="text-muted-foreground">
+                                            {lineItems.length === 0 ? 'No items added yet' : `${lineItems.length} item${lineItems.length !== 1 ? 's' : ''} added`}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-foreground">Line Items</h2>
-                                    <p className="text-muted-foreground">
-                                        {lineItems.length === 0 ? 'No items added yet' : `${lineItems.length} item${lineItems.length !== 1 ? 's' : ''} added`}
-                                    </p>
-                                </div>
+                                {lineItems.length > 0 && clearLineItems && (
+                                    <button
+                                        onClick={() => {
+                                            if (window.confirm('Are you sure you want to clear all line items?')) {
+                                                clearLineItems();
+                                            }
+                                        }}
+                                        className="bg-red-500/10 hover:bg-red-500/20 text-red-600 hover:text-red-700 px-4 py-2 rounded-[16px] flex items-center gap-2 transition-all duration-200 text-sm font-medium"
+                                    >
+                                        <Minus className="w-4 h-4" />
+                                        Clear All
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -636,14 +653,14 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Taxable Value:</span>
                                     <span className="font-semibold text-foreground">
-                                        ₹{totals.taxableValue.toFixed(2)}
+                                        ₹{totals.taxableValue.toFixed(3)}
                                     </span>
                                 </div>
                                 {isIGST ? (
                                     <div className="flex justify-between text-sm">
                                         <span className="text-muted-foreground">IGST ({totals.igstRate}%):</span>
                                         <span className="font-semibold text-foreground">
-                                            ₹{totals.igstAmount.toFixed(2)}
+                                            ₹{totals.igstAmount.toFixed(3)}
                                         </span>
                                     </div>
                                 ) : (
@@ -651,13 +668,13 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">SGST ({sgstRate}%):</span>
                                             <span className="font-semibold text-foreground">
-                                                ₹{totals.sgstAmount.toFixed(2)}
+                                                ₹{totals.sgstAmount.toFixed(3)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">CGST ({cgstRate}%):</span>
                                             <span className="font-semibold text-foreground">
-                                                ₹{totals.cgstAmount.toFixed(2)}
+                                                ₹{totals.cgstAmount.toFixed(3)}
                                             </span>
                                         </div>
                                     </>
@@ -668,7 +685,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Total Before Roundoff:</span>
                                     <span className="font-semibold text-foreground">
-                                        ₹{totals.totalBeforeRoundoff.toFixed(2)}
+                                        ₹{totals.totalBeforeRoundoff.toFixed(3)}
                                     </span>
                                 </div>
 
@@ -691,7 +708,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 <div className="flex justify-between items-center border-t border-border pt-3">
                                     <span className="font-bold text-lg text-foreground">Final Invoice Total:</span>
                                     <span className="text-2xl font-bold text-primary">
-                                        ₹{totals.finalTotal.toFixed(2)}
+                                        ₹{totals.finalTotal.toFixed(3)}
                                     </span>
                                 </div>
                             </div>
