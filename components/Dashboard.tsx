@@ -479,33 +479,25 @@ export default function Dashboard() {
                             };
                         }
 
-                        const amount = invoice.total_amount || invoice.total_invoice_value || 0;
+                        const amount = parseFloat(invoice.total_invoice_value?.toString() || '0') || 0;
                         acc[monthKey].totalSales += amount;
 
-                        // Categorize based on buyer location, invoice type, or amount ranges
-                        const buyerState = invoice.buyer_state?.toLowerCase() || '';
-                        const sellerState = invoice.seller_state?.toLowerCase() || 'local';
-                        const invoiceType = invoice.invoice_type?.toLowerCase() || '';
-
-                        // If we have state data, use it for categorization
-                        if (buyerState && buyerState !== sellerState) {
-                            const neighboringStates = ['maharashtra', 'gujarat', 'rajasthan', 'madhya pradesh', 'haryana', 'punjab'];
-                            if (neighboringStates.includes(buyerState)) {
-                                acc[monthKey].interstateSales += amount;
-                            } else {
-                                acc[monthKey].outerstateSales += amount;
-                            }
-                        } else {
-                            // Fallback categorization based on amount or other criteria
-                            // Distribute invoices across categories for demonstration
-                            const invoiceIndex = invoices.indexOf(invoice);
-                            if (invoiceIndex % 3 === 0) {
+                        // Categorize based on transaction_type field from database
+                        const transactionType = invoice.transaction_type?.toLowerCase() || 'retail';
+                        
+                        switch (transactionType) {
+                            case 'retail':
                                 acc[monthKey].retailSales += amount;
-                            } else if (invoiceIndex % 3 === 1) {
+                                break;
+                            case 'inter_state':
                                 acc[monthKey].interstateSales += amount;
-                            } else {
+                                break;
+                            case 'outer_state':
                                 acc[monthKey].outerstateSales += amount;
-                            }
+                                break;
+                            default:
+                                acc[monthKey].retailSales += amount;
+                                break;
                         }
 
                         return acc;
