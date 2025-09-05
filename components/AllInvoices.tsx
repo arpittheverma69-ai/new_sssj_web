@@ -9,6 +9,7 @@ import { Invoice } from '@/types/invoiceTypes';
 import { DownloadPDFModal } from './DownloadPDFModal';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { formatCurrency } from '@/utils/requiredFunction';
 // Invoice categories will be populated with counts dynamically
 
 const AllInvoices = () => {
@@ -138,12 +139,12 @@ const AllInvoices = () => {
         return sum + invoiceValue;
     }, 0);
     const flaggedInvoices = invoices.filter(inv => inv.flagged).length;
-    
+
     // Calculate transaction type counts
     const retailCount = invoices.filter(inv => inv.transaction_type === 'retail').length;
     const interStateCount = invoices.filter(inv => inv.transaction_type === 'inter_state').length;
     const outerStateCount = invoices.filter(inv => inv.transaction_type === 'outer_state').length;
-    
+
     // Dynamic invoice categories with counts
     const invoiceCategories = [
         { value: 'all', label: `All Invoices (${totalInvoices})` },
@@ -151,22 +152,11 @@ const AllInvoices = () => {
         { value: 'inter_state', label: `Inter-State Sales (${interStateCount})` },
         { value: 'outer_state', label: `Outer-State Sales (${outerStateCount})` }
     ];
-
-    // Format currency in Indian Rupees
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(amount);
-    };
-
     // Toggle flag status
     const toggleFlag = async (invoice: Invoice) => {
         try {
             setFlaggingInvoices(prev => new Set(prev).add(invoice.id));
-            
+
             const response = await fetch(`/api/invoices/${invoice.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },

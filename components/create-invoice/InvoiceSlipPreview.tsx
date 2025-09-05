@@ -20,7 +20,7 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
     // ✅ Helper for currency formatting
     const formatCurrency = (amount: number) =>
         Number(amount || 0).toLocaleString('en-IN', {
-            minimumFractionDigits: 3,
+            minimumFractionDigits: 0,
             maximumFractionDigits: 3,
         });
 

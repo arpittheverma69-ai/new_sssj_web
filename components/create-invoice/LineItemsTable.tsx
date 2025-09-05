@@ -13,7 +13,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, onRemoveItem
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
-            minimumFractionDigits: 3,
+            minimumFractionDigits: 0,
             maximumFractionDigits: 3,
         }).format(amount);
     };

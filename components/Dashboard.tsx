@@ -7,6 +7,7 @@ import { TrendingUp, TrendingDown, DollarSign, Users, Package, Clock, Calendar, 
 import { Invoice } from '@/types/invoiceTypes';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { formatCurrency } from '@/utils/requiredFunction';
 
 // Register ChartJS components
 ChartJS.register(
@@ -262,16 +263,6 @@ const RecentInvoices = () => {
         invoice.buyer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         invoice.transaction_type.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    // Format currency
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(amount);
-    };
 
     return (
         <div className="bg-card rounded-[16px] sm:rounded-[20px] lg:rounded-[24px] shadow-lg shadow-black/5 border border-border overflow-hidden">
