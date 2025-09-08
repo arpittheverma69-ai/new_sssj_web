@@ -125,7 +125,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
 </head>
 <body class="bg-white">
     <button class="print-btn no-print" onclick="window.print()">🖨️ Print Invoice</button>
-    <div class="w-[672.5px] mx-auto text-[10px] scale-[1.06] mt-6 pt-6">
+    <div class="w-[672.5px] mx-auto text-[10px] md:scale-[1.06] scale-[1.04] pt-2 mt-2 md:mt-6 md:pt-6">
         <div class="flex justify-between w-[100%]">
             <div class="w-[50%]"></div>
             <div class="w-[50%] flex justify-between">

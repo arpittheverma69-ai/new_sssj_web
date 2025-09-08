@@ -78,15 +78,15 @@ const Customers = () => {
                 method: 'DELETE',
             });
             if (response.ok) {
-                toast.success('Customer deleted successfully');
+                toast.success('Customer deleted successfully', { closeOnClick: true });
                 fetchCustomers();
                 setDeleteModalOpen(false);
                 setSelectedCustomer(null);
             } else {
-                toast.error('Failed to delete customer');
+                toast.error('Failed to delete customer', { closeOnClick: true });
             }
         } catch (error) {
-            toast.error('Error deleting customer');
+            toast.error('Error deleting customer', { closeOnClick: true });
             console.error('Error:', error);
         }
     };

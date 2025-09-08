@@ -26,12 +26,12 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
           autoClose={5000}
           hideProgressBar={false}
           newestOnTop={false}
-          closeOnClick
+          closeOnClick={true}
           rtl={false}
           pauseOnFocusLoss
           draggable
-          pauseOnHover
-          theme="light"
+          pauseOnHover={false}
+          theme="colored"
         />
       </div>
     </SessionProvider>

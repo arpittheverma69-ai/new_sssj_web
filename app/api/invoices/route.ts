@@ -27,8 +27,9 @@ export async function GET(request: NextRequest) {
         include: {
           customer: true,
           line_items: {
+            where: { deletedAt: null },
             include: {
-              taxes: true,
+              taxes: { where: { deletedAt: null } },
             },
           },
         },

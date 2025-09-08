@@ -146,7 +146,7 @@ export const DownloadPDFModal: React.FC<DownloadPDFModalProps> = ({ invoice, onC
     return (
         <div className="space-y-6">
             {/* Invoice Summary */}
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-black">
                 <h3 className="font-semibold text-lg mb-2">Invoice #{invoice.invoice_number}</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
@@ -171,7 +171,7 @@ export const DownloadPDFModal: React.FC<DownloadPDFModalProps> = ({ invoice, onC
             {/* Copy Selection */}
             <div>
                 <h4 className="font-medium mb-3">Select Invoice Copies to Include:</h4>
-                <div className="space-y-2">
+                <div className="space-y-2 text-black">
                     <label className="flex items-center space-x-2">
                         <input
                             type="checkbox"

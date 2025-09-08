@@ -247,7 +247,7 @@ const RecentInvoices = () => {
                 const recentInvoices = (data.invoices || []).slice(0, 5);
                 setInvoices(recentInvoices);
             } catch (error) {
-                toast.error('Failed to fetch recent invoices');
+                toast.error('Failed to fetch recent invoices', { closeOnClick: true });
                 console.error('Error fetching invoices:', error);
             } finally {
                 setLoading(false);
@@ -327,25 +327,25 @@ const RecentInvoices = () => {
                                     <div className="mb-3">
                                         <div className="font-medium text-foreground text-sm">{invoice.buyer_name}</div>
                                     </div>
-                                    <div className="flex items-center justify-end gap-2">
-                                        <button
-                                            onClick={() => router.push(`/dashboard/all-invoice?view=${invoice.id}`)}
-                                            className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200"
-                                            title="View"
-                                        >
-                                            <Eye className="w-4 h-4 text-muted-foreground" />
-                                        </button>
-                                        <button
-                                            onClick={() => router.push(`/dashboard/create-invoice?edit=${invoice.id}`)}
-                                            className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200"
-                                            title="Edit"
-                                        >
-                                            <Edit className="w-4 h-4 text-muted-foreground" />
-                                        </button>
-                                        <button className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200" title="Download">
-                                            <Download className="w-4 h-4 text-muted-foreground" />
-                                        </button>
-                                    </div>
+                                    {/* <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => router.push(`/dashboard/all-invoice?view=${invoice.id}`)}
+                                                className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200"
+                                                title="View"
+                                            >
+                                                <Eye className="w-4 h-4 text-muted-foreground" />
+                                            </button>
+                                            <button
+                                                onClick={() => router.push(`/dashboard/create-invoice?edit=${invoice.id}`)}
+                                                className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200"
+                                                title="Edit"
+                                            >
+                                                <Edit className="w-4 h-4 text-muted-foreground" />
+                                            </button>
+                                            <button className="p-2 hover:bg-muted rounded-[8px] transition-colors duration-200" title="Download">
+                                                <Download className="w-4 h-4 text-muted-foreground" />
+                                            </button>
+                                        </div> */}
                                 </div>
                             ))}
                         </div>
@@ -484,7 +484,7 @@ export default function Dashboard() {
 
                         // Categorize based on transaction_type field from database
                         const transactionType = invoice.transaction_type?.toLowerCase() || 'retail';
-                        
+
                         switch (transactionType) {
                             case 'retail':
                                 acc[monthKey].retailSales += amount;
@@ -677,7 +677,7 @@ export default function Dashboard() {
     };
 
     return (
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto max-sm:mt-18">
             {/* Header */}
             <header className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 sm:mb-8 gap-4 lg:gap-6 max-md:pt-6">
                 <div className="text-center lg:text-left">

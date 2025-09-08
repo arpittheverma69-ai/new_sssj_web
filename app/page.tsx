@@ -24,13 +24,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        toast.error("Invalid credentials");
+        toast.error("Invalid credentials", { closeOnClick: true });
       } else {
-        toast.success("Login successful");
+        toast.success("Login successful", { closeOnClick: true });
         router.push("/dashboard");
       }
     } catch (error) {
-      toast.error("An error occurred during login");
+      toast.error("An error occurred during login", { closeOnClick: true });
     } finally {
       setLoading(false);
     }

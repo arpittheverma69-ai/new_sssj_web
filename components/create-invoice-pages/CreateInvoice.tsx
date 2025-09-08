@@ -18,7 +18,7 @@ const CreateInvoiceInner: React.FC = () => {
         if (!editId) return;
 
         const loadInvoice = async () => {
-            const loadingToast = toast.loading("Loading invoice data for editing...");
+            const loadingToast = toast.loading("Loading invoice data for editing...", { closeOnClick: true });
             try {
                 const res = await fetch(`/api/invoices/${editId}`);
                 if (!res.ok) {
@@ -77,7 +77,8 @@ const CreateInvoiceInner: React.FC = () => {
                     render: "Invoice data loaded successfully!",
                     type: "success",
                     isLoading: false,
-                    autoClose: 2000
+                    autoClose: 2000,
+                    closeOnClick: true
                 });
             } catch (err) {
                 console.error(err);
@@ -85,7 +86,8 @@ const CreateInvoiceInner: React.FC = () => {
                     render: "Unable to load invoice for editing",
                     type: "error",
                     isLoading: false,
-                    autoClose: 3000
+                    autoClose: 3000,
+                    closeOnClick: true
                 });
             }
         };

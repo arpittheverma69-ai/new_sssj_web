@@ -72,13 +72,13 @@ export default function ProfilePage() {
             email: updatedUser.email
           }
         });
-        toast.success('Profile updated successfully');
+        toast.success('Profile updated successfully', { closeOnClick: true });
         setIsEditing(false);
       } else {
-        toast.error('Failed to update profile');
+        toast.error('Failed to update profile', { closeOnClick: true });
       }
     } catch (error) {
-      toast.error('Error updating profile');
+      toast.error('Error updating profile', { closeOnClick: true });
       console.error('Error:', error);
     } finally {
       setLoading(false);
@@ -89,12 +89,12 @@ export default function ProfilePage() {
     e.preventDefault();
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('New passwords do not match');
+      toast.error('New passwords do not match', { closeOnClick: true });
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long', { closeOnClick: true });
       return;
     }
 
@@ -111,7 +111,7 @@ export default function ProfilePage() {
       });
 
       if (response.ok) {
-        toast.success('Password changed successfully');
+        toast.success('Password changed successfully', { closeOnClick: true });
         setPasswordModalOpen(false);
         setPasswordData({
           currentPassword: '',
@@ -120,10 +120,10 @@ export default function ProfilePage() {
         });
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Failed to change password');
+        toast.error(error.message || 'Failed to change password', { closeOnClick: true });
       }
     } catch (error) {
-      toast.error('Error changing password');
+      toast.error('Error changing password', { closeOnClick: true });
       console.error('Error:', error);
     } finally {
       setLoading(false);

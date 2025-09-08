@@ -44,7 +44,7 @@ const AllInvoices = () => {
             const data = await response.json();
             setInvoices(data.invoices || []);
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error(error.message, { closeOnClick: true });
             console.error('Error fetching invoices:', error);
         } finally {
             setLoading(false);
@@ -79,15 +79,15 @@ const AllInvoices = () => {
             });
 
             if (response.ok) {
-                toast.success('Invoice deleted successfully');
+                toast.success('Invoice deleted successfully', { closeOnClick: true });
                 fetchInvoices();
                 setDeleteModalOpen(false);
                 setSelectedInvoice(null);
             } else {
-                toast.error('Failed to delete invoice');
+                toast.error('Failed to delete invoice', { closeOnClick: true });
             }
         } catch (error) {
-            toast.error('Error deleting invoice');
+            toast.error('Error deleting invoice', { closeOnClick: true });
             console.error('Error:', error);
         }
     };
@@ -165,13 +165,13 @@ const AllInvoices = () => {
 
             if (response.ok) {
                 fetchInvoices();
-                toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`);
+                toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`, { closeOnClick: true });
             } else {
                 const errorData = await response.json();
-                toast.error(errorData.error || 'Failed to update flag');
+                toast.error(errorData.error || 'Failed to update flag', { closeOnClick: true });
             }
         } catch (error) {
-            toast.error('Failed to update flag');
+            toast.error('Failed to update flag', { closeOnClick: true });
         } finally {
             setFlaggingInvoices(prev => {
                 const newSet = new Set(prev);
@@ -322,6 +322,8 @@ const AllInvoices = () => {
                 </div>
             </div>
 
+
+
             {/* Mobile Invoice Cards */}
             <div className="block md:hidden">
                 {loading ? (
@@ -361,7 +363,7 @@ const AllInvoices = () => {
                                             )}
                                         </button>
                                         <div>
-                                            <div className="font-semibold text-foreground text-sm">INV-{invoice.id}</div>
+                                            <div className="font-semibold text-foreground text-sm">{invoice.invoice_number}</div>
                                             <div className="text-xs text-muted-foreground">{invoice.transaction_type}</div>
                                         </div>
                                     </div>

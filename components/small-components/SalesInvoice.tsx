@@ -80,7 +80,7 @@ const SalesInvoice = () => {
                     avgInvoiceValue
                 });
             } catch (error) {
-                toast.error('Failed to fetch invoice statistics');
+                toast.error('Failed to fetch invoice statistics', { closeOnClick: true });
                 console.error('Error fetching invoices:', error);
             } finally {
                 setLoading(false);

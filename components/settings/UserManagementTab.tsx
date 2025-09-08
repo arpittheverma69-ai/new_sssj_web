@@ -41,10 +41,10 @@ const UserManagementTab = () => {
                 setUsers(data);
             } else {
                 const error = await response.json();
-                toast.error(error.error || 'Failed to fetch users');
+                toast.error(error.error || 'Failed to fetch users', { closeOnClick: true });
             }
         } catch (error) {
-            toast.error('Error fetching users');
+            toast.error('Error fetching users', { closeOnClick: true });
         } finally {
             setLoading(false);
         }
@@ -59,7 +59,7 @@ const UserManagementTab = () => {
         e.preventDefault();
 
         if (!formData.username || !formData.email || (!editingUser && !formData.password)) {
-            toast.error('Please fill in all required fields');
+            toast.error('Please fill in all required fields', { closeOnClick: true });
             return;
         }
 
@@ -76,15 +76,15 @@ const UserManagementTab = () => {
             });
 
             if (response.ok) {
-                toast.success(editingUser ? 'User updated successfully' : 'User created successfully');
+                toast.success(editingUser ? 'User updated successfully' : 'User created successfully', { closeOnClick: true });
                 resetForm();
                 fetchUsers();
             } else {
                 const error = await response.json();
-                toast.error(error.error || 'Operation failed');
+                toast.error(error.error || 'Operation failed', { closeOnClick: true });
             }
         } catch (error) {
-            toast.error('Error saving user');
+            toast.error('Error saving user', { closeOnClick: true });
         }
     };
 
@@ -98,14 +98,14 @@ const UserManagementTab = () => {
             });
 
             if (response.ok) {
-                toast.success('User deleted successfully');
+                toast.success('User deleted successfully', { closeOnClick: true });
                 fetchUsers();
             } else {
                 const error = await response.json();
-                toast.error(error.error || 'Failed to delete user');
+                toast.error(error.error || 'Failed to delete user', { closeOnClick: true });
             }
         } catch (error) {
-            toast.error('Error deleting user');
+            toast.error('Error deleting user', { closeOnClick: true });
         }
     };
 
@@ -274,8 +274,8 @@ const UserManagementTab = () => {
                                         <td className="p-4 text-muted-foreground">{user.email}</td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'admin'
-                                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                                                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                                                ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                                : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
                                                 }`}>
                                                 {user.role}
                                             </span>

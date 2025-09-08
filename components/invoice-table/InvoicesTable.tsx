@@ -39,7 +39,7 @@ export default function InvoiceTable() {
             const data = await response.json();
             setInvoices(data.invoices || []);
         } catch (error) {
-            toast.error('Failed to fetch invoices');
+            toast.error('Failed to fetch invoices', { closeOnClick: true });
             console.error('Error fetching invoices:', error);
         } finally {
             setLoading(false);
@@ -70,15 +70,15 @@ export default function InvoiceTable() {
             });
 
             if (response.ok) {
-                toast.success('Invoice deleted successfully');
+                toast.success('Invoice deleted successfully', { closeOnClick: true });
                 fetchInvoices();
                 setDeleteModalOpen(false);
                 setSelectedInvoice(null);
             } else {
-                toast.error('Failed to delete invoice');
+                toast.error('Failed to delete invoice', { closeOnClick: true });
             }
         } catch (error) {
-            toast.error('Error deleting invoice');
+            toast.error('Error deleting invoice', { closeOnClick: true });
             console.error('Error:', error);
         }
     };
@@ -103,10 +103,10 @@ export default function InvoiceTable() {
 
             if (response.ok) {
                 fetchInvoices();
-                toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`);
+                toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`, { closeOnClick: true });
             }
         } catch (error) {
-            toast.error('Failed to update flag');
+            toast.error('Failed to update flag', { closeOnClick: true });
         }
     };
 

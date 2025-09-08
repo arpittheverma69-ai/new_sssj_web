@@ -31,7 +31,7 @@ export default function CustomerTable() {
       const data = await response.json();
       setCustomers(data.customers || []);
     } catch (error) {
-      toast.error('Failed to fetch customers');
+      toast.error('Failed to fetch customers', { closeOnClick: true });
       console.error('Error fetching customers:', error);
     } finally {
       setLoading(false);
@@ -60,22 +60,22 @@ export default function CustomerTable() {
 
   const confirmDelete = async () => {
     if (!selectedCustomer) return;
-    
+
     try {
       const response = await fetch(`/api/customer/${selectedCustomer.id}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
-        toast.success('Customer deleted successfully');
+        toast.success('Customer deleted successfully', { closeOnClick: true });
         fetchCustomers();
         setDeleteModalOpen(false);
         setSelectedCustomer(null);
       } else {
-        toast.error('Failed to delete customer');
+        toast.error('Failed to delete customer', { closeOnClick: true });
       }
     } catch (error) {
-      toast.error('Error deleting customer');
+      toast.error('Error deleting customer', { closeOnClick: true });
       console.error('Error:', error);
     }
   };
@@ -88,20 +88,20 @@ export default function CustomerTable() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...customer, flagged: !customer.flagged }),
       });
-      
+
       if (response.ok) {
         fetchCustomers();
-        toast.success(`Customer ${customer.flagged ? 'unflagged' : 'flagged'}`);
+        toast.success(`Customer ${customer.flagged ? 'unflagged' : 'flagged'}`, { closeOnClick: true });
       }
     } catch (error) {
-      toast.error('Failed to update flag');
+      toast.error('Failed to update flag', { closeOnClick: true });
     }
   };
 
   const columns: GridColDef[] = [
-    { 
-      field: "name", 
-      headerName: "Name", 
+    {
+      field: "name",
+      headerName: "Name",
       flex: 1,
       renderCell: (params) => (
         <div className="flex items-center gap-2">
@@ -115,20 +115,20 @@ export default function CustomerTable() {
     { field: "email", headerName: "Email", flex: 1 },
     { field: "phone", headerName: "Phone", flex: 1 },
     { field: "city", headerName: "City", flex: 1 },
-    { 
-      field: "gstin", 
-      headerName: "GSTIN", 
+    {
+      field: "gstin",
+      headerName: "GSTIN",
       flex: 1,
       renderCell: (params) => params.value || 'N/A'
     },
-    { 
-      field: "_count", 
-      headerName: "Invoices", 
+    {
+      field: "_count",
+      headerName: "Invoices",
       flex: 0.5,
       renderCell: (params) => (
-        <Chip 
-          label={params.value?.invoices || 0} 
-          size="small" 
+        <Chip
+          label={params.value?.invoices || 0}
+          size="small"
           color="primary"
         />
       )
@@ -314,7 +314,7 @@ export default function CustomerTable() {
         {selectedCustomer && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Are you sure you want to delete customer <strong>{selectedCustomer.name}</strong>? 
+              Are you sure you want to delete customer <strong>{selectedCustomer.name}</strong>?
               This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">

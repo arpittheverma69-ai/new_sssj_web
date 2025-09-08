@@ -65,7 +65,7 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
             >
                 <div
                     id="invoice-content"
-                    className="bg-white dark:bg-gray-900 text-black dark:text-white mx-auto p-8 shadow-lg rounded-lg"
+                    className="bg-white dark:bg-gray-900 text-black dark:text-white mx-auto p-8 shadow-lg rounded-lg resize-both overflow-auto"
                     style={{
                         width: '210mm',
                         minWidth: '210mm',
