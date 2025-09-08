@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import SalesInvoice from './small-components/SalesInvoice';
-import { TrendingUp, TrendingDown, DollarSign, Users, Package, Clock, Calendar, ArrowUpRight, Plus, FileText, BarChart3, PieChart, Activity, Search, Eye, Download, Edit, ArrowRight } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, Package, ArrowUpRight, Plus, FileText, Search, ArrowRight } from 'lucide-react';
 import { Invoice } from '@/types/invoiceTypes';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';

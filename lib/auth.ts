@@ -46,23 +46,40 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt" as const,
+    maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
+  },
+  jwt: {
+    maxAge: 7 * 24 * 60 * 60, // 1 week in seconds
   },
   callbacks: {
     async jwt({ token, user }: any) {
       if (user) {
         token.role = user.role;
+        token.loginTime = Date.now();
       }
+
+      // Check if session has expired (1 week = 604800000 ms)
+      if (token.loginTime && Date.now() - token.loginTime > 604800000) {
+        return null; // This will force logout
+      }
+
       return token;
     },
     async session({ session, token }: any) {
       if (token && session.user) {
         session.user.id = String(token.sub);
         session.user.role = token.role as string;
+        session.user.loginTime = token.loginTime;
       }
       return session;
     },
   },
   pages: {
     signIn: "/",
+  },
+  events: {
+    async signOut() {
+      // Custom logout logic can be added here if needed
+    },
   },
 };

@@ -1,6 +1,7 @@
 "use client";
 import { NavbarDemo } from "@/components/Navbar";
 import SideItems from "@/components/side-menu/SideItems";
+import { SessionMonitor } from "@/components/SessionMonitor";
 import React from "react";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -9,6 +10,7 @@ import { SessionProvider } from 'next-auth/react';
 const Provider = ({ children }: { children: React.ReactNode }) => {
   return (
     <SessionProvider>
+      <SessionMonitor />
       <div className="relative w-full flex bg-background min-h-screen">
 
         <div className="w-80 max-lg:hidden relative">

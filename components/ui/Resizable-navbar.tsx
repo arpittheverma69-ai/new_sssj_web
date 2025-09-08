@@ -1,6 +1,10 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { IconMenu2, IconX } from "@tabler/icons-react";
+import { LogOut } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
     motion,
     AnimatePresence,
@@ -8,8 +12,7 @@ import {
     useMotionValueEvent,
 } from "motion/react";
 
-import React, { useRef, useState } from "react";
-
+import React, { useRef } from "react";
 
 interface NavbarProps {
     children: React.ReactNode;
@@ -232,17 +235,67 @@ export const MobileNavToggle = ({
 export const NavbarLogo = () => {
     return (
         <a
-            href="#"
+            href="/dashboard"
             className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
         >
             <img
-                src="https://assets.aceternity.com/logo-dark.png"
-                alt="logo"
+                src="/jw_logo.png"
+                alt="JW Logo"
                 width={30}
                 height={30}
             />
-            <span className="font-medium text-black dark:text-white">Startup</span>
+            <span className="font-medium text-black dark:text-white">J.V. JEWELLERS</span>
         </a>
+    );
+};
+
+export const NavbarActions = () => {
+    const { data: session } = useSession();
+    const router = useRouter();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        try {
+            setIsLoggingOut(true);
+
+            // Call our custom logout API
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // Sign out using NextAuth
+            await signOut({
+                redirect: false,
+            });
+
+            // Redirect to home page
+            router.push('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
+
+    if (!session) return null;
+
+    return (
+        <div className="relative z-20 flex items-center space-x-2">
+            <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex items-center space-x-2 px-3 py-2 rounded-md bg-red-100 hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 transition-colors duration-200 group"
+                title="Logout"
+            >
+                <LogOut className={`w-4 h-4 text-red-600 dark:text-red-400 ${isLoggingOut ? 'animate-spin' : 'group-hover:scale-110'} transition-transform duration-200`} />
+                <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
+                </span>
+            </button>
+        </div>
     );
 };
 

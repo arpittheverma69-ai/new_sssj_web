@@ -5,6 +5,7 @@ A comprehensive invoice management system built with Next.js, designed specifica
 ## 🚀 Features
 
 ### Invoice Management
+
 - **Create Professional Invoices**: Multi-step invoice creation with detailed line items
 - **HSN/SAC Code Integration**: Dynamic HSN/SAC code management with auto-populated descriptions
 - **Per-Item Roundoff**: Granular control over taxable values with per-item roundoff adjustments
@@ -13,22 +14,26 @@ A comprehensive invoice management system built with Next.js, designed specifica
 - **Float Precision**: Support for quantities with 3 decimal places for accurate calculations
 
 ### Customer Management
+
 - **Customer Database**: Comprehensive customer information management
 - **Customer Profiles**: Store and manage customer details for quick invoice creation
 - **Customer History**: Track invoice history per customer
 
 ### Tax & Compliance
+
 - **Tax Rate Management**: Simplified HSN/SAC code and description management
 - **Compliance Ready**: GST-compliant invoice generation
 - **Soft Delete**: Safe data management with soft delete functionality
 
 ### User Management & Security
+
 - **Role-Based Access**: Admin and User roles with appropriate permissions
 - **User Administration**: Admin-only user management through settings panel
 - **Secure Authentication**: Session-based authentication with NextAuth.js
 - **Password Security**: Bcrypt password hashing and validation
 
 ### Dashboard & Analytics
+
 - **Invoice Dashboard**: Overview of all invoices with filtering and search
 - **Analytics**: Business insights and reporting capabilities
 - **Settings Management**: Comprehensive settings for business configuration
@@ -47,19 +52,21 @@ A comprehensive invoice management system built with Next.js, designed specifica
 
 ## 📋 Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL database
 - npm or yarn package manager
 
 ## 🚀 Getting Started
 
 ### 1. Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd invoice_jewellers
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 npm install
 # or
@@ -67,7 +74,9 @@ yarn install
 ```
 
 ### 3. Environment Setup
+
 Create a `.env` file in the root directory:
+
 ```env
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/invoice_db"
@@ -80,6 +89,7 @@ NEXTAUTH_SECRET="your-secret-key"
 ```
 
 ### 4. Database Setup
+
 ```bash
 # Generate Prisma client
 npm run db:generate
@@ -92,6 +102,7 @@ npm run db:seed
 ```
 
 ### 5. Run Development Server
+
 ```bash
 npm run dev
 ```
@@ -135,24 +146,28 @@ invoice_jewellers/
 ## 📖 Key Features Documentation
 
 ### Invoice Creation Flow
+
 1. **Invoice Details**: Basic invoice information and customer selection
 2. **Line Items**: Add products with HSN/SAC codes, quantities, rates, and per-item roundoff
 3. **Review & Generate**: Review totals and generate PDF with selected copy types
 
 ### HSN/SAC Management
+
 - Manage HSN/SAC codes through Settings → Tax Rates
 - Codes are dynamically loaded in invoice creation
 - Auto-populate descriptions when codes are selected
 
 ### User Management (Admin Only)
+
 - Access through Settings → User Management
 - Create, edit, and delete user accounts
 - Assign roles (Admin/User)
 - Secure password management
 
 ### PDF Generation Options
+
 - **Original for Recipient**: Customer copy
-- **Duplicate for Transporter**: Transport copy  
+- **Duplicate for Transporter**: Transport copy
 - **Triplicate for Supplier**: Supplier copy
 - Select multiple copies as needed
 
@@ -168,11 +183,13 @@ invoice_jewellers/
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 1. Connect your repository to Vercel
 2. Configure environment variables
 3. Deploy automatically on push
 
 ### Manual Deployment
+
 ```bash
 npm run build
 npm run start

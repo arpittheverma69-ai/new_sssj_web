@@ -1,7 +1,7 @@
 "use client"
 import { usePathname } from "next/navigation";
 import Lottie, { LottieRefCurrentProps } from "lottie-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import analytics from "@/lib/icon-files/analytics.json"
 import Individual from "@/lib/icon-files/Individual.json"
 import Report from "@/lib/icon-files/Report V2.json"
@@ -11,11 +11,44 @@ import setting from "@/lib/icon-files/setting.json"
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useShopProfile } from "@/contexts/ShopProfileContext";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import Image from "next/image";
 
 const SideItems = () => {
     const pathname = usePathname();
     const { shopProfile } = useShopProfile();
+    const { data: session } = useSession();
+    const router = useRouter();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        try {
+            setIsLoggingOut(true);
+
+            // Call our custom logout API
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // Sign out using NextAuth
+            await signOut({
+                redirect: false,
+            });
+
+            // Redirect to home page
+            router.push('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
+
     const navItems = [
         {
             name: "Dashboard",
@@ -100,7 +133,7 @@ const SideItems = () => {
                 }
             </nav>
 
-            {/* Footer user */}
+            {/* Footer user with logout */}
             <div className="absolute bottom-6 left-3 right-3">
                 <div className="bg-accent/50 backdrop-blur-sm rounded-[24px] p-4 border border-border/50">
                     <div className="flex items-center gap-3">
@@ -108,9 +141,21 @@ const SideItems = () => {
                             <span className="text-primary text-lg">👤</span>
                         </div>
                         <div className="flex-1">
-                            <div className="font-medium text-foreground">Admin User</div>
-                            <div className="text-xs text-muted-foreground">admin@jvjewellers.com</div>
+                            <div className="font-medium text-foreground">
+                                {session?.user?.name || 'Admin User'}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                                {session?.user?.email || 'admin@jvjewellers.com'}
+                            </div>
                         </div>
+                        <button
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className="p-2 rounded-full bg-red-100 hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 transition-colors duration-200 group"
+                            title="Logout"
+                        >
+                            <LogOut className={`w-4 h-4 text-red-600 dark:text-red-400 ${isLoggingOut ? 'animate-spin' : 'group-hover:scale-110'} transition-transform duration-200`} />
+                        </button>
                     </div>
                 </div>
             </div>
