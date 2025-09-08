@@ -88,12 +88,12 @@ export function NavbarDemo() {
             <MobileNav>
                 <MobileNavHeader>
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary rounded-[20px] flex items-center justify-center text-white text-sm font-bold">
+                        <div className="w-16 h-16 rounded-[20px] flex items-center justify-center text-white text-sm font-bold">
                             <Image
                                 src={'/jw_logo.png'}
                                 alt="Jewellers Logo"
-                                width={24}
-                                height={24}
+                                width={50}
+                                height={50}
                             />
                         </div>
                         <div>

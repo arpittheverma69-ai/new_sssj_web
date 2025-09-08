@@ -86,7 +86,7 @@ const SideItems = () => {
             <div className="px-2 py-4 border-b border-border bg-gradient-to-br from-primary/5 to-primary/10">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="bg-primary rounded-[24px] flex items-center justify-center">
+                        <div className="rounded-[24px] flex items-center justify-center">
                             <Image
                                 src={'/jw_logo.png'}
                                 alt="Jewellers Logo"

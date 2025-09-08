@@ -542,7 +542,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                             ) : (
                                 <>
                                     <div className="text-center">
-                                        <div className="w-16 h-16 bg-primary rounded-[20px] flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
+                                        <div className="w-16 h-16 rounded-[20px] flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3">
                                             <Image
                                                 src={'/jw_logo.png'}
                                                 alt="Jewellers Logo"
