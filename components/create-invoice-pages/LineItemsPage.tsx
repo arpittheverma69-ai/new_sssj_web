@@ -708,7 +708,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 <div className="flex justify-between items-center border-t border-border pt-3">
                                     <span className="font-bold text-lg text-foreground">Final Invoice Total:</span>
                                     <span className="text-2xl font-bold text-primary">
-                                        ₹{totals.finalTotal.toFixed(3)}
+                                        ₹{totals.finalTotal.toFixed(2)}
                                     </span>
                                 </div>
                             </div>

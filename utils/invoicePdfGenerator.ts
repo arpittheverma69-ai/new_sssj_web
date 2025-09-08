@@ -209,7 +209,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
                 </div>
             </div>
 
-            <table class="w-full border-collapse border-t border-b border-black h-[380px]">
+            <table class="w-full border-collapse border-t border-b border-black table-fixed ${lineItems?.length > 0 ? `h-[calc(414px-${lineItems?.length * 16}px)]` : `h-[414px]`}">
                 <thead>
                     <tr class="border-b border-black text-[9px] h-[38px]">
                         <th class="border-r border-black w-[15.11px]">SI No.</th>
@@ -289,8 +289,6 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
                         <td class="border-r border-black"></td>
                         <td class="w-[104px] text-right"></td>
                     </tr>
-                </tbody>
-                <tfoot>
                     <tr class="border-t border-black h-[18.89px] text-[10px] text-center">
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black">Total</td>
@@ -299,19 +297,26 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
                         <td class="border-r border-black"></td>
                         <td class="border-r border-black"></td>
                         <td class="font-bold h-[18.90px] text-[12px]">₹ ${totalInvoice.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</td>
+                    </tr>                    
+                    
+                    <tr class="font-bold h-full max-h-auto">
+                        <td class="border-t border-black relative" colspan="7">
+                            <span class="font-normal">Amount Chargeable (in words)</span>
+                            <span class="text-right absolute right-1 top-1 font-normal italic">E. & O.E<div>
+                        </td>
                     </tr>
-                </tfoot>
-            </table>
-            
-            <div class="h-[34px] relative">
-                <div class="p-0.5">
-                    <p><span class="font-normal">Amount Chargeable (in words)</span></p>
-                    <span class="font-bold">Indian ${numberToWords(totalInvoice)}</span>
-                </div>
-                <p class="text-right absolute right-1 top-1">E. & O.E</p>
-            </div>
 
-            <table class="w-full border-collapse border-t border-b border-black h-[60.50px]">
+                    <tr class="font-bold h-full max-h-auto">
+                        <td colspan="7"">
+                            <span class="font-bold text-[12px]">Indian ${numberToWords(totalInvoice)}</span>
+                        </td>
+                    </tr>
+                    
+
+                </tbody>
+            </table>
+
+            <table class="w-full border-collapse border-b border-black h-[60.50px]">
                 <thead>
                     <tr class="border-b border-black ">
                         <th class="border-r border-black h-[17px] w-[38%] font-normal" rowspan="2">HSN/SAC</th>
