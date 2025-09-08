@@ -27,7 +27,7 @@ const CreateInvoiceInner: React.FC = () => {
                     throw new Error(`Failed to load invoice: ${res.status}`);
                 }
                 const inv = await res.json();
-                console.log("Invoice data loaded:", inv);
+                // console.log("Invoice data loaded:", inv);
 
                 const invoice_date = inv.invoice_date
                     ? new Date(inv.invoice_date).toISOString().slice(0, 10)

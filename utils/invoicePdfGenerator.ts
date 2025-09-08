@@ -37,9 +37,9 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
         branchIfsc: ''
     };
 
-    console.log("invoiceData", invoiceData);
-    console.log("invoiceData.type:", invoiceData.type);
-    console.log("invoiceData.transaction_type:", invoiceData.transaction_type);
+    // console.log("invoiceData", invoiceData);
+    // console.log("invoiceData.type:", invoiceData.type);
+    // console.log("invoiceData.transaction_type:", invoiceData.transaction_type);
 
     const profile = shopProfile || defaultShopProfile;
     // Calculate totals
@@ -47,7 +47,7 @@ export const generateInvoicePDF = (invoiceData: any, lineItems: any[], globalRou
 
     // Determine tax type based on transaction type
     const isIGST = invoiceData.type === 'outer_state' || invoiceData.transaction_type === 'outer_state';
-    console.log("isIGST:", isIGST);
+    // console.log("isIGST:", isIGST);
 
     // Calculate tax rates dynamically from line items if available
     let cgstRate = 1.5; // default

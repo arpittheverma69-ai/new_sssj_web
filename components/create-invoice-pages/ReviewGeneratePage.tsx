@@ -165,7 +165,7 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
                         ]
                 }))
             };
-            console.log("invoicePayload", invoicePayload);
+            // console.log("invoicePayload", invoicePayload);
 
             const isEdit = Boolean(editId);
             const url = isEdit ? `/api/invoices/${editId}` : '/api/invoices';
