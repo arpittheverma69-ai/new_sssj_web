@@ -3,8 +3,6 @@ import { NavbarDemo } from "@/components/Navbar";
 import SideItems from "@/components/side-menu/SideItems";
 import { SessionMonitor } from "@/components/SessionMonitor";
 import React from "react";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { SessionProvider } from 'next-auth/react';
 
 const Provider = ({ children }: { children: React.ReactNode }) => {
@@ -23,18 +21,6 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
           <NavbarDemo />
           {children}
         </div>
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick={true}
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover={false}
-          theme="colored"
-        />
       </div>
     </SessionProvider>
   );

@@ -20,8 +20,8 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
     // ✅ Helper for currency formatting
     const formatCurrency = (amount: number) =>
         Number(amount || 0).toLocaleString('en-IN', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 3,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
         });
 
     // ✅ Ensure all numeric values are properly casted
@@ -65,10 +65,10 @@ const InvoiceSlipPreview: React.FC<InvoiceSlipPreviewProps> = ({
             >
                 <div
                     id="invoice-content"
-                    className="bg-white dark:bg-gray-900 text-black dark:text-white mx-auto p-8 shadow-lg rounded-lg resize-both overflow-auto"
+                    className="bg-white dark:bg-gray-900 text-black dark:text-white mx-auto p-6 md:p-8 shadow-lg rounded-lg overflow-auto"
                     style={{
-                        width: '210mm',
-                        minWidth: '210mm',
+                        width: '100%',
+                        maxWidth: '210mm',
                         minHeight: '297mm'
                     }}
                 >

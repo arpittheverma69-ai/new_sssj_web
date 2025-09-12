@@ -1,5 +1,6 @@
 import { Customer } from "@/types/invoiceTypes";
 import { Edit, Eye, MoreVertical, Trash2 } from "lucide-react";
+import { useRouter } from 'next/navigation';
 
 interface CustomerListItemProps {
     customer: Customer;
@@ -9,7 +10,10 @@ interface CustomerListItemProps {
 }
 
 // Customer List Item Component
-export const CustomerListItem = ({ customer, onView, onEdit, onDelete }: CustomerListItemProps) => (
+export const CustomerListItem = ({ customer, onView, onEdit, onDelete }: CustomerListItemProps) => {
+    const router = useRouter();
+    const goDetail = () => router.push(`/dashboard/customers/${customer.id}`);
+    return (
     <div className="bg-card rounded-[20px] border border-border hover:border-primary/50 transition-all duration-200 hover:shadow-lg hover:shadow-primary/10">
         <div className="p-4">
             <div className="flex items-center gap-4">
@@ -19,7 +23,7 @@ export const CustomerListItem = ({ customer, onView, onEdit, onDelete }: Custome
                 </div>
 
                 <div className="flex-1 grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
-                    <div>
+                    <div className="cursor-pointer" onClick={goDetail}>
                         <div className="font-semibold text-foreground">{customer.name}</div>
                         <div className="text-sm text-muted-foreground">{customer.email}</div>
                     </div>
@@ -31,7 +35,7 @@ export const CustomerListItem = ({ customer, onView, onEdit, onDelete }: Custome
 
                 <div className="flex items-center gap-2">
                     <button 
-                        onClick={() => onView?.(customer)}
+                        onClick={goDetail}
                         className="p-2 hover:bg-primary/10 rounded-[12px] transition-colors duration-200 text-primary"
                         title="View Customer"
                     >
@@ -55,4 +59,4 @@ export const CustomerListItem = ({ customer, onView, onEdit, onDelete }: Custome
             </div>
         </div>
     </div>
-);
+)}

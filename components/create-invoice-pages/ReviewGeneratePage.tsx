@@ -219,8 +219,8 @@ const ReviewGeneratePage: React.FC<ReviewGeneratePageProps> = ({
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
-            minimumFractionDigits: 3,
-            maximumFractionDigits: 3,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
         }).format(amount);
     };
 

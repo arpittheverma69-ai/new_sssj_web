@@ -44,6 +44,7 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [cgstRate, setCgstRate] = useState('1.5');
     const [sgstRate, setSgstRate] = useState('1.5');
+    const [autoRoundoffEnabled, setAutoRoundoffEnabled] = useState(true);
 
     // Fetch HSN/SAC codes from database
     useEffect(() => {
@@ -182,7 +183,12 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
         const igstRate = (parseFloat(cgstRate) + parseFloat(sgstRate)) || 0;
         const igstAmt = isIGST ? taxableValue * (igstRate / 100) : 0;
         const totalBeforeRoundoff = taxableValue + cgstAmt + sgstAmt + igstAmt;
-        const finalTotal = totalBeforeRoundoff + globalRoundoff; // Apply global roundoff to final total
+
+        // Auto round-off to nearest rupee: >= .50 rounds up, else down
+        const roundedToRupee = Math.round(totalBeforeRoundoff);
+        const autoRoundoff = roundedToRupee - totalBeforeRoundoff;
+        const chosenRoundoff = autoRoundoffEnabled ? autoRoundoff : (Number(globalRoundoff) || 0);
+        const finalTotal = totalBeforeRoundoff + chosenRoundoff;
 
         return {
             taxableValue,
@@ -191,7 +197,8 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
             igstAmount: igstAmt,
             igstRate,
             totalBeforeRoundoff,
-            globalRoundoff,
+            autoRoundoff,
+            chosenRoundoff,
             finalTotal
         };
     };
@@ -653,14 +660,14 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Taxable Value:</span>
                                     <span className="font-semibold text-foreground">
-                                        ₹{totals.taxableValue.toFixed(3)}
+                                        ₹{totals.taxableValue.toFixed(2)}
                                     </span>
                                 </div>
                                 {isIGST ? (
                                     <div className="flex justify-between text-sm">
                                         <span className="text-muted-foreground">IGST ({totals.igstRate}%):</span>
                                         <span className="font-semibold text-foreground">
-                                            ₹{totals.igstAmount.toFixed(3)}
+                                            ₹{totals.igstAmount.toFixed(2)}
                                         </span>
                                     </div>
                                 ) : (
@@ -668,13 +675,13 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">SGST ({sgstRate}%):</span>
                                             <span className="font-semibold text-foreground">
-                                                ₹{totals.sgstAmount.toFixed(3)}
+                                                ₹{totals.sgstAmount.toFixed(2)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">CGST ({cgstRate}%):</span>
                                             <span className="font-semibold text-foreground">
-                                                ₹{totals.cgstAmount.toFixed(3)}
+                                                ₹{totals.cgstAmount.toFixed(2)}
                                             </span>
                                         </div>
                                     </>
@@ -685,31 +692,43 @@ const LineItemsPage: React.FC<LineItemsPageProps> = ({
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Total Before Roundoff:</span>
                                     <span className="font-semibold text-foreground">
-                                        ₹{totals.totalBeforeRoundoff.toFixed(3)}
+                                        ₹{totals.totalBeforeRoundoff.toFixed(2)}
                                     </span>
                                 </div>
 
-                                {/* Global Roundoff Input */}
-                                <div className="flex justify-between items-center">
-                                    <span className="text-muted-foreground">Roundoff Adjustment:</span>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            value={globalRoundoff}
-                                            onChange={(e) => setGlobalRoundoff(Number(e.target.value) || 0)}
-                                            className="w-24 px-2 py-1 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-right"
-                                            placeholder="0"
-                                        />
-                                        <span className="text-xs text-muted-foreground">₹</span>
+                                {/* Roundoff: Auto or Manual */}
+                                <div className="flex justify-between items-center gap-3">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-muted-foreground">Roundoff Adjustment:</span>
+                                        <label className="flex items-center gap-2 text-sm">
+                                            <input
+                                                type="checkbox"
+                                                checked={autoRoundoffEnabled}
+                                                onChange={(e) => setAutoRoundoffEnabled(e.target.checked)}
+                                            />
+                                            Auto
+                                        </label>
                                     </div>
+                                    {autoRoundoffEnabled ? (
+                                        <div className="font-semibold text-foreground">₹{totals.autoRoundoff.toFixed(2)}</div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={globalRoundoff}
+                                                onChange={(e) => setGlobalRoundoff(Number(e.target.value) || 0)}
+                                                className="w-24 px-2 py-1 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-right"
+                                                placeholder="0"
+                                            />
+                                            <span className="text-xs text-muted-foreground">₹</span>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="flex justify-between items-center border-t border-border pt-3">
-                                    <span className="font-bold text-lg text-foreground">Final Invoice Total:</span>
-                                    <span className="text-2xl font-bold text-primary">
-                                        ₹{totals.finalTotal.toFixed(2)}
-                                    </span>
+                                <div className="border-t border-border pt-3">
+                                    <div className="font-bold text-lg text-foreground">Final Invoice Total:</div>
+                                    <div className="text-2xl font-bold text-primary mt-1">₹{totals.finalTotal.toFixed(2)}</div>
                                 </div>
                             </div>
 

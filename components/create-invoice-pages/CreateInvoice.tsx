@@ -98,17 +98,23 @@ const CreateInvoiceInner: React.FC = () => {
 
     return (
         <main className="flex-1 md:p-8">
-            <div className="flex-1 max-md:pt-6">
+            <div className="flex-1 max-md:pt-2">
                 <InvoiceStepper currentStep={invoiceForm.currentStep} />
 
                 {invoiceForm.currentStep === 1 && (
-                    <InvoiceDetailsPage {...invoiceForm} />
+                    <div className="max-w-full md:max-w-5xl mx-auto px-3 md:px-0">
+                        <InvoiceDetailsPage {...invoiceForm} />
+                    </div>
                 )}
                 {invoiceForm.currentStep === 2 && (
-                    <LineItemsPage {...invoiceForm} />
+                    <div className="max-w-full md:max-w-5xl mx-auto px-3 md:px-0">
+                        <LineItemsPage {...invoiceForm} />
+                    </div>
                 )}
                 {invoiceForm.currentStep === 3 && (
-                    <ReviewGeneratePage {...invoiceForm} />
+                    <div className="max-w-full md:max-w-6xl mx-auto px-2 md:px-0">
+                        <ReviewGeneratePage {...invoiceForm} />
+                    </div>
                 )}
             </div>
         </main>

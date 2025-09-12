@@ -4,15 +4,37 @@ import { NextResponse } from 'next/server'
 // GET - Fetch shop profile
 export async function GET() {
     try {
-        const shopProfile = await prisma.businessProfile.findFirst({
+        let shopProfile = await prisma.businessProfile.findFirst({
             include: { state: true }
         })
 
         if (!shopProfile) {
-            return NextResponse.json(
-                { error: 'Shop profile not found' },
-                { status: 404 }
-            )
+            // Ensure a default state exists (prefer Maharashtra code 27)
+            const defaultState = await prisma.states.findFirst({
+                where: {
+                    OR: [
+                        { state_numeric_code: 27 },
+                        { state_code: 'MH' },
+                        { state_name: 'Maharashtra' },
+                    ],
+                },
+            })
+
+            shopProfile = await prisma.businessProfile.create({
+                data: {
+                    business_name: 'J.V. Jewellers',
+                    gstin: '27ABCDE1234F1Z5',
+                    address: '123 Jewellery Street, Commercial Area',
+                    city: 'Mumbai',
+                    state_id: defaultState ? defaultState.id : null,
+                    vat_tin: null,
+                    pan_number: null,
+                    bank_name: null,
+                    account_number: null,
+                    branch_ifsc: null,
+                },
+                include: { state: true },
+            })
         }
 
         // Transform response for frontend

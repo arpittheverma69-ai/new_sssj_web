@@ -10,6 +10,8 @@ import { DownloadPDFModal } from './DownloadPDFModal';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { formatCurrency } from '@/utils/requiredFunction';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 // Invoice categories will be populated with counts dynamically
 
 const AllInvoices = () => {
@@ -27,6 +29,7 @@ const AllInvoices = () => {
     const [downloadModalOpen, setDownloadModalOpen] = useState(false)
     const [downloadInvoice, setDownloadInvoice] = useState<Invoice | null>(null);
     const [flaggingInvoices, setFlaggingInvoices] = useState<Set<number>>(new Set());
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
     // Fetch invoices on component mount
     React.useEffect(() => {
@@ -320,6 +323,84 @@ const AllInvoices = () => {
                 <div className="text-xs md:text-sm text-muted-foreground">
                     {loading ? 'Loading...' : `Showing ${filteredInvoices.length} of ${totalInvoices} invoices`}
                 </div>
+                {/* Bulk actions toolbar (desktop) */}
+                <div className="hidden md:flex items-center gap-2">
+                    <button
+                        onClick={async () => {
+                            if (selectedIds.size === 0) return;
+                            // Optimistic
+                            setInvoices(prev => prev.map(inv => selectedIds.has(inv.id) ? { ...inv, flagged: true } : inv));
+                            try {
+                                await Promise.all(Array.from(selectedIds).map(id => fetch(`/api/invoices/${id}`, {
+                                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ flagged: true })
+                                })));
+                                toast.success('Flagged selected', { closeOnClick: true });
+                            } catch {
+                                toast.error('Failed to flag some invoices', { closeOnClick: true });
+                                fetchInvoices();
+                            }
+                        }}
+                        className="px-3 py-2 rounded-[10px] bg-muted hover:bg-accent text-sm"
+                        disabled={selectedIds.size === 0}
+                    >Flag</button>
+                    <button
+                        onClick={async () => {
+                            if (selectedIds.size === 0) return;
+                            setInvoices(prev => prev.map(inv => selectedIds.has(inv.id) ? { ...inv, flagged: false } : inv));
+                            try {
+                                await Promise.all(Array.from(selectedIds).map(id => fetch(`/api/invoices/${id}`, {
+                                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ flagged: false })
+                                })));
+                                toast.success('Unflagged selected', { closeOnClick: true });
+                            } catch {
+                                toast.error('Failed to unflag some invoices', { closeOnClick: true });
+                                fetchInvoices();
+                            }
+                        }}
+                        className="px-3 py-2 rounded-[10px] bg-muted hover:bg-accent text-sm"
+                        disabled={selectedIds.size === 0}
+                    >Unflag</button>
+                    <button
+                        onClick={async () => {
+                            if (selectedIds.size === 0) return;
+                            try {
+                                const res = await fetch('/api/invoices/bulk-export', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ ids: Array.from(selectedIds) })
+                                });
+                                if (!res.ok) throw new Error('Export failed');
+                                const blob = await res.blob();
+                                saveAs(blob, 'invoices.zip');
+                                toast.success('Downloaded selected invoices as ZIP', { closeOnClick: true });
+                            } catch {
+                                toast.error('Failed to export invoices', { closeOnClick: true });
+                            }
+                        }}
+                        className="px-3 py-2 rounded-[10px] bg-muted hover:bg-accent text-sm"
+                        disabled={selectedIds.size === 0}
+                    >Download ZIP</button>
+                    <button
+                        onClick={async () => {
+                            if (selectedIds.size === 0) return;
+                            const ok = window.confirm(`Delete ${selectedIds.size} invoice(s)? This cannot be undone.`);
+                            if (!ok) return;
+                            const ids = Array.from(selectedIds);
+                            const prev = invoices;
+                            setInvoices(prev.filter(inv => !selectedIds.has(inv.id)));
+                            try {
+                                await Promise.all(ids.map(id => fetch(`/api/invoices/${id}`, { method: 'DELETE' })));
+                                toast.success('Deleted selected invoices', { closeOnClick: true });
+                                setSelectedIds(new Set());
+                            } catch {
+                                toast.error('Failed to delete selected', { closeOnClick: true });
+                                setInvoices(prev);
+                            }
+                        }}
+                        className="px-3 py-2 rounded-[10px] bg-red-600 text-white hover:bg-red-700 text-sm"
+                        disabled={selectedIds.size === 0}
+                    >Delete</button>
+                </div>
             </div>
 
 
@@ -435,7 +516,24 @@ const AllInvoices = () => {
                 {/* Table Header */}
                 <div className="bg-muted/50 border-b border-border">
                     <div className="grid grid-cols-12 gap-4 p-4 text-sm font-semibold text-foreground">
-                        <div className="col-span-1">Flag</div>
+                        <div className="col-span-1 flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={filteredInvoices.length > 0 && filteredInvoices.every(inv => selectedIds.has(inv.id))}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        const next = new Set(selectedIds);
+                                        filteredInvoices.forEach(inv => next.add(inv.id));
+                                        setSelectedIds(next);
+                                    } else {
+                                        const next = new Set(selectedIds);
+                                        filteredInvoices.forEach(inv => next.delete(inv.id));
+                                        setSelectedIds(next);
+                                    }
+                                }}
+                            />
+                            Flag
+                        </div>
                         <div className="col-span-2">Invoice</div>
                         <div className="col-span-2">Customer</div>
                         <div className="col-span-1">Date</div>
@@ -470,7 +568,17 @@ const AllInvoices = () => {
                                     <div className="grid grid-cols-12 gap-4 p-4 items-center">
                                         {/* Flag Column */}
                                         <div className="col-span-1">
-                                            <button
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.has(invoice.id)}
+                                                    onChange={(e) => {
+                                                        const next = new Set(selectedIds);
+                                                        if (e.target.checked) next.add(invoice.id); else next.delete(invoice.id);
+                                                        setSelectedIds(next);
+                                                    }}
+                                                />
+                                                <button
                                                 onClick={() => toggleFlag(invoice)}
                                                 disabled={flaggingInvoices.has(invoice.id)}
                                                 className={`p-2 rounded-full transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${invoice.flagged
@@ -484,6 +592,7 @@ const AllInvoices = () => {
                                                     <Flag className={`w-4 h-4 ${invoice.flagged ? 'fill-current' : ''}`} />
                                                 )}
                                             </button>
+                                            </div>
                                         </div>
 
                                         {/* Invoice Number */}

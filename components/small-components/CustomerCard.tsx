@@ -1,5 +1,6 @@
 import { Customer } from "@/types/invoiceTypes";
 import { Edit, Eye, Mail, MapPin, MoreVertical, Phone, Trash2 } from "lucide-react";
+import { useRouter } from 'next/navigation';
 
 interface CustomerCardProps {
     customer: Customer;
@@ -9,7 +10,9 @@ interface CustomerCardProps {
 }
 
 // Customer Card Component
-export const CustomerCard = ({ customer, onView, onEdit, onDelete }: CustomerCardProps) => (
+export const CustomerCard = ({ customer, onView, onEdit, onDelete }: CustomerCardProps) => {
+    const router = useRouter();
+    return (
     <div className="bg-card rounded-[24px] border border-border hover:border-primary/50 transition-all duration-200 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1">
         <div className="p-6">
             {/* Header */}
@@ -32,6 +35,7 @@ export const CustomerCard = ({ customer, onView, onEdit, onDelete }: CustomerCar
                             </div>
 
             {/* Contact Info */}
+            <button onClick={() => router.push(`/dashboard/customers/${customer.id}`)} className="w-full text-left">
             <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Mail className="w-4 h-4" />
@@ -46,6 +50,7 @@ export const CustomerCard = ({ customer, onView, onEdit, onDelete }: CustomerCar
                     <span className="line-clamp-2">{customer.address}</span>
                 </div>
             </div>
+            </button>
 
             {/* Tags */}
             {/* <div className="flex flex-wrap gap-1 mb-4">
@@ -75,7 +80,7 @@ export const CustomerCard = ({ customer, onView, onEdit, onDelete }: CustomerCar
             {/* Actions */}
             <div className="flex gap-2">
                 <button 
-                    onClick={() => onView?.(customer)}
+                    onClick={() => router.push(`/dashboard/customers/${customer.id}`)}
                     className="flex-1 bg-primary text-primary-foreground py-2 px-3 rounded-[12px] text-sm font-medium hover:bg-primary/90 transition-colors duration-200 flex items-center justify-center gap-2"
                 >
                     <Eye className="w-4 h-4" />
@@ -98,3 +103,4 @@ export const CustomerCard = ({ customer, onView, onEdit, onDelete }: CustomerCar
         </div>
     </div>
 );
+}

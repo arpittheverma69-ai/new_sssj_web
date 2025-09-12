@@ -1,7 +1,9 @@
 "use client";
 import { FaRegPenToSquare, FaTrashCan, FaEye, FaFlag } from "react-icons/fa6";
 import * as React from "react";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridToolbarContainer } from "@mui/x-data-grid";
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import { TextField, Box, Chip, IconButton, Tooltip } from "@mui/material";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -19,6 +21,8 @@ export default function InvoiceTable() {
     const [viewModalOpen, setViewModalOpen] = React.useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
     const [filteredRows, setFilteredRows] = React.useState<Invoice[]>([]);
+    const [updatingFlagIds, setUpdatingFlagIds] = React.useState<Set<number>>(new Set());
+    const [selectionModel, setSelectionModel] = React.useState<number[]>([]);
     // Avoid SSR hydration mismatches with MUI DataGrid by rendering after mount
     const [isClient, setIsClient] = React.useState(false);
 
@@ -45,6 +49,127 @@ export default function InvoiceTable() {
             setLoading(false);
         }
     };
+
+    // Bulk actions
+    const getSelectedInvoices = () => invoices.filter(inv => selectionModel.includes(inv.id));
+
+    const bulkSetFlag = async (flagged: boolean) => {
+        const selected = getSelectedInvoices();
+        if (selected.length === 0) return;
+        // Optimistic
+        setInvoices(prev => prev.map(inv => selectionModel.includes(inv.id) ? { ...inv, flagged } : inv));
+        try {
+            await Promise.all(selected.map(inv => fetch(`/api/invoices/${inv.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ flagged })
+            })));
+            toast.success(`Flag ${flagged ? 'applied' : 'removed'} on ${selected.length} invoice(s)`, { closeOnClick: true });
+        } catch {
+            // Revert
+            setInvoices(prev => prev.map(inv => selectionModel.includes(inv.id) ? { ...inv, flagged: !flagged } : inv));
+            toast.error('Failed to update flags', { closeOnClick: true });
+        }
+    };
+
+    const bulkDelete = async () => {
+        const selected = getSelectedInvoices();
+        if (selected.length === 0) return;
+        const confirm = window.confirm(`Delete ${selected.length} invoice(s)? This cannot be undone.`);
+        if (!confirm) return;
+        const toDeleteIds = new Set(selectionModel);
+        // Optimistic remove
+        const prev = invoices;
+        setInvoices(prev.filter(inv => !toDeleteIds.has(inv.id)));
+        try {
+            await Promise.all(selected.map(inv => fetch(`/api/invoices/${inv.id}`, { method: 'DELETE' })));
+            toast.success('Deleted selected invoices', { closeOnClick: true });
+            setSelectionModel([]);
+        } catch {
+            // Revert on failure
+            setInvoices(prev);
+            toast.error('Failed to delete selected invoices', { closeOnClick: true });
+        }
+    };
+
+    const bulkExportPdf = async () => {
+        const selected = getSelectedInvoices();
+        if (selected.length === 0) return;
+        try {
+            const { downloadInvoicePDF, downloadInvoiceHTMLFile } = await import('@/utils/invoicePdfGenerator');
+            // Fetch shop profile once for header details
+            let shopProfile: any = null;
+            try {
+                const sp = await fetch('/api/setting/shopprofile');
+                if (sp.ok) shopProfile = await sp.json();
+            } catch {}
+            for (const inv of selected) {
+                // Fetch full invoice details to include items
+                const res = await fetch(`/api/invoices/${inv.id}`);
+                if (!res.ok) continue;
+                const full = await res.json();
+                try {
+                    await downloadInvoicePDF({
+                        invoiceData: full,
+                        lineItems: full.line_items || [],
+                        cgstRate: 1.5,
+                        sgstRate: 1.5,
+                        globalRoundoff: Number(full.roundoff) || 0,
+                        copies: ['ORIGINAL FOR RECIPIENT'],
+                        shopProfile: shopProfile || {
+                            business_name: 'Business',
+                            gstin: '',
+                            address: '',
+                            city: '',
+                            state: '',
+                            state_code: ''
+                        }
+                    } as any);
+                } catch {
+                    // Fallback: force HTML download if popup blocked
+                    await downloadInvoiceHTMLFile({
+                    invoiceData: full,
+                    lineItems: full.line_items || [],
+                    cgstRate: 1.5,
+                    sgstRate: 1.5,
+                    globalRoundoff: Number(full.roundoff) || 0,
+                    copies: ['ORIGINAL FOR RECIPIENT'],
+                    shopProfile: shopProfile || { business_name: 'Business', gstin: '', address: '', city: '', state: '', state_code: '' }
+                  } as any);
+                }
+            }
+            toast.success(`Exported ${selected.length} invoice(s)`, { closeOnClick: true });
+        } catch {
+            toast.error('Failed to export invoices', { closeOnClick: true });
+        }
+    };
+
+    const Toolbar = () => (
+        <GridToolbarContainer>
+            <div className="flex gap-2 p-2">
+                <Button onClick={() => bulkSetFlag(true)} disabled={selectionModel.length === 0}>Flag</Button>
+                <Button onClick={() => bulkSetFlag(false)} disabled={selectionModel.length === 0}>Unflag</Button>
+                <Button onClick={bulkExportPdf} disabled={selectionModel.length === 0}>Export PDF</Button>
+                <Button onClick={async () => {
+                    if (selectionModel.length === 0) return;
+                    try {
+                        const res = await fetch('/api/invoices/bulk-export', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ids: selectionModel })
+                        });
+                        if (!res.ok) throw new Error('Export failed');
+                        const blob = await res.blob();
+                        saveAs(blob, 'invoices.zip');
+                        toast.success(`Downloaded ${selectionModel.length} invoice(s) as ZIP`, { closeOnClick: true });
+                    } catch {
+                        toast.error('Failed to export', { closeOnClick: true });
+                    }
+                }} disabled={selectionModel.length === 0}>Download ZIP</Button>
+                <Button variant="danger" onClick={bulkDelete} disabled={selectionModel.length === 0}>Delete</Button>
+            </div>
+        </GridToolbarContainer>
+    );
 
     const handleView = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
@@ -94,6 +219,10 @@ export default function InvoiceTable() {
     // };
 
     const toggleFlag = async (invoice: Invoice) => {
+        // Optimistic update for instant UI feedback
+        setUpdatingFlagIds((prev) => new Set(prev).add(invoice.id));
+        setInvoices((prev) => prev.map((inv) => inv.id === invoice.id ? { ...inv, flagged: !invoice.flagged } : inv));
+
         try {
             const response = await fetch(`/api/invoices/${invoice.id}`, {
                 method: 'PUT',
@@ -101,12 +230,20 @@ export default function InvoiceTable() {
                 body: JSON.stringify({ flagged: !invoice.flagged }),
             });
 
-            if (response.ok) {
-                fetchInvoices();
-                toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`, { closeOnClick: true });
+            if (!response.ok) {
+                throw new Error('Request failed');
             }
+            toast.success(`Invoice ${invoice.flagged ? 'unflagged' : 'flagged'}`, { closeOnClick: true });
         } catch (error) {
+            // Revert on failure
+            setInvoices((prev) => prev.map((inv) => inv.id === invoice.id ? { ...inv, flagged: invoice.flagged } : inv));
             toast.error('Failed to update flag', { closeOnClick: true });
+        } finally {
+            setUpdatingFlagIds((prev) => {
+                const copy = new Set(prev);
+                copy.delete(invoice.id);
+                return copy;
+            });
         }
     };
 
@@ -172,7 +309,7 @@ export default function InvoiceTable() {
                         </IconButton>
                     </Tooltip> */}
                     <Tooltip title={params.row.flagged ? "Unflag" : "Flag"}>
-                        <IconButton size="small" onClick={() => toggleFlag(params.row)}>
+                        <IconButton size="small" onClick={() => toggleFlag(params.row)} disabled={updatingFlagIds.has(params.row.id)}>
                             <FaFlag className={params.row.flagged ? "text-red-500" : "text-gray-400"} />
                         </IconButton>
                     </Tooltip>
@@ -187,13 +324,23 @@ export default function InvoiceTable() {
     ];
 
     React.useEffect(() => {
-        setFilteredRows(
-            invoices.filter(
-                (invoice) =>
-                    invoice.invoice_number.toLowerCase().includes(search.toLowerCase()) ||
-                    invoice.buyer_name.toLowerCase().includes(search.toLowerCase()) ||
-                    invoice.transaction_type.toLowerCase().includes(search.toLowerCase())
-            )
+        // setFilteredRows(
+        //     invoices.filter(
+        //         (invoice) =>
+        //             invoice.invoice_number.toLowerCase().includes(search.toLowerCase()) ||
+        //             invoice.buyer_name.toLowerCase().includes(search.toLowerCase()) ||
+        //             invoice.transaction_type.toLowerCase().includes(search.toLowerCase())
+        //     )
+        // );
+    }, [search, invoices]);
+
+    const rows = React.useMemo(() => {
+        const lower = search.toLowerCase();
+        return invoices.filter(
+            (invoice) =>
+                invoice.invoice_number.toLowerCase().includes(lower) ||
+                invoice.buyer_name.toLowerCase().includes(lower) ||
+                invoice.transaction_type.toLowerCase().includes(lower)
         );
     }, [search, invoices]);
 
@@ -255,7 +402,7 @@ export default function InvoiceTable() {
             {/* DataGrid container */}
             <div style={{ height: 400, width: '100%' }}>
                 <DataGrid
-                    rows={filteredRows}
+                    rows={rows}
                     columns={columns}
                     loading={loading}
                     pagination
@@ -264,6 +411,10 @@ export default function InvoiceTable() {
                     }}
                     pageSizeOptions={[5, 10, 25]}
                     disableRowSelectionOnClick
+                    checkboxSelection
+                    onRowSelectionModelChange={(m) => setSelectionModel(m as number[])}
+                    rowSelectionModel={selectionModel}
+                    slots={{ toolbar: Toolbar }}
                     sx={{
                         border: 'none',
                         '& .MuiDataGrid-cell': {
