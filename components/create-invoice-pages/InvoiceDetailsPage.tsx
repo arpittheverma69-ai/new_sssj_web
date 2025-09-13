@@ -5,6 +5,7 @@ import { showToast } from '@/utils/toast';
 import { Calendar, Hash, User, MapPin, Building2, CreditCard, Calculator, ArrowRight } from 'lucide-react';
 import { useShopProfile } from '@/hooks/useShopProfile';
 import Image from 'next/image';
+import { log } from 'console';
 
 interface InvoiceDetailsPageProps {
     invoiceData: InvoiceData;
@@ -12,6 +13,7 @@ interface InvoiceDetailsPageProps {
     selectedCustomer: (data: Partial<Customer>) => void;
     nextStep: () => void;
     states: State[];
+    isEdit: boolean;
 }
 
 const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
@@ -20,6 +22,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
     selectedCustomer,
     nextStep,
     states,
+    isEdit
 }) => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [customers, setCustomers] = useState<Customer[]>();
@@ -85,6 +88,9 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
         const fetchInvoiceNumber = async () => {
             if (!invoiceData.type) return;
 
+            // Skip fetching if we already have an invoice number (edit mode)
+            if (isEdit) return;
+
             // Skip if we already have an invoice number for this type
             if (fetchedInvoiceNumbers.current[invoiceData.type]) {
                 updateInvoiceData({ invoice_number: fetchedInvoiceNumbers.current[invoiceData.type] });
@@ -109,8 +115,6 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
         };
 
         fetchInvoiceNumber();
-        // Remove updateInvoiceData from dependencies to prevent infinite loops
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [invoiceData.type])
 
     const selectCustomer = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -454,7 +458,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                     </label>
                                     <div className="relative">
                                         <select
-                                            value={invoiceData.buyer_state_code}
+                                            value={invoiceData?.buyer_state_code}
                                             disabled={defaultCustomer}
                                             onChange={(e) => {
                                                 const selectedState = states.find(
@@ -462,6 +466,7 @@ const InvoiceDetailsPage: React.FC<InvoiceDetailsPageProps> = ({
                                                 );
                                                 if (selectedState) {
                                                     updateInvoiceData({
+                                                        buyer_state_id: String(selectedState.id),
                                                         buyer_state: selectedState.state,
                                                         buyer_state_code: selectedState.statecode,
                                                     });

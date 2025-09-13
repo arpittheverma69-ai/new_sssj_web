@@ -11,11 +11,13 @@ import { useSearchParams } from "next/navigation";
 const CreateInvoiceInner: React.FC = () => {
     const invoiceForm = useInvoiceForm();
     const searchParams = useSearchParams();
+    const [isEdit, setIsEdit] = useState(false);
 
     // Load invoice when in edit mode
     useEffect(() => {
         const editId = searchParams.get("edit");
         if (!editId) return;
+        setIsEdit(true);
 
         const loadInvoice = async () => {
             const loadingToast = toast.loading("Loading invoice data for editing...", { closeOnClick: true });
