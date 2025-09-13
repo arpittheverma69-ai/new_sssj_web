@@ -17,28 +17,28 @@ export async function POST(request: NextRequest) {
     const business = await prisma.businessProfile.findFirst({ include: { state: true } })
     const shopProfile = business
       ? {
-          shopName: business.business_name,
-          gstin: business.gstin,
-          address: business.address,
-          city: business.city,
-          state: business.state?.state_name || '',
-          stateCode: business.state
-            ? `${business.state.state_code} (${business.state.state_name.slice(0, 2).toUpperCase()})`
-            : '',
-          vatTin: business.vat_tin || '',
-          panNumber: business.pan_number || '',
-          bankName: business.bank_name || '',
-          accountNumber: business.account_number || '',
-          branchIfsc: business.branch_ifsc || '',
-        }
+        shopName: business.business_name,
+        gstin: business.gstin,
+        address: business.address,
+        city: business.city,
+        state: business.state?.state_name || '',
+        stateCode: business.state
+          ? `${business.state.state_code} (${business.state.state_name.slice(0, 2).toUpperCase()})`
+          : '',
+        vatTin: business.vat_tin || '',
+        panNumber: business.pan_number || '',
+        bankName: business.bank_name || '',
+        accountNumber: business.account_number || '',
+        branchIfsc: business.branch_ifsc || '',
+      }
       : {
-          shopName: 'Business',
-          gstin: '',
-          address: '',
-          city: '',
-          state: '',
-          stateCode: '',
-        }
+        shopName: 'Business',
+        gstin: '',
+        address: '',
+        city: '',
+        state: '',
+        stateCode: '',
+      }
 
     const zip = new JSZip()
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
           cgstRate: 1.5,
           sgstRate: 1.5,
           globalRoundoff: inv.roundoff ? Number(inv.roundoff) : 0,
-          copies: ['ORIGINAL FOR RECIPIENT','DUPLICATE FOR TRANSPORTER','TRIPLICATE FOR SUPPLIER'],
+          copies: ['ORIGINAL FOR RECIPIENT', 'DUPLICATE FOR TRANSPORTER', 'TRIPLICATE FOR SUPPLIER'],
           shopProfile,
         } as any)
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
           const file = fs.readFileSync(logoPath)
           const b64 = file.toString('base64')
           htmlWithAssets = html.replace(/src="\/jw_logo\.png"/g, `src="data:image/png;base64,${b64}"`)
-        } catch {}
+        } catch { }
 
         // Render real PDF using puppeteer
         const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
