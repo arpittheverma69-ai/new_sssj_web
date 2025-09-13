@@ -10,7 +10,7 @@ import { DownloadPDFModal } from './DownloadPDFModal';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { formatCurrency } from '@/utils/requiredFunction';
-import JSZip from 'jszip';
+// import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 // Invoice categories will be populated with counts dynamically
 
@@ -579,19 +579,19 @@ const AllInvoices = () => {
                                                     }}
                                                 />
                                                 <button
-                                                onClick={() => toggleFlag(invoice)}
-                                                disabled={flaggingInvoices.has(invoice.id)}
-                                                className={`p-2 rounded-full transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${invoice.flagged
-                                                    ? 'text-red-500 hover:text-red-600'
-                                                    : 'text-muted-foreground hover:text-red-500'
-                                                    }`}
-                                            >
-                                                {flaggingInvoices.has(invoice.id) ? (
-                                                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                ) : (
-                                                    <Flag className={`w-4 h-4 ${invoice.flagged ? 'fill-current' : ''}`} />
-                                                )}
-                                            </button>
+                                                    onClick={() => toggleFlag(invoice)}
+                                                    disabled={flaggingInvoices.has(invoice.id)}
+                                                    className={`p-2 rounded-full transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${invoice.flagged
+                                                        ? 'text-red-500 hover:text-red-600'
+                                                        : 'text-muted-foreground hover:text-red-500'
+                                                        }`}
+                                                >
+                                                    {flaggingInvoices.has(invoice.id) ? (
+                                                        <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                    ) : (
+                                                        <Flag className={`w-4 h-4 ${invoice.flagged ? 'fill-current' : ''}`} />
+                                                    )}
+                                                </button>
                                             </div>
                                         </div>
 
